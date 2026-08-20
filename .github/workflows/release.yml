@@ -94,13 +94,14 @@ jobs:
         id: changelog
         run: |
           VERSION="${{ needs.pre-check.outputs.version }}"
+          CURRENT_TAG="v${VERSION}"
           
-          # Find previous tag
-          PREV_TAG=$(git tag --sort=-v:refname | grep -E "^v[0-9]" | head -2 | tail -1)
+          # Find previous tag (exclude current tag)
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E "^v[0-9]" | grep -v "^${CURRENT_TAG}$" | head -1)
           
           if [ -n "$PREV_TAG" ]; then
-            COMMITS=$(git log "$PREV_TAG..HEAD" --pretty=format:"%s" --no-merges)
-            COMPARE_URL="https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${VERSION}"
+            COMMITS=$(git log "${PREV_TAG}..HEAD" --pretty=format:"%s" --no-merges)
+            COMPARE_URL="https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${CURRENT_TAG}"
           else
             COMMITS=$(git log --pretty=format:"%s" --no-merges -30)
             COMPARE_URL=""
@@ -117,21 +118,22 @@ jobs:
           while IFS= read -r commit; do
             [ -z "$commit" ] && continue
             
-            case "$commit" in
-              feat:*)
-                FEATURES="${FEATURES}- ${commit#feat: }"$'\n'
+            prefix=$(echo "$commit" | grep -oE '^[a-z]+')
+            case "$prefix" in
+              feat)
+                FEATURES="${FEATURES}- ${commit#*: }"$'\n'
                 ;;
-              fix:*)
-                FIXES="${FIXES}- ${commit#fix: }"$'\n'
+              fix)
+                FIXES="${FIXES}- ${commit#*: }"$'\n'
                 ;;
-              docs:*)
-                DOCS="${DOCS}- ${commit#docs: }"$'\n'
+              docs)
+                DOCS="${DOCS}- ${commit#*: }"$'\n'
                 ;;
-              perf:*)
-                PERF="${PERF}- ${commit#perf: }"$'\n'
+              perf)
+                PERF="${PERF}- ${commit#*: }"$'\n'
                 ;;
-              refactor:*)
-                REFACTOR="${REFACTOR}- ${commit#refactor: }"$'\n'
+              refactor)
+                REFACTOR="${REFACTOR}- ${commit#*: }"$'\n'
                 ;;
               *)
                 OTHER="${OTHER}- ${commit}"$'\n'
@@ -142,7 +144,7 @@ jobs:
           # Build highlights (only from feat:)
           HIGHLIGHTS=""
           if [ -n "$FEATURES" ]; then
-            HIGHLIGHTS=$(echo "$FEATURES" | head -5 | sed 's/^- //' | sed 's/^/- /')
+            HIGHLIGHTS=$(echo "$FEATURES" | grep -v '^$' | head -5 | sed 's/^- //' | sed 's/^/- /')
           fi
           
           # Build full changelog
