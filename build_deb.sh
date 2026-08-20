@@ -6,7 +6,7 @@
 PACKAGE_NAME="aurastudio"
 # Automatically fetch version from config/env.sh
 VERSION=$(grep -E '^CLI_VERSION=' config/env.sh | cut -d'"' -f2)
-VERSION="${VERSION:-1.0}"
+VERSION="${VERSION:-1.1}"
 ARCH="all"
 BUILD_DIR="dist/deb_build"
 OUTPUT_DEB="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"

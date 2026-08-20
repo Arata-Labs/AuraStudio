@@ -1,12 +1,15 @@
 <div align="center">
 
 ```text
- ╔══════════════════════════════════════════════════════════════════╗
- ║  AURA STUDIO CLI v1.0 - Next-Gen Termux Android Development Tool ║
- ╚══════════════════════════════════════════════════════════════════╝
+  ╭──────────────────────────────────────────────────────────────╮
+  │                                                              │
+  │    ⚡  AuraStudio CLI  v1.1                                  │
+  │        Build Android, Anywhere                               │
+  │                                                              │
+  ╰──────────────────────────────────────────────────────────────╯
 ```
 
-# ⚡ AuraStudio CLI v1.0
+# ⚡ AuraStudio CLI v1.1
 
 **Turn your Android device into a full-fledged native Android development environment.**
 
@@ -58,7 +61,7 @@ curl -sSL https://raw.githubusercontent.com/Arata-Labs/AuraStudio/main/install.s
 1. Download the latest `.deb` package from [GitHub Releases](https://github.com/Arata-Labs/AuraStudio/releases/latest).
 2. Install it using Termux package manager:
    ```bash
-   pkg install ./aurastudio_1.0_all.deb
+   pkg install ./aurastudio_1.1_all.deb
    ```
 
 ---
@@ -142,8 +145,8 @@ chmod +x build_deb.sh
 ./build_deb.sh
 ```
 The output file and its SHA256 checksum will be generated inside the `dist/` directory:
-- `dist/aurastudio_1.0_all.deb`
-- `dist/aurastudio_1.0_all.deb.sha256`
+- `dist/aurastudio_1.1_all.deb`
+- `dist/aurastudio_1.1_all.deb.sha256`
 
 ---
 

@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 # shellcheck disable=SC2034
 
-CLI_VERSION="1.0"
+CLI_VERSION="1.1"
 
 # ── XDG Base Directory Paths (Termux) ────────────────────────
 AURA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/aurastudio"

@@ -1,8 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 # shellcheck disable=SC1091
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║  AURA STUDIO CLI v1.0 - Next-Gen Termux Android Development Tool ║
-# ╚══════════════════════════════════════════════════════════════════╝
+# ╭──────────────────────────────────────────────────────────────╮
+# │    ⚡  AuraStudio CLI  v1.1                                  │
+# │        Build Android, Anywhere                               │
+# ╰──────────────────────────────────────────────────────────────╯
 
 # Resolve Script Root Directory (Supports Symlinks)
 SOURCE="${BASH_SOURCE[0]}"

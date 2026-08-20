@@ -638,7 +638,7 @@ AUTHOR
 LICENSE
        MIT License
 
-AURA STUDIO CLI v1.0            August 2026                    AURASTUDIO(1)
+AURA STUDIO CLI v1.1            August 2026                    AURASTUDIO(1)
 MANPAGE
 }
 

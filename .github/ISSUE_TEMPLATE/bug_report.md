@@ -36,7 +36,7 @@ If applicable, add screenshots or terminal output to help explain your problem.
 
 - **OS**: [e.g., Termux on Android]
 - **Android Version**: [e.g., Android 14]
-- **AuraStudio Version**: [e.g., 1.0] (run `aurastudio version`)
+- **AuraStudio Version**: [e.g., 1.1] (run `aurastudio version`)
 - **Shell**: [e.g., bash, zsh]
 - **Architecture**: [e.g., aarch64]
 
