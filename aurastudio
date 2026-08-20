@@ -1,0 +1,97 @@
+#!/data/data/com.termux/files/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  AURA STUDIO CLI v1.0 - Next-Gen Termux Android Development Tool ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# Resolve Script Root Directory (Supports Symlinks)
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+AURA_ROOT="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+
+# Load Core Configurations & Libraries
+source "$AURA_ROOT/config/env.sh"
+source "$AURA_ROOT/lib/ui.sh"
+source "$AURA_ROOT/lib/utils.sh"
+source "$AURA_ROOT/lib/tools.sh"
+
+# Load Command Modules
+source "$AURA_ROOT/modules/setup.sh"
+source "$AURA_ROOT/modules/sdk.sh"
+source "$AURA_ROOT/modules/ndk.sh"
+source "$AURA_ROOT/modules/cmake.sh"
+source "$AURA_ROOT/modules/remove.sh"
+source "$AURA_ROOT/modules/clean.sh"
+source "$AURA_ROOT/modules/init.sh"
+source "$AURA_ROOT/modules/update.sh"
+source "$AURA_ROOT/modules/uninstall.sh"
+source "$AURA_ROOT/modules/status.sh"
+source "$AURA_ROOT/modules/doctor.sh"
+
+# Process Global Flags (--verbose / -v)
+for arg in "$@"; do
+    if [ "$arg" = "--verbose" ] || [ "$arg" = "-v" ]; then
+        DEBUG=1
+    fi
+done
+
+# CLI Command Router
+case "${1:-}" in
+    setup)   cmd_setup ;;
+    install)
+        case "${2:-}" in
+            ndk)   cmd_install_ndk ;;
+            cmake) cmd_install_cmake ;;
+            sdk)   cmd_install_sdk "${@:3}" ;;
+            *)
+                error "Unknown command: aurastudio install ${2:-}"
+                printf "  %b\n" "${MUTED}Available: aurastudio install sdk | ndk | cmake${RESET}"
+                exit 1 ;;
+        esac ;;
+    remove)       cmd_remove "${2:-}" "${3:-}" "${4:-}" ;;
+    clean)        cmd_clean ;;
+    init)         cmd_init ;;
+    update)       cmd_update ;;
+    check-update) cmd_update --check ;;
+    uninstall)    cmd_uninstall ;;
+    status)       cmd_status ;;
+    doctor)       cmd_doctor "${2:-}" ;;
+    version|-v|--version) printf "\n  %b v%s\n\n" "${INDIGO}AuraStudio CLI${RESET}" "${CLI_VERSION}" ;;
+    help|-help|--help|"")
+        clear
+        draw_banner
+        printf "\n  %b\n\n" "${BOLD}CLI Usage Guide:${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio setup${RESET}"
+        printf "  %b\n\n" "${MUTED}    Full automated environment setup (Java 21, Gradle, SDK Manager, API 37/Custom)${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio install sdk [platform <API>] [buildtools <ver>]${RESET}"
+        printf "  %b\n\n" "${MUTED}    Select and install Android Platform APIs and Build-Tools${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio install ndk${RESET}"
+        printf "  %b\n\n" "${MUTED}    Select and install Native NDK (r30, r29, r28c, r27d, r26d) & CMake${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio install cmake${RESET}"
+        printf "  %b\n\n" "${MUTED}    Select and install native CMake SDK versions${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio update${RESET}"
+        printf "  %b\n\n" "${MUTED}    Update AuraStudio CLI to the latest version from GitHub${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio check-update${RESET}"
+        printf "  %b\n\n" "${MUTED}    Check if a new update is available on GitHub${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio remove [ndk|cmake|sdk] [name]${RESET}"
+        printf "  %b\n\n" "${MUTED}    Uninstall specific components or run interactively${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio clean${RESET}"
+        printf "  %b\n\n" "${MUTED}    Clean temporary downloaded files and extraction cache${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio init${RESET}"
+        printf "  %b\n\n" "${MUTED}    Generate starter project (CMake C++, NDK, Android Gradle Java/Kotlin)${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio uninstall${RESET}"
+        printf "  %b\n\n" "${MUTED}    Completely uninstall AuraStudio CLI and optional SDK files${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio status${RESET}"
+        printf "  %b\n\n" "${MUTED}    Show a visual status summary of installed components${RESET}"
+        printf "  %b\n" "${CYAN}aurastudio doctor${RESET}"
+        printf "  %b\n\n" "${MUTED}    Run diagnostic checks and view recommended fixes${RESET}"
+        draw_divider
+        echo "" ;;
+    *)
+        error "Unknown command: ${1}"
+        printf "  %b\n" "${MUTED}Run: aurastudio -help${RESET}"
+        exit 1 ;;
+esac

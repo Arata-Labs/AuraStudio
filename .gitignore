@@ -1,0 +1,19 @@
+# Build Output & Staging Directories
+dist/
+*.deb
+*.sha256
+
+# Temporary & Download Caches
+tmp/
+*.zip
+*.tar.xz
+*.tar.gz
+
+# Local Android SDK Test Data
+android-sdk/
+
+# Shell/IDE Specific
+.DS_Store
+.idea/
+.vscode/
+*.swp
