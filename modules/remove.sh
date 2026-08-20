@@ -13,7 +13,7 @@ cmd_remove() {
     # 1. Direct Target Deletion
     if [ "$type" = "ndk" ] && [ -n "$name" ]; then
         if [ -d "$NDK_DIR/$name" ]; then
-            rm -rf "$NDK_DIR/$name"
+            rm -rf "${NDK_DIR:?}/$name"
             success "NDK $name successfully removed."
         else
             error "NDK $name not found at $NDK_DIR/$name"
@@ -21,7 +21,7 @@ cmd_remove() {
         return
     elif [ "$type" = "cmake" ] && [ -n "$name" ]; then
         if [ -d "$CMAKE_DIR/$name" ]; then
-            rm -rf "$CMAKE_DIR/$name"
+            rm -rf "${CMAKE_DIR:?}/$name"
             success "CMake $name successfully removed."
         else
             error "CMake $name not found at $CMAKE_DIR/$name"

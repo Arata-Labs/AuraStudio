@@ -2,9 +2,9 @@
 
 cleanup() {
     rm -rf "$TMPDIR"/aurastudio_* 2>/dev/null
-    tput cnorm 2>/dev/null
+    tput cnorm 2>/dev/null || true
 }
-trap 'cleanup; exit' SIGINT SIGTERM EXIT
+trap 'cleanup; exit $?' SIGINT SIGTERM EXIT
 
 check_storage() {
     local req_mb="$1"
@@ -158,7 +158,8 @@ parse_entry() {
     local delimiter="${3:-|}"
     
     local IFS="$delimiter"
-    local parts=($entry)
+    local -a parts
+    read -ra parts <<< "$entry"
     echo "${parts[$((field - 1))]}"
 }
 
@@ -229,7 +230,10 @@ detect_java_home() {
 }
 
 detect_shell_rc() {
-    [ -f "$HOME_DIR/.zshrc" ] && echo "$HOME_DIR/.zshrc" || echo "$PREFIX/etc/bash.bashrc"
+    [ -f "$HOME_DIR/.zshrc" ] && echo "$HOME_DIR/.zshrc" && return
+    [ -f "${PREFIX:-}/etc/bash.bashrc" ] && echo "${PREFIX:-}/etc/bash.bashrc" && return
+    [ -f /etc/bash.bashrc ] && echo /etc/bash.bashrc && return
+    echo /etc/bash.bashrc
 }
 
 write_env() {
@@ -258,7 +262,7 @@ unset _bt_dir
 ENV
 
     # Auto-Completion Script Injection if available
-    local comp_script_deb="$PREFIX/opt/aurastudio/lib/aurastudio-completion.bash"
+    local comp_script_deb="${PREFIX:-}/opt/aurastudio/lib/aurastudio-completion.bash"
     local comp_script_git="$HOME/.aurastudio/lib/aurastudio-completion.bash"
     local comp_script_auraroot="$AURA_ROOT/lib/aurastudio-completion.bash"
     
@@ -306,7 +310,8 @@ run_with_timeout() {
     
     if command -v timeout &>/dev/null; then
         timeout --signal=KILL "$timeout" "$@" 2>/dev/null
-        local exit_code=$?
+        local exit_code
+        exit_code=$?
         if [ "$exit_code" -eq 124 ]; then
             error "Operation timed out after ${timeout}s"
             return 1
@@ -333,7 +338,8 @@ run_with_timeout() {
 }
 
 save_state() {
-    local state_file="$AURA_CACHE_DIR/state_$(date +%s).json"
+    local state_file
+    state_file="$AURA_CACHE_DIR/state_$(date +%s).json"
     mkdir -p "$AURA_CACHE_DIR"
     
     local ndk_list cmake_list sdk_platforms sdk_buildtools
@@ -433,7 +439,6 @@ EOF
 
 calculate_health_score() {
     local score=0
-    local max_score=100
     
     # Java (+20)
     command -v java &>/dev/null && score=$((score + 20))
@@ -471,7 +476,8 @@ calculate_health_score() {
 }
 
 save_env_snapshot() {
-    local snapshot="$AURA_CACHE_DIR/env_snapshot_$(date +%Y%m%d_%H%M%S).txt"
+    local snapshot
+    snapshot="$AURA_CACHE_DIR/env_snapshot_$(date +%Y%m%d_%H%M%S).txt"
     mkdir -p "$AURA_CACHE_DIR"
     
     {
@@ -534,6 +540,7 @@ load_plugins() {
     local loaded=0
     for plugin in "$plugin_dir"/*.sh; do
         if [ -f "$plugin" ]; then
+            # shellcheck source=/dev/null
             if source "$plugin" 2>/dev/null; then
                 loaded=$((loaded + 1))
                 log DEBUG "Loaded plugin: $(basename "$plugin")"

@@ -17,7 +17,7 @@ CMDTOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-11
 CMDTOOLS_DIR="$SDK_DIR/cmdline-tools/latest"
 SDKMANAGER="$CMDTOOLS_DIR/bin/sdkmanager"
 
-TMPDIR="${TMPDIR:-$PREFIX/tmp}"
+TMPDIR="${TMPDIR:-${PREFIX:-/tmp}/tmp}"
 mkdir -p "$TMPDIR" "$AURA_CONFIG_DIR" "$AURA_CACHE_DIR"
 DEBUG="${DEBUG:-0}"
 

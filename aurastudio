@@ -38,7 +38,7 @@ load_plugins
 # Process Global Flags (--verbose / -v)
 for arg in "$@"; do
     if [ "$arg" = "--verbose" ] || [ "$arg" = "-v" ]; then
-        DEBUG=1
+        export DEBUG=1
     fi
 done
 

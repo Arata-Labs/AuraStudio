@@ -7,7 +7,7 @@ cmd_update() {
     draw_divider
 
     # Checking installation via DEB package
-    if [ -d "$PREFIX/opt/aurastudio" ] && [ ! -d "$AURA_ROOT/.git" ]; then
+    if [ -d "${PREFIX:-}/opt/aurastudio" ] && [ ! -d "$AURA_ROOT/.git" ]; then
         info "AuraStudio is currently installed via DEB package."
         info "To update to the latest version:"
         info "  1. Download the latest .deb file from GitHub Releases:"

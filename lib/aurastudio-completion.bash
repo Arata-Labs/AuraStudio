@@ -9,27 +9,27 @@ _aurastudio_completions() {
 
     case "$prev" in
         aurastudio)
-            COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+            mapfile -t COMPREPLY < <(compgen -W "$opts" -- "$cur")
             return 0
             ;;
         install)
-            COMPREPLY=( $(compgen -W "sdk ndk cmake" -- "$cur") )
+            mapfile -t COMPREPLY < <(compgen -W "sdk ndk cmake" -- "$cur")
             return 0
             ;;
         remove)
-            COMPREPLY=( $(compgen -W "sdk ndk cmake" -- "$cur") )
+            mapfile -t COMPREPLY < <(compgen -W "sdk ndk cmake" -- "$cur")
             return 0
             ;;
         sdk)
-            COMPREPLY=( $(compgen -W "platform buildtools" -- "$cur") )
+            mapfile -t COMPREPLY < <(compgen -W "platform buildtools" -- "$cur")
             return 0
             ;;
         status)
-            COMPREPLY=( $(compgen -W "--json -j" -- "$cur") )
+            mapfile -t COMPREPLY < <(compgen -W "--json -j" -- "$cur")
             return 0
             ;;
         doctor)
-            COMPREPLY=( $(compgen -W "--fix --snapshot" -- "$cur") )
+            mapfile -t COMPREPLY < <(compgen -W "--fix --snapshot" -- "$cur")
             return 0
             ;;
     esac
