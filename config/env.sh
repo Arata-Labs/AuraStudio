@@ -3,6 +3,12 @@
 
 CLI_VERSION="1.0"
 
+# ── XDG Base Directory Paths (Termux) ────────────────────────
+AURA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/aurastudio"
+AURA_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/aurastudio"
+AURA_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/aurastudio"
+AURA_ENV_FILE="$AURA_CONFIG_DIR/env.sh"
+
 HOME_DIR="$HOME"
 SDK_DIR="$HOME/android-sdk"
 NDK_DIR="$SDK_DIR/ndk"
@@ -12,7 +18,7 @@ CMDTOOLS_DIR="$SDK_DIR/cmdline-tools/latest"
 SDKMANAGER="$CMDTOOLS_DIR/bin/sdkmanager"
 
 TMPDIR="${TMPDIR:-$PREFIX/tmp}"
-mkdir -p "$TMPDIR"
+mkdir -p "$TMPDIR" "$AURA_CONFIG_DIR" "$AURA_CACHE_DIR"
 DEBUG="${DEBUG:-0}"
 
 # ── Repositori NDK HomuHomu833 ──────────────────────────────────
