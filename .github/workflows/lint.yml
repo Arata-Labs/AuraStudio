@@ -1,4 +1,4 @@
-name: ShellCheck Linter
+name: ShellCheck Linter & Tests
 
 on:
   push:
@@ -8,11 +8,45 @@ on:
 
 jobs:
   shellcheck:
+    name: ShellCheck Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
+        uses: ludeeus/action-shellcheck@2.0.0
         with:
-          ignore_paths: 'dist'
-          severity: error
+          ignore_paths: 'dist tests'
+          severity: warning
+          format: tty
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Make test scripts executable
+        run: chmod +x tests/*.sh
+        
+      - name: Run Unit Tests
+        run: ./tests/run_tests.sh
+        
+  validate:
+    name: Validate Package Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dpkg-dev
+        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
+        
+      - name: Validate DEB Build
+        run: |
+          chmod +x build_deb.sh
+          ./build_deb.sh
+          
+      - name: Verify Package Checksum
+        run: |
+          cd dist
+          sha256sum -c *.sha256

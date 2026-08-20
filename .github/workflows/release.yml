@@ -9,25 +9,221 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  pre-check:
+    name: Pre-release Checks
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Extract & Validate Version
+        id: version
+        run: |
+          VERSION=$(grep -E '^CLI_VERSION=' config/env.sh | cut -d'"' -f2)
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "Invalid version format: $VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+  test:
+    name: Run Tests
+    needs: pre-check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          ignore_paths: 'dist tests'
+          severity: warning
+          
+      - name: Run Unit Tests
+        run: |
+          chmod +x tests/*.sh
+          ./tests/run_tests.sh
 
+  build:
+    name: Build DEB Package
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
       - name: Install dpkg-dev
         run: sudo apt-get update && sudo apt-get install -y dpkg-dev
-
+        
       - name: Build DEB Package
         run: |
           chmod +x build_deb.sh
           ./build_deb.sh
-
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
+          
+      - name: Verify Package
+        run: |
+          cd dist
+          ls -la *.deb *.sha256
+          sha256sum -c *.sha256
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          body_path: .github/RELEASE_TEMPLATE.md
-          generate_release_notes: true
+          name: aurastudio-deb
+          path: dist/
+
+  release:
+    name: Create GitHub Release
+    needs: [pre-check, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: aurastudio-deb
+          path: dist/
+      
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.pre-check.outputs.version }}"
+          
+          # Find previous tag
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E "^v[0-9]" | head -2 | tail -1)
+          
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log "$PREV_TAG..HEAD" --pretty=format:"%s" --no-merges)
+            COMPARE_URL="https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${VERSION}"
+          else
+            COMMITS=$(git log --pretty=format:"%s" --no-merges -30)
+            COMPARE_URL=""
+          fi
+          
+          # Categorize commits
+          FEATURES=""
+          FIXES=""
+          DOCS=""
+          PERF=""
+          REFACTOR=""
+          OTHER=""
+          
+          while IFS= read -r commit; do
+            [ -z "$commit" ] && continue
+            
+            case "$commit" in
+              feat:*)
+                FEATURES="${FEATURES}- ${commit#feat: }"$'\n'
+                ;;
+              fix:*)
+                FIXES="${FIXES}- ${commit#fix: }"$'\n'
+                ;;
+              docs:*)
+                DOCS="${DOCS}- ${commit#docs: }"$'\n'
+                ;;
+              perf:*)
+                PERF="${PERF}- ${commit#perf: }"$'\n'
+                ;;
+              refactor:*)
+                REFACTOR="${REFACTOR}- ${commit#refactor: }"$'\n'
+                ;;
+              *)
+                OTHER="${OTHER}- ${commit}"$'\n'
+                ;;
+            esac
+          done <<< "$COMMITS"
+          
+          # Build highlights (only from feat:)
+          HIGHLIGHTS=""
+          if [ -n "$FEATURES" ]; then
+            HIGHLIGHTS=$(echo "$FEATURES" | head -5 | sed 's/^- //' | sed 's/^/- /')
+          fi
+          
+          # Build full changelog
+          {
+            echo "## What's Changed"
+            echo ""
+            
+            if [ -n "$FEATURES" ]; then
+              echo "### 🚀 Features"
+              echo "$FEATURES"
+            fi
+            
+            if [ -n "$FIXES" ]; then
+              echo "### 🐛 Bug Fixes"
+              echo "$FIXES"
+            fi
+            
+            if [ -n "$DOCS" ]; then
+              echo "### 📚 Documentation"
+              echo "$DOCS"
+            fi
+            
+            if [ -n "$PERF" ]; then
+              echo "### ⚡ Performance"
+              echo "$PERF"
+            fi
+            
+            if [ -n "$REFACTOR" ]; then
+              echo "### 🔧 Refactoring"
+              echo "$REFACTOR"
+            fi
+            
+            if [ -n "$OTHER" ]; then
+              echo "### 📦 Other Changes"
+              echo "$OTHER"
+            fi
+          } > /tmp/changelog.md
+          
+          # Save outputs
+          {
+            echo "highlights<<EOF"
+            echo "$HIGHLIGHTS"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+          
+          {
+            echo "changelog<<EOF"
+            cat /tmp/changelog.md
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+          
+          echo "compare_url=$COMPARE_URL" >> $GITHUB_OUTPUT
+          
+          echo "=== Generated Changelog ==="
+          cat /tmp/changelog.md
+      
+      - name: Prepare Release Notes
+        run: |
+          VERSION="${{ needs.pre-check.outputs.version }}"
+          HIGHLIGHTS="${{ steps.changelog.outputs.highlights }}"
+          CHANGELOG="${{ steps.changelog.outputs.changelog }}"
+          COMPARE_URL="${{ steps.changelog.outputs.compare_url }}"
+          
+          # Read template
+          TEMPLATE=$(cat .github/RELEASE_TEMPLATE.md)
+          
+          # Replace placeholders
+          TEMPLATE="${TEMPLATE//\{VERSION\}/$VERSION}"
+          TEMPLATE="${TEMPLATE//\{HIGHLIGHTS\}/$HIGHLIGHTS}"
+          TEMPLATE="${TEMPLATE//\{CHANGELOG\}/$CHANGELOG}"
+          TEMPLATE="${TEMPLATE//\{COMPARE_URL\}/$COMPARE_URL}"
+          
+          echo "$TEMPLATE" > /tmp/release_notes.md
+          
+          echo "=== Final Release Notes ==="
+          cat /tmp/release_notes.md
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: /tmp/release_notes.md
           files: |
             dist/*.deb
             dist/*.sha256
