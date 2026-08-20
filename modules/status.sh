@@ -58,6 +58,24 @@ cmd_status() {
     fi
     [ "$cmake_found" -eq 0 ] && show_row "CMake" "None" "fail" "Not installed"
 
+    # Health Score
+    local health_score
+    health_score=$(calculate_health_score)
+    local health_color="$RED"
+    [ "$health_score" -ge 50 ] && health_color="$AMBER"
+    [ "$health_score" -ge 80 ] && health_color="$GREEN"
+    
+    printf "\n  %b\n" "${BOLD}Environment Health:${RESET}"
+    printf "  %b%s%%%b\n" "$health_color" "$health_score" "$RESET"
+    
+    if [ "$health_score" -ge 80 ]; then
+        printf "  %b\n" "${GREEN}Excellent - Your environment is ready for development${RESET}"
+    elif [ "$health_score" -ge 50 ]; then
+        printf "  %b\n" "${AMBER}Good - Some components could be improved${RESET}"
+    else
+        printf "  %b\n" "${RED}Needs attention - Run 'aurastudio setup' to fix${RESET}"
+    fi
+
     echo ""
     draw_divider
     echo ""
