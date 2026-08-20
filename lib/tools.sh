@@ -1,7 +1,11 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
 check_java() { 
-    command -v java &>/dev/null || { error "Java not found — Run: pkg install openjdk-21"; exit 1; }; 
+    if ! command -v java &>/dev/null; then
+        error "Java not found — Run: pkg install openjdk-21"
+        return 1
+    fi
+    return 0
 }
 
 ensure_tools() {
@@ -24,6 +28,7 @@ ensure_tools() {
     if [ "${#failed[@]}" -gt 0 ]; then
         error "Auto-install failed for: ${failed[*]}"
         printf "  %b\n" "${MUTED}→ Try manually: pkg install ${failed[*]}${RESET}"
-        exit 1
+        return 1
     fi
+    return 0
 }
