@@ -1,7 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
 _do_install_cmake() {
-    check_storage 200
+    if ! check_storage 200; then
+        return 1
+    fi
     printf "\n  %b\n\n" "${BOLD}Available CMake Versions:${RESET}"
     local i=1
     for entry in "${CMAKE_VERSIONS[@]}"; do
@@ -18,7 +20,9 @@ _do_install_cmake() {
     read -r cmake_sel
 
     [ "$cmake_sel" = "q" ] && return
-    ensure_tools curl unzip tar sed
+    if ! ensure_tools curl unzip tar sed; then
+        return 1
+    fi
     mkdir -p "$CMAKE_DIR"
 
     if [ "$cmake_sel" = "a" ]; then
@@ -33,16 +37,17 @@ _do_install_cmake() {
 _download_cmake() {
     local entry="$1"
     local cmake_name cmake_ver cmake_url
-    cmake_name=$(echo "$entry" | cut -d'|' -f1)
-    cmake_ver=$(echo "$entry"  | cut -d'|' -f2)
-    cmake_url=$(echo "$entry"  | cut -d'|' -f3)
+    cmake_name=$(parse_entry "$entry" 1)
+    cmake_ver=$(parse_entry "$entry" 2)
+    cmake_url=$(parse_entry "$entry" 3)
 
     local target_dir="$CMAKE_DIR/$cmake_ver"
     if [ -d "$target_dir" ]; then
         warn "CMake $cmake_name is already installed"
         return
     fi
-    local cmake_file; cmake_file=$(basename "$cmake_url")
+    local cmake_file
+    cmake_file=$(basename_fast "$cmake_url")
     local download_target="$TMPDIR/$cmake_file"
 
     info "Downloading CMake $cmake_name..."
@@ -70,9 +75,10 @@ cmd_install_cmake() {
     draw_divider
     _do_install_cmake
     write_env
-    local shell_rc; shell_rc=$(detect_shell_rc)
     echo ""
     draw_divider
     success "CMake Installation Complete!"
+    local shell_rc
+    shell_rc="$(detect_shell_rc)"
     printf "  Run: %b\n\n" "${CYAN}source $shell_rc${RESET}"
 }

@@ -5,7 +5,7 @@ _aurastudio_completions() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    opts="setup install remove clean init update check-update status doctor uninstall -v --verbose --help"
+    opts="setup install remove clean init update check-update status doctor uninstall man version -v --verbose --help"
 
     case "$prev" in
         aurastudio)
@@ -22,6 +22,14 @@ _aurastudio_completions() {
             ;;
         sdk)
             COMPREPLY=( $(compgen -W "platform buildtools" -- "$cur") )
+            return 0
+            ;;
+        status)
+            COMPREPLY=( $(compgen -W "--json -j" -- "$cur") )
+            return 0
+            ;;
+        doctor)
+            COMPREPLY=( $(compgen -W "--fix --snapshot" -- "$cur") )
             return 0
             ;;
     esac

@@ -6,10 +6,17 @@ cmd_setup() {
     printf "\n  %b\n" "${BOLD}${WHITE}Running Environment Setup${RESET}"
     draw_divider
 
-    check_storage 500
+    if ! check_storage 500; then
+        return 1
+    fi
+
+    # Save state before changes
+    save_state
 
     step "1/9" "Checking & Installing Dependencies..."
-    ensure_tools curl unzip tar "findutils:find" sed grep "gawk:awk" which
+    if ! ensure_tools curl unzip tar "findutils:find" sed grep "gawk:awk" which; then
+        return 1
+    fi
 
     step "2/9" "Configuring OpenJDK 21..."
     if dpkg -l openjdk-21 &>/dev/null 2>&1; then
@@ -37,21 +44,28 @@ cmd_setup() {
         local tmp_zip="$TMPDIR/aurastudio_cmdtools.zip" tmp_dir="$TMPDIR/aurastudio_cmdtools_extract"
         
         info "Downloading cmdline-tools package..."
-        download_file "$CMDTOOLS_URL" "$tmp_zip"
-        [ ! -s "$tmp_zip" ] && error "cmdline-tools download failed!" && exit 1
+        if ! download_file "$CMDTOOLS_URL" "$tmp_zip"; then
+            error "cmdline-tools download failed!"
+            return 1
+        fi
 
-        (_ex_tools() {
+        _ex_tools() {
             rm -rf "$tmp_dir"
-            unzip -q "$tmp_zip" -d "$tmp_dir"
+            unzip -q "$tmp_zip" -d "$tmp_dir" || return 1
             mkdir -p "$CMDTOOLS_DIR"
             if [ -d "$tmp_dir/cmdline-tools" ]; then
-                cp -r "$tmp_dir/cmdline-tools/." "$CMDTOOLS_DIR/"
+                cp -r "$tmp_dir/cmdline-tools/." "$CMDTOOLS_DIR/" || return 1
             else
-                cp -r "$tmp_dir/." "$CMDTOOLS_DIR/"
+                cp -r "$tmp_dir/." "$CMDTOOLS_DIR/" || return 1
             fi
             rm -rf "$tmp_zip" "$tmp_dir"
-        }; _ex_tools) &
-        spin $! "Extracting cmdline-tools package"
+            return 0
+        }
+        
+        if ! (_ex_tools); then
+            error "cmdline-tools extraction failed!"
+            return 1
+        fi
         success "cmdline-tools successfully configured"
     fi
     chmod -R 755 "$CMDTOOLS_DIR/bin/" 2>/dev/null
@@ -77,7 +91,8 @@ cmd_setup() {
     step "7/9" "Accepting Android SDK Licenses..."
     export ANDROID_HOME="$SDK_DIR"
     export ANDROID_SDK_ROOT="$SDK_DIR"
-    export JAVA_HOME="$(dirname $(dirname $(readlink -f $(which java))))"
+    JAVA_HOME="$(detect_java_home)" || { error "Java not found"; return 1; }
+    export JAVA_HOME
     export PATH="$JAVA_HOME/bin:$CMDTOOLS_DIR/bin:$SDK_DIR/platform-tools:$PATH"
 
     (yes | "$SDKMANAGER" --licenses > /dev/null 2>&1) &
@@ -137,18 +152,20 @@ cmd_setup() {
 
     step "9/9" "Writing Isolated Environment File..."
     write_env
-    local shell_rc; shell_rc=$(detect_shell_rc)
-    success "Environment written to ${CYAN}$HOME_DIR/.aurastudiorc${RESET}"
+    success "Environment written to ${CYAN}$AURA_CONFIG_DIR/env.sh${RESET}"
 
     echo ""
     draw_divider
     printf "  %b\n" "${GREEN}${BOLD}✨ Setup Complete! AuraStudio Environment is Ready.${RESET}"
     draw_divider
     printf "  %-20s %s\n" "ANDROID_HOME:" "$SDK_DIR"
-    printf "  %-20s %s\n" "JAVA_HOME:"    "$(dirname $(dirname $(readlink -f $(which java))))"
+    printf "  %-20s %s\n" "JAVA_HOME:"    "$JAVA_HOME"
     printf "  %-20s %s\n" "Platform:"     "$target_platform"
     printf "  %-20s %s\n" "Build-tools:"  "$target_buildtools"
+    printf "  %-20s %s\n" "Config Dir:"   "$AURA_CONFIG_DIR"
     printf "\n  %b\n" "${MUTED}Tip: Use 'aurastudio install sdk' anytime to install additional APIs.${RESET}"
     echo ""
+    local shell_rc
+    shell_rc="$(detect_shell_rc)"
     printf "  Apply changes now by running: %b\n\n" "${CYAN}source $shell_rc${RESET}"
 }

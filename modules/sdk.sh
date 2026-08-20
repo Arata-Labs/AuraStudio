@@ -8,12 +8,13 @@ cmd_install_sdk() {
 
     if [ ! -f "$SDKMANAGER" ]; then
         error "cmdline-tools not found. Run: aurastudio setup"
-        exit 1
+        return 1
     fi
 
     export ANDROID_HOME="$SDK_DIR"
     export ANDROID_SDK_ROOT="$SDK_DIR"
-    export JAVA_HOME="$(dirname $(dirname $(readlink -f $(which java))))"
+    JAVA_HOME="$(detect_java_home)" || { error "Java not found"; return 1; }
+    export JAVA_HOME
     export PATH="$JAVA_HOME/bin:$CMDTOOLS_DIR/bin:$SDK_DIR/platform-tools:$PATH"
 
     local param_api="" param_bt=""
@@ -66,7 +67,7 @@ cmd_install_sdk() {
         1) do_plat=true ;;
         2) do_bt=true ;;
         3) do_plat=true; do_bt=true ;;
-        *) error "Invalid choice"; exit 1 ;;
+        *) error "Invalid choice"; return 1 ;;
     esac
 
     if $do_plat; then

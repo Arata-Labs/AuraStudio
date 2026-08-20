@@ -83,9 +83,9 @@ cmd_remove() {
     printf "\n  %b\n\n" "${BOLD}Select package to remove:${RESET}"
     local idx=1
     for item in "${installed_items[@]}"; do
-        local cat name path
-        cat=$(echo "$item" | cut -d'|' -f1)
-        name=$(echo "$item" | cut -d'|' -f2)
+        local cat name
+        cat=$(parse_entry "$item" 1)
+        name=$(parse_entry "$item" 2)
         printf "  %b %-16s %s\n" "${CYAN}[$idx]${RESET}" "[$cat]" "$name"
         idx=$((idx+1))
     done
@@ -98,9 +98,9 @@ cmd_remove() {
     if [[ "$r_sel" =~ ^[0-9]+$ ]] && [ "$r_sel" -ge 1 ] && [ "$r_sel" -le "${#installed_items[@]}" ]; then
         local selected="${installed_items[$((r_sel-1))]}"
         local r_cat r_name r_path
-        r_cat=$(echo "$selected" | cut -d'|' -f1)
-        r_name=$(echo "$selected" | cut -d'|' -f2)
-        r_path=$(echo "$selected" | cut -d'|' -f3)
+        r_cat=$(parse_entry "$selected" 1)
+        r_name=$(parse_entry "$selected" 2)
+        r_path=$(parse_entry "$selected" 3)
 
         printf "  Are you sure you want to remove %s %s? [y/N]: " "$r_cat" "$r_name"
         read -r confirm

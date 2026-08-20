@@ -22,13 +22,14 @@ cmd_uninstall() {
     step "1/3" "Removing Binary Symlink & Environment Configuration..."
     rm -f "$PREFIX/bin/aurastudio"
     rm -f "$HOME_DIR/.aurastudiorc"
-    success "Symlink and .aurastudiorc successfully removed."
+    rm -rf "$AURA_CONFIG_DIR"
+    success "Symlink and config directory successfully removed."
 
     step "2/3" "Cleaning Shell Config Integration..."
     local shell_rc
-    shell_rc=$(detect_shell_rc)
+    shell_rc="$(detect_shell_rc)"
     if [ -f "$shell_rc" ]; then
-        sed -i '/\.aurastudiorc/d' "$shell_rc" 2>/dev/null
+        sed -i '/aurastudio/d' "$shell_rc" 2>/dev/null
         success "Shell configuration references cleaned from ${CYAN}$shell_rc${RESET}"
     fi
 
