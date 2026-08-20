@@ -230,7 +230,7 @@ EOF
 
             if command -v gradle &>/dev/null; then
                 (_gen_wrapper() {
-                    cd "$target_dir"
+                    cd "$target_dir" || return 1
                     gradle wrapper --gradle-version 8.5 >/dev/null 2>&1
                 }; _gen_wrapper) &
                 spin $! "Generating Gradle Wrapper (gradlew)"

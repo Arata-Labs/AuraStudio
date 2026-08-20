@@ -13,9 +13,9 @@ cmd_doctor() {
     chk() {
         local label="$1" condition="$2" fix_cmd="$3"
         if [ "$condition" = "true" ]; then
-            printf "  ${GREEN}✔${RESET} %-30s ${GREEN}[ OK ]${RESET}\n" "$label"
+            printf "  %b✔%b %-30s %b[ OK ]%b\n" "$GREEN" "$RESET" "$label" "$GREEN" "$RESET"
         else
-            printf "  ${RED}✖${RESET} %-30s ${RED}[ ERROR ]${RESET}\n" "$label"
+            printf "  %b✖%b %-30s %b[ ERROR ]%b\n" "$RED" "$RESET" "$label" "$RED" "$RESET"
             if $auto_fix && [ -n "$fix_cmd" ]; then
                 info "Auto-fixing: $fix_cmd"
                 eval "$fix_cmd"

@@ -97,7 +97,7 @@ cmd_setup() {
         idx=$((idx+1))
     done
     printf "  %b Custom API Level\n" "${CYAN}[c]${RESET}"
-    printf "\n  Select option [1-${#PLATFORM_LIST[@]}/c] (default: 1 [API 37]): "
+    printf "\n  Select option [1-%d/c] (default: 1 [API 37]): " "${#PLATFORM_LIST[@]}"
     read -r p_sel
 
     local sel_api="37"
@@ -116,7 +116,7 @@ cmd_setup() {
         idx=$((idx+1))
     done
     printf "  %b Custom Build-Tools Version\n" "${CYAN}[c]${RESET}"
-    printf "\n  Select option [1-${#BUILDTOOLS_LIST[@]}/c] (default: 1 [37.0.0]): "
+    printf "\n  Select option [1-%d/c] (default: 1 [37.0.0]): " "${#BUILDTOOLS_LIST[@]}"
     read -r bt_sel
 
     local sel_bt="37.0.0"

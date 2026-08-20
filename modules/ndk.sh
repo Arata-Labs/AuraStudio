@@ -21,7 +21,7 @@ cmd_install_ndk() {
         i=$((i + 1))
     done
     printf "  %b Cancel\n\n" "${RED}[q]${RESET}"
-    printf "  Select option [1-${#NDK_VERSIONS[@]}/q]: "
+    printf "  Select option [1-%d/q]: " "${#NDK_VERSIONS[@]}"
     read -r choice
 
     [ "$choice" = "q" ] && echo "" && info "Cancelled." && return
@@ -46,7 +46,7 @@ cmd_install_ndk() {
         [ ! -s "$download_target" ] && error "Download failed!" && exit 1
 
         (_extract_ndk() {
-            cd "$HOME_DIR"
+            cd "$HOME_DIR" || return 1
             tar --no-same-owner -xf "$download_target" --warning=no-unknown-keyword
             rm -f "$download_target"
             mkdir -p "$NDK_DIR"
@@ -75,7 +75,7 @@ cmd_install_ndk() {
         (_symlink_musl() {
             for path in "toolchains/llvm/prebuilt" "prebuilt" "shader-tools"; do
                 if [ -d "$ndk_install_dir/$path" ]; then
-                    cd "$ndk_install_dir/$path"
+                    cd "$ndk_install_dir/$path" || return 1
                     [ ! -e "linux-aarch64" ] && ln -s linux-arm64 linux-aarch64 2>/dev/null
                 fi
             done

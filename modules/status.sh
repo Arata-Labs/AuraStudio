@@ -9,9 +9,9 @@ cmd_status() {
     show_row() {
         local category="$1" name="$2" status="$3" detail="$4"
         if [ "$status" = "ok" ]; then
-            printf "  ${GREEN}✔${RESET} %-14s %-16s ${CYAN}%s${RESET}\n" "[$category]" "$name" "$detail"
+            printf "  %b✔%b %-14s %-16s %b%s%b\n" "$GREEN" "$RESET" "[$category]" "$name" "$CYAN" "$detail" "$RESET"
         else
-            printf "  ${RED}✖${RESET} %-14s %-16s ${MUTED}%s${RESET}\n" "[$category]" "$name" "$detail"
+            printf "  %b✖%b %-14s %-16s %b%s%b\n" "$RED" "$RESET" "[$category]" "$name" "$MUTED" "$detail" "$RESET"
         fi
     }
 

@@ -90,7 +90,7 @@ cmd_remove() {
         idx=$((idx+1))
     done
     printf "  %b Cancel\n\n" "${RED}[q]${RESET}"
-    printf "  Select option [1-${#installed_items[@]}/q]: "
+    printf "  Select option [1-%d/q]: " "${#installed_items[@]}"
     read -r r_sel
 
     [ "$r_sel" = "q" ] && info "Cancelled." && return

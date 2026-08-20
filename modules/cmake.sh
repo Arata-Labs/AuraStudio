@@ -14,7 +14,7 @@ _do_install_cmake() {
     done
     printf "  %b Install All\n" "${CYAN}[a]${RESET}"
     printf "  %b Cancel\n\n" "${RED}[q]${RESET}"
-    printf "  Select option [1-${#CMAKE_VERSIONS[@]}/a/q]: "
+    printf "  Select option [1-%d/a/q]: " "${#CMAKE_VERSIONS[@]}"
     read -r cmake_sel
 
     [ "$cmake_sel" = "q" ] && return

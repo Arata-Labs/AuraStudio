@@ -24,7 +24,7 @@ spin() {
     tput civis 2>/dev/null
     while ps -p "$pid" > /dev/null 2>&1; do
         local temp=${spinstr#?}
-        printf "\r  ${CYAN}%c${RESET} ${WHITE}%s${RESET}..." "$spinstr" "$msg"
+        printf "\r  %b%c%b %b%s%b..." "$CYAN" "$spinstr" "$RESET" "$WHITE" "$msg" "$RESET"
         spinstr=$temp${spinstr%"$temp"}
         sleep $delay
     done

@@ -79,7 +79,7 @@ cmd_install_sdk() {
             i=$((i+1))
         done
         printf "  %b Custom API Level\n\n" "${CYAN}[c]${RESET}"
-        printf "  Select option [1-${#PLATFORM_LIST[@]}/c]: "
+        printf "  Select option [1-%d/c]: " "${#PLATFORM_LIST[@]}"
         read -r p_sel
 
         local sel_api=""
@@ -108,7 +108,7 @@ cmd_install_sdk() {
             i=$((i+1))
         done
         printf "  %b Custom Version\n\n" "${CYAN}[c]${RESET}"
-        printf "  Select option [1-${#BUILDTOOLS_LIST[@]}/c]: "
+        printf "  Select option [1-%d/c]: " "${#BUILDTOOLS_LIST[@]}"
         read -r bt_sel
 
         local sel_bt=""

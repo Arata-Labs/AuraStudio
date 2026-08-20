@@ -1,4 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/env bash
+# shellcheck disable=SC2034
 
 CLI_VERSION="1.0"
 

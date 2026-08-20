@@ -6,7 +6,7 @@ We are excited to announce a new release of **AuraStudio CLI**! 🚀
 
 **Via One-Liner Web Installer:**
 ```bash
-curl -sSL [https://raw.githubusercontent.com/Arata-Labs/AuraStudio/main/install.sh](https://raw.githubusercontent.com/Arata-Labs/AuraStudio/main/install.sh) | bash
+curl -sSL https://raw.githubusercontent.com/Arata-Labs/AuraStudio/main/install.sh | bash
 ```
 
 **Via Offline DEB Package:**

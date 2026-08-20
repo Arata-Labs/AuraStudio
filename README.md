@@ -51,7 +51,7 @@ Choose one of the following methods to install AuraStudio CLI in Termux:
 Paste and run this single-line command inside your Termux terminal:
 
 ```bash
-curl -sSL [https://raw.githubusercontent.com/Arata-Labs/AuraStudio/main/install.sh](https://raw.githubusercontent.com/Arata-Labs/AuraStudio/main/install.sh) | bash
+curl -sSL https://raw.githubusercontent.com/Arata-Labs/AuraStudio/main/install.sh | bash
 ```
 
 ### Option 2: Pre-built `.deb` Package (GitHub Releases)

@@ -1,4 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/env bash
+# shellcheck disable=SC1091
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║  AURA STUDIO CLI v1.0 - Next-Gen Termux Android Development Tool ║
 # ╚══════════════════════════════════════════════════════════════════╝

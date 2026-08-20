@@ -64,7 +64,8 @@ ln -sf "$PREFIX_PATH/opt/$PACKAGE_NAME/aurastudio" "$BIN_TARGET/aurastudio"
 dpkg-deb --build "$BUILD_DIR" "dist/$OUTPUT_DEB"
 
 if [ -f "dist/$OUTPUT_DEB" ]; then
-    cd dist && sha256sum "$OUTPUT_DEB" > "$OUTPUT_DEB.sha256" && cd ..
+    cd dist || return 1
+    sha256sum "$OUTPUT_DEB" > "$OUTPUT_DEB.sha256" && cd ..
     echo "✔ Package built successfully: dist/$OUTPUT_DEB"
     echo "✔ Checksum generated: dist/$OUTPUT_DEB.sha256"
 else
