@@ -22,10 +22,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hinohara.aurastudio.R
 import com.hinohara.aurastudio.data.models.*
 import com.hinohara.aurastudio.data.viewmodel.DashboardViewModel
 import com.hinohara.aurastudio.ui.theme.*
@@ -49,17 +51,14 @@ fun DashboardScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(vertical = 24.dp)
     ) {
-        // Header
         item {
             DashboardHeader()
         }
 
-        // Health Score Banner
         item {
             HealthBanner(score = status.healthScore, status = status)
         }
 
-        // Quick Actions Grid
         item {
             QuickActionsGrid(
                 onSetup = { onNavigateToTerminal("aurastudio setup") },
@@ -69,12 +68,10 @@ fun DashboardScreen(
             )
         }
 
-        // Environment Components Card
         item {
             EnvironmentCard(status)
         }
 
-        // Recent Projects Card
         item {
             RecentProjectsCard(
                 projects = recentProjects,
@@ -82,7 +79,6 @@ fun DashboardScreen(
             )
         }
 
-        // Installed Components
         if (status.platforms.isNotEmpty() || status.ndk.isNotEmpty()) {
             item {
                 InstalledComponentsCard(
@@ -128,13 +124,13 @@ private fun DashboardHeader() {
             Spacer(modifier = Modifier.width(14.dp))
             Column {
                 Text(
-                    text = "Aura Studio",
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Build Android, Anywhere",
+                    text = stringResource(R.string.dashboard_tagline),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -163,19 +159,12 @@ private fun HealthBanner(score: Int, status: EnvironmentStatus) {
         )
     }
 
-    val statusText = when {
-        score >= 90 -> "Excellent"
-        score >= 80 -> "Good"
-        score >= 60 -> "Fair"
-        score >= 40 -> "Needs Attention"
-        else -> "Critical"
-    }
-
-    val statusDescription = when {
-        score >= 80 -> "All systems operational"
-        score >= 50 -> "Some components need setup"
-        score >= 30 -> "Environment partially configured"
-        else -> "Run setup to get started"
+    val (statusTextRes, statusDescRes) = when {
+        score >= 90 -> Pair(R.string.health_excellent, R.string.health_desc_all_operational)
+        score >= 80 -> Pair(R.string.health_good, R.string.health_desc_all_operational)
+        score >= 60 -> Pair(R.string.health_fair, R.string.health_desc_some_missing)
+        score >= 40 -> Pair(R.string.health_needs_attention, R.string.health_desc_partially_configured)
+        else -> Pair(R.string.health_critical, R.string.health_desc_run_setup)
     }
 
     Card(
@@ -196,12 +185,10 @@ private fun HealthBanner(score: Int, status: EnvironmentStatus) {
                 .padding(24.dp)
         ) {
             Column {
-                // Top section with score and status
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Animated circular progress
                     Box(
                         modifier = Modifier.size(100.dp),
                         contentAlignment = Alignment.Center
@@ -234,14 +221,14 @@ private fun HealthBanner(score: Int, status: EnvironmentStatus) {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "$score",
+                                text = stringResource(R.string.dashboard_health_score_format, score),
                                 style = MaterialTheme.typography.displaySmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
                                 lineHeight = 32.sp
                             )
                             Text(
-                                text = "/ 100",
+                                text = stringResource(R.string.dashboard_health_score_max),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.8f)
                             )
@@ -252,20 +239,20 @@ private fun HealthBanner(score: Int, status: EnvironmentStatus) {
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Environment Health",
+                            text = stringResource(R.string.dashboard_health_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = statusText,
+                            text = stringResource(statusTextRes),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White.copy(alpha = 0.95f)
                         )
                         Text(
-                            text = statusDescription,
+                            text = stringResource(statusDescRes),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.8f)
                         )
@@ -274,16 +261,15 @@ private fun HealthBanner(score: Int, status: EnvironmentStatus) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Quick status pills
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val components = listOf(
-                        Triple("Java", status.java.isInstalled, Icons.Filled.Coffee),
-                        Triple("Gradle", status.gradle.isInstalled, Icons.Filled.Build),
-                        Triple("SDK", status.cmdlineTools.isInstalled, Icons.Filled.PhoneAndroid),
-                        Triple("AAPT2", status.aapt2.isInstalled, Icons.Filled.Settings)
+                        Triple(stringResource(R.string.component_java), status.java.isInstalled, Icons.Filled.Coffee),
+                        Triple(stringResource(R.string.component_gradle), status.gradle.isInstalled, Icons.Filled.Build),
+                        Triple(stringResource(R.string.component_sdk), status.cmdlineTools.isInstalled, Icons.Filled.PhoneAndroid),
+                        Triple(stringResource(R.string.component_aapt2), status.aapt2.isInstalled, Icons.Filled.Settings)
                     )
 
                     components.forEach { (name, installed, icon) ->
@@ -333,16 +319,16 @@ private fun QuickActionsGrid(
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Filled.Rocket,
-                label = "Setup",
-                description = "Initialize env",
+                label = stringResource(R.string.action_setup),
+                description = stringResource(R.string.action_setup_desc),
                 gradient = Brush.linearGradient(listOf(Indigo40, Purple40)),
                 onClick = onSetup
             )
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Filled.Download,
-                label = "Install SDK",
-                description = "Platforms & tools",
+                label = stringResource(R.string.action_install_sdk),
+                description = stringResource(R.string.action_install_sdk_desc),
                 gradient = Brush.linearGradient(listOf(Cyan40, Indigo40)),
                 onClick = onInstallSdk
             )
@@ -354,16 +340,16 @@ private fun QuickActionsGrid(
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Filled.MedicalServices,
-                label = "Doctor",
-                description = "Health checks",
+                label = stringResource(R.string.action_doctor),
+                description = stringResource(R.string.action_doctor_desc),
                 gradient = Brush.linearGradient(listOf(Green40, Cyan40)),
                 onClick = onDoctor
             )
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Filled.BarChart,
-                label = "Status",
-                description = "View details",
+                label = stringResource(R.string.action_status),
+                description = stringResource(R.string.action_status_desc),
                 gradient = Brush.linearGradient(listOf(Amber40, Red40)),
                 onClick = onStatus
             )
@@ -390,7 +376,7 @@ private fun QuickActionCard(
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
         Row(
             modifier = Modifier
@@ -440,7 +426,7 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -456,7 +442,7 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Environment Components",
+                    text = stringResource(R.string.env_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -465,10 +451,26 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            EnvironmentItem("Java", status.java.version, status.java.isInstalled)
-            EnvironmentItem("Gradle", status.gradle.version, status.gradle.isInstalled)
-            EnvironmentItem("AAPT2", status.aapt2.version, status.aapt2.isInstalled)
-            EnvironmentItem("cmdline-tools", status.cmdlineTools.version, status.cmdlineTools.isInstalled)
+            EnvironmentItem(
+                name = stringResource(R.string.component_java),
+                version = status.java.version,
+                isInstalled = status.java.isInstalled
+            )
+            EnvironmentItem(
+                name = stringResource(R.string.component_gradle),
+                version = status.gradle.version,
+                isInstalled = status.gradle.isInstalled
+            )
+            EnvironmentItem(
+                name = stringResource(R.string.component_aapt2),
+                version = status.aapt2.version,
+                isInstalled = status.aapt2.isInstalled
+            )
+            EnvironmentItem(
+                name = stringResource(R.string.component_sdk),
+                version = status.cmdlineTools.version,
+                isInstalled = status.cmdlineTools.isInstalled
+            )
 
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 12.dp),
@@ -480,17 +482,17 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 StatChip(
-                    label = "Platforms",
+                    label = stringResource(R.string.env_platforms),
                     count = status.platforms.size,
                     color = MaterialTheme.colorScheme.primary
                 )
                 StatChip(
-                    label = "Build-Tools",
+                    label = stringResource(R.string.env_build_tools),
                     count = status.buildTools.size,
                     color = MaterialTheme.colorScheme.secondary
                 )
                 StatChip(
-                    label = "NDK",
+                    label = stringResource(R.string.env_ndk),
                     count = status.ndk.size,
                     color = MaterialTheme.colorScheme.tertiary
                 )
@@ -527,7 +529,7 @@ private fun EnvironmentItem(name: String, version: String?, isInstalled: Boolean
             color = if (isInstalled) Green40.copy(alpha = 0.1f) else MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
         ) {
             Text(
-                text = version ?: "Not installed",
+                text = version ?: stringResource(R.string.env_not_installed),
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isInstalled) Green40 else MaterialTheme.colorScheme.error
@@ -569,7 +571,7 @@ private fun RecentProjectsCard(
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -585,7 +587,7 @@ private fun RecentProjectsCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Recent Projects",
+                    text = stringResource(R.string.projects_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -609,13 +611,13 @@ private fun RecentProjectsCard(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "No projects yet",
+                        text = stringResource(R.string.projects_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Run 'aurastudio init' to create your first project",
+                        text = stringResource(R.string.projects_empty_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
@@ -709,7 +711,7 @@ private fun InstalledComponentsCard(
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -725,7 +727,7 @@ private fun InstalledComponentsCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Installed Components",
+                    text = stringResource(R.string.installed_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -736,7 +738,7 @@ private fun InstalledComponentsCard(
 
             if (platforms.isNotEmpty()) {
                 Text(
-                    text = "Android Platforms",
+                    text = stringResource(R.string.installed_platforms),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -761,7 +763,7 @@ private fun InstalledComponentsCard(
 
             if (ndk.isNotEmpty()) {
                 Text(
-                    text = "NDK Versions",
+                    text = stringResource(R.string.installed_ndk),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -785,7 +787,7 @@ private fun InstalledComponentsCard(
 
             if (platforms.isEmpty() && ndk.isEmpty()) {
                 Text(
-                    text = "No components installed",
+                    text = stringResource(R.string.installed_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.padding(vertical = 8.dp)

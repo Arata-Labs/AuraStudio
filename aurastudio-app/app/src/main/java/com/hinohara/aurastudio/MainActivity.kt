@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -45,7 +46,6 @@ fun AuraStudioApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Terminal command argument
     var terminalCommand by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -54,7 +54,7 @@ fun AuraStudioApp(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Aura Studio",
+                        text = stringResource(R.string.app_name),
                         style = MaterialTheme.typography.titleMedium
                     )
                 },
@@ -70,6 +70,7 @@ fun AuraStudioApp(
             ) {
                 bottomNavItems.forEach { item ->
                     val selected = currentRoute == item.route
+                    val label = stringResource(item.labelRes)
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
@@ -85,10 +86,10 @@ fun AuraStudioApp(
                         icon = {
                             Icon(
                                 if (selected) item.selectedIcon else item.unselectedIcon,
-                                contentDescription = item.label
+                                contentDescription = label
                             )
                         },
-                        label = { Text(item.label) }
+                        label = { Text(label) }
                     )
                 }
             }

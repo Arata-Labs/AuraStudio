@@ -26,7 +26,8 @@ val Red80 = Color(0xFFFCA5A5)
 
 // Dark Theme Variants
 val DarkOnSurfaceVariant = Color(0xFFCAC4D0)
-val DarkSurface = Color(0xFF1C1B1F)
+val DarkSurface = Color(0xFF1A1A24)
+val DarkSurfaceElevated = Color(0xFF222236)
 
 // Gradient Colors
 val GradientStart = Color(0xFF6366F1)

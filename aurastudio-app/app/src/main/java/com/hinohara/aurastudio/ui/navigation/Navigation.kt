@@ -1,9 +1,11 @@
 package com.hinohara.aurastudio.ui.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.hinohara.aurastudio.R
 
 sealed class Screen(val route: String) {
     data object Dashboard : Screen("dashboard")
@@ -14,16 +16,16 @@ sealed class Screen(val route: String) {
 }
 
 data class BottomNavItem(
-    val label: String,
+    @StringRes val labelRes: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
     val route: String
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem("Home", Icons.Filled.Home, Icons.Outlined.Home, Screen.Dashboard.route),
-    BottomNavItem("Editor", Icons.Filled.Edit, Icons.Outlined.Edit, Screen.Editor.route),
-    BottomNavItem("Terminal", Icons.Filled.Terminal, Icons.Outlined.Terminal, Screen.Terminal.route),
-    BottomNavItem("Files", Icons.Filled.Folder, Icons.Outlined.Folder, Screen.Files.route),
-    BottomNavItem("Settings", Icons.Filled.Settings, Icons.Outlined.Settings, Screen.Settings.route),
+    BottomNavItem(R.string.nav_home, Icons.Filled.Home, Icons.Outlined.Home, Screen.Dashboard.route),
+    BottomNavItem(R.string.nav_editor, Icons.Filled.Edit, Icons.Outlined.Edit, Screen.Editor.route),
+    BottomNavItem(R.string.nav_terminal, Icons.Filled.Terminal, Icons.Outlined.Terminal, Screen.Terminal.route),
+    BottomNavItem(R.string.nav_files, Icons.Filled.Folder, Icons.Outlined.Folder, Screen.Files.route),
+    BottomNavItem(R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings, Screen.Settings.route),
 )

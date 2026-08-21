@@ -11,17 +11,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hinohara.aurastudio.R
 import com.hinohara.aurastudio.ui.theme.*
 
 @Composable
 fun TerminalScreen(initialCommand: String? = null) {
     var input by remember { mutableStateOf(initialCommand ?: "") }
-    var output by remember { mutableStateOf("Welcome to Aura Studio Terminal\n") }
+    var output by remember { mutableStateOf("${stringResource(R.string.terminal_title)}\n") }
 
     LaunchedEffect(initialCommand) {
         if (initialCommand != null) {
@@ -34,7 +36,6 @@ fun TerminalScreen(initialCommand: String? = null) {
             .fillMaxSize()
             .background(TerminalBg)
     ) {
-        // Output area
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -51,7 +52,6 @@ fun TerminalScreen(initialCommand: String? = null) {
             )
         }
 
-        // Input bar
         Surface(color = DarkSurface) {
             Row(
                 modifier = Modifier
@@ -96,7 +96,7 @@ fun TerminalScreen(initialCommand: String? = null) {
                         input = ""
                     }
                 }) {
-                    Icon(Icons.Filled.Send, "Send", tint = TerminalGreen)
+                    Icon(Icons.Filled.Send, stringResource(R.string.terminal_title), tint = TerminalGreen)
                 }
             }
         }

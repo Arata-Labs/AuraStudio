@@ -45,13 +45,16 @@ private val DarkColorScheme = darkColorScheme(
     onTertiary = Color(0xFF380052),
     tertiaryContainer = Purple40,
     onTertiaryContainer = Purple90,
-    background = Color(0xFF1C1B1F),
+    background = Color(0xFF111118),
     onBackground = Color(0xFFE6E1E5),
-    surface = Color(0xFF1C1B1F),
+    surface = Color(0xFF1A1A24),
     onSurface = Color(0xFFE6E1E5),
-    surfaceVariant = Color(0xFF49454F),
+    surfaceVariant = Color(0xFF252536),
     onSurfaceVariant = Color(0xFFCAC4D0),
     outline = Color(0xFF938F99),
+    surfaceContainer = Color(0xFF1E1E2A),
+    surfaceContainerLow = Color(0xFF181820),
+    surfaceContainerHigh = Color(0xFF262638),
 )
 
 @Composable

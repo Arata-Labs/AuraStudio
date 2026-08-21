@@ -1,4 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Aura Studio</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_tagline">Build Android, Anywhere</string>
+    <string name="dashboard_health_title">Environment Health</string>
+    <string name="dashboard_health_score_format">%1$d</string>
+    <string name="dashboard_health_score_max">/ 100</string>
+
+    <!-- Health Status -->
+    <string name="health_excellent">Excellent</string>
+    <string name="health_good">Good</string>
+    <string name="health_fair">Fair</string>
+    <string name="health_needs_attention">Needs Attention</string>
+    <string name="health_critical">Critical</string>
+
+    <string name="health_desc_all_operational">All systems operational</string>
+    <string name="health_desc_some_missing">Some components need setup</string>
+    <string name="health_desc_partially_configured">Environment partially configured</string>
+    <string name="health_desc_run_setup">Run setup to get started</string>
+
+    <!-- Status Pills -->
+    <string name="component_java">Java</string>
+    <string name="component_gradle">Gradle</string>
+    <string name="component_sdk">SDK</string>
+    <string name="component_aapt2">AAPT2</string>
+
+    <!-- Quick Actions -->
+    <string name="action_setup">Setup</string>
+    <string name="action_setup_desc">Initialize env</string>
+    <string name="action_install_sdk">Install SDK</string>
+    <string name="action_install_sdk_desc">Platforms &amp; tools</string>
+    <string name="action_doctor">Doctor</string>
+    <string name="action_doctor_desc">Health checks</string>
+    <string name="action_status">Status</string>
+    <string name="action_status_desc">View details</string>
+
+    <!-- Environment Card -->
+    <string name="env_title">Environment Components</string>
+    <string name="env_platforms">Platforms</string>
+    <string name="env_build_tools">Build-Tools</string>
+    <string name="env_ndk">NDK</string>
+    <string name="env_not_installed">Not installed</string>
+
+    <!-- Recent Projects -->
+    <string name="projects_title">Recent Projects</string>
+    <string name="projects_empty">No projects yet</string>
+    <string name="projects_empty_hint">Run \'aurastudio init\' to create your first project</string>
+
+    <!-- Installed Components -->
+    <string name="installed_title">Installed Components</string>
+    <string name="installed_platforms">Android Platforms</string>
+    <string name="installed_ndk">NDK Versions</string>
+    <string name="installed_empty">No components installed</string>
+
+    <!-- Editor -->
+    <string name="editor_title">Code Editor</string>
+    <string name="editor_no_file">No file open</string>
+    <string name="editor_no_file_hint">Open a file from the Files tab</string>
+
+    <!-- File Explorer -->
+    <string name="file_explorer_title">File Explorer</string>
+
+    <!-- Terminal -->
+    <string name="terminal_title">Terminal</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_editor">Editor</string>
+    <string name="nav_terminal">Terminal</string>
+    <string name="nav_files">Files</string>
+    <string name="nav_settings">Settings</string>
 </resources>

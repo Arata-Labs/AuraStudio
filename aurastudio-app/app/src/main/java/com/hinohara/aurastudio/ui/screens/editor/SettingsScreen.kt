@@ -6,9 +6,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
+import com.hinohara.aurastudio.R
 import com.hinohara.aurastudio.ui.theme.*
 
 @Composable
@@ -20,7 +22,7 @@ fun SettingsScreen() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Settings",
+            text = stringResource(R.string.settings_title),
             color = DarkOnSurfaceVariant,
             style = TextStyle(
                 fontFamily = FontFamily.Monospace,
