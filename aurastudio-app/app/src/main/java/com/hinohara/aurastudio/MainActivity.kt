@@ -19,9 +19,8 @@ import com.hinohara.aurastudio.data.viewmodel.DashboardViewModel
 import com.hinohara.aurastudio.ui.navigation.Screen
 import com.hinohara.aurastudio.ui.navigation.bottomNavItems
 import com.hinohara.aurastudio.ui.screens.dashboard.DashboardScreen
-import com.hinohara.aurastudio.ui.screens.editor.EditorScreen
-import com.hinohara.aurastudio.ui.screens.editor.FileExplorerScreen
-import com.hinohara.aurastudio.ui.screens.editor.SettingsScreen
+import com.hinohara.aurastudio.ui.screens.projects.CreateProjectScreen
+import com.hinohara.aurastudio.ui.screens.projects.ProjectsScreen
 import com.hinohara.aurastudio.ui.screens.terminal.TerminalScreen
 import com.hinohara.aurastudio.ui.theme.AuraStudioTheme
 
@@ -107,23 +106,28 @@ fun AuraStudioApp(
                         terminalCommand = cmd
                         navController.navigate(Screen.Terminal.route)
                     },
-                    onNavigateToEditor = {
-                        navController.navigate(Screen.Editor.route)
-                    },
+                    onNavigateToEditor = {},
                     onOpenProject = { /* TODO: open project */ }
                 )
             }
-            composable(Screen.Editor.route) {
-                EditorScreen()
+            composable(Screen.Projects.route) {
+                ProjectsScreen(
+                    onOpenProject = { /* TODO: open project */ }
+                )
+            }
+            composable(Screen.CreateProject.route) {
+                CreateProjectScreen(
+                    onCreateProject = { name, type, path ->
+                        // TODO: create project via aurastudio init
+                        navController.navigate(Screen.Projects.route)
+                    }
+                )
             }
             composable(Screen.Terminal.route) {
                 TerminalScreen(initialCommand = terminalCommand)
             }
-            composable(Screen.Files.route) {
-                FileExplorerScreen()
-            }
             composable(Screen.Settings.route) {
-                SettingsScreen()
+                com.hinohara.aurastudio.ui.screens.editor.SettingsScreen()
             }
         }
     }

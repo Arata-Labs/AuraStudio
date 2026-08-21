@@ -70,8 +70,25 @@
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
-    <string name="nav_editor">Editor</string>
+    <string name="nav_projects">Projects</string>
+    <string name="nav_create_project">Create</string>
     <string name="nav_terminal">Terminal</string>
-    <string name="nav_files">Files</string>
     <string name="nav_settings">Settings</string>
+
+    <!-- Projects Screen -->
+    <string name="projects_screen_title">My Projects</string>
+    <string name="projects_screen_empty">No projects yet</string>
+    <string name="projects_screen_empty_hint">Tap Create to start your first project</string>
+
+    <!-- Create Project Screen -->
+    <string name="create_project_title">Create Project</string>
+    <string name="create_project_name_label">Project Name</string>
+    <string name="create_project_name_hint">my_awesome_app</string>
+    <string name="create_project_type_label">Project Type</string>
+    <string name="create_project_path_label">Location</string>
+    <string name="create_project_btn">Create Project</string>
+    <string name="create_project_type_gradle_java">Gradle + Java</string>
+    <string name="create_project_type_gradle_kotlin">Gradle + Kotlin</string>
+    <string name="create_project_type_native_cpp">Native C++</string>
+    <string name="create_project_type_ndk">NDK Shared Lib</string>
 </resources>
