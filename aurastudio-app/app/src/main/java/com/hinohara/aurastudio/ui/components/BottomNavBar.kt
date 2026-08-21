@@ -122,7 +122,7 @@ private fun FloatingNavigationItem(
             .clip(CircleShape)
             .clickable(
                 interactionSource = interactionSource,
-                indication = ripple(bounded = true, radius = 28.dp),
+                indication = null,
                 onClick = onClick
             )
             .padding(vertical = 3.dp),
