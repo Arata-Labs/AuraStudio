@@ -22,8 +22,9 @@ import com.hinohara.aurastudio.ui.theme.*
 
 @Composable
 fun TerminalScreen(initialCommand: String? = null) {
+    val welcomeMessage = stringResource(R.string.terminal_title)
     var input by remember { mutableStateOf(initialCommand ?: "") }
-    var output by remember { mutableStateOf("${stringResource(R.string.terminal_title)}\n") }
+    var output by remember { mutableStateOf("$welcomeMessage\n") }
 
     LaunchedEffect(initialCommand) {
         if (initialCommand != null) {
