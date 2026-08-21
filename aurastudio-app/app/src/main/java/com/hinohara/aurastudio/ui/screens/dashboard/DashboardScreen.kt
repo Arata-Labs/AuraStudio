@@ -1,6 +1,6 @@
 package com.hinohara.aurastudio.ui.screens.dashboard
 
-import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,9 +16,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hinohara.aurastudio.data.models.*
 import com.hinohara.aurastudio.data.viewmodel.DashboardViewModel
 import com.hinohara.aurastudio.ui.theme.*
@@ -39,25 +46,22 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(vertical = 16.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        contentPadding = PaddingValues(vertical = 24.dp)
     ) {
         // Header
         item {
-            DashboardHeader(status)
+            DashboardHeader()
         }
 
-        // Health Score Card
+        // Health Score Banner
         item {
-            HealthScoreCard(status.healthScore)
+            HealthBanner(score = status.healthScore, status = status)
         }
 
-        // Quick Actions
+        // Quick Actions Grid
         item {
-            SectionTitle("Quick Actions")
-        }
-        item {
-            QuickActionsRow(
+            QuickActionsGrid(
                 onSetup = { onNavigateToTerminal("aurastudio setup") },
                 onInstallSdk = { onNavigateToTerminal("aurastudio install sdk") },
                 onDoctor = { onNavigateToTerminal("aurastudio doctor") },
@@ -65,48 +69,27 @@ fun DashboardScreen(
             )
         }
 
-        // Environment Status
+        // Environment Components Card
         item {
-            SectionTitle("Environment")
-        }
-        item {
-            EnvironmentStatusCard(status)
+            EnvironmentCard(status)
         }
 
-        // Recent Projects
+        // Recent Projects Card
         item {
-            SectionTitle("Recent Projects")
+            RecentProjectsCard(
+                projects = recentProjects,
+                onOpenProject = onOpenProject
+            )
         }
-        if (recentProjects.isEmpty()) {
+
+        // Installed Components
+        if (status.platforms.isNotEmpty() || status.ndk.isNotEmpty()) {
             item {
-                EmptyProjectsCard()
-            }
-        } else {
-            items(recentProjects) { project ->
-                ProjectCard(
-                    project = project,
-                    onClick = { onOpenProject(project.path) }
+                InstalledComponentsCard(
+                    platforms = status.platforms,
+                    ndk = status.ndk,
+                    buildTools = status.buildTools
                 )
-            }
-        }
-
-        // Installed Platforms
-        if (status.platforms.isNotEmpty()) {
-            item {
-                SectionTitle("Installed Platforms")
-            }
-            item {
-                InstalledChips(status.platforms, MaterialTheme.colorScheme.primaryContainer)
-            }
-        }
-
-        // Installed NDK
-        if (status.ndk.isNotEmpty()) {
-            item {
-                SectionTitle("Installed NDK")
-            }
-            item {
-                InstalledChips(status.ndk, MaterialTheme.colorScheme.tertiaryContainer)
             }
         }
 
@@ -115,247 +98,565 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun DashboardHeader(status: EnvironmentStatus) {
+private fun DashboardHeader() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 8.dp)
     ) {
-        Text(
-            text = "Aura Studio",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Text(
-            text = "Build Android, Anywhere",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun HealthScoreCard(score: Int) {
-    val color = when {
-        score >= 80 -> Green40
-        score >= 50 -> Amber40
-        else -> Red40
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        shape = RoundedCornerShape(24.dp)
-    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Score ring
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                    .size(48.dp)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(GradientStart, GradientEnd)
+                        ),
+                        shape = RoundedCornerShape(14.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
+                Icon(
+                    Icons.Filled.Code,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column {
                 Text(
-                    text = "$score",
+                    text = "Aura Studio",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Environment Health",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = when {
-                        score >= 80 -> "All systems operational"
-                        score >= 50 -> "Some components missing"
-                        else -> "Setup required"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    text = "Build Android, Anywhere",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Icon(
-                Icons.Filled.Psychology,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
         }
     }
 }
 
 @Composable
-private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onBackground
-    )
+private fun HealthBanner(score: Int, status: EnvironmentStatus) {
+    val gradient = when {
+        score >= 80 -> Brush.linearGradient(
+            colors = listOf(GradientHealthyStart, GradientHealthyEnd),
+            start = Offset(0f, 0f),
+            end = Offset(1000f, 1000f)
+        )
+        score >= 50 -> Brush.linearGradient(
+            colors = listOf(GradientWarningStart, GradientWarningEnd),
+            start = Offset(0f, 0f),
+            end = Offset(1000f, 1000f)
+        )
+        else -> Brush.linearGradient(
+            colors = listOf(GradientCriticalStart, GradientCriticalEnd),
+            start = Offset(0f, 0f),
+            end = Offset(1000f, 1000f)
+        )
+    }
+
+    val statusText = when {
+        score >= 90 -> "Excellent"
+        score >= 80 -> "Good"
+        score >= 60 -> "Fair"
+        score >= 40 -> "Needs Attention"
+        else -> "Critical"
+    }
+
+    val statusDescription = when {
+        score >= 80 -> "All systems operational"
+        score >= 50 -> "Some components need setup"
+        score >= 30 -> "Environment partially configured"
+        else -> "Run setup to get started"
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 12.dp,
+                shape = RoundedCornerShape(24.dp),
+                ambientColor = if (score >= 80) Green40 else if (score >= 50) Amber40 else Red40
+            ),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(gradient)
+                .padding(24.dp)
+        ) {
+            Column {
+                // Top section with score and status
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Animated circular progress
+                    Box(
+                        modifier = Modifier.size(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val progress by animateFloatAsState(
+                            targetValue = score / 100f,
+                            animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+                            label = "progress"
+                        )
+
+                        CircularProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxSize(),
+                            color = Color.White.copy(alpha = 0.3f),
+                            trackColor = Color.Transparent,
+                            strokeWidth = 8.dp,
+                            strokeCap = StrokeCap.Round
+                        )
+
+                        CircularProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxSize(),
+                            color = Color.White,
+                            trackColor = Color.Transparent,
+                            strokeWidth = 8.dp,
+                            strokeCap = StrokeCap.Round
+                        )
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "$score",
+                                style = MaterialTheme.typography.displaySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                lineHeight = 32.sp
+                            )
+                            Text(
+                                text = "/ 100",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Environment Health",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White.copy(alpha = 0.95f)
+                        )
+                        Text(
+                            text = statusDescription,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Quick status pills
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val components = listOf(
+                        Triple("Java", status.java.isInstalled, Icons.Filled.Coffee),
+                        Triple("Gradle", status.gradle.isInstalled, Icons.Filled.Build),
+                        Triple("SDK", status.cmdlineTools.isInstalled, Icons.Filled.PhoneAndroid),
+                        Triple("AAPT2", status.aapt2.isInstalled, Icons.Filled.Settings)
+                    )
+
+                    components.forEach { (name, installed, icon) ->
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color.White.copy(alpha = if (installed) 0.25f else 0.1f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = if (installed) Color.White else Color.White.copy(alpha = 0.5f)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (installed) Color.White else Color.White.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
-private fun QuickActionsRow(
+private fun QuickActionsGrid(
     onSetup: () -> Unit,
     onInstallSdk: () -> Unit,
     onDoctor: () -> Unit,
     onStatus: () -> Unit
 ) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            QuickActionChip(
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            QuickActionCard(
+                modifier = Modifier.weight(1f),
                 icon = Icons.Filled.Rocket,
                 label = "Setup",
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                description = "Initialize env",
+                gradient = Brush.linearGradient(listOf(Indigo40, Purple40)),
                 onClick = onSetup
             )
-        }
-        item {
-            QuickActionChip(
+            QuickActionCard(
+                modifier = Modifier.weight(1f),
                 icon = Icons.Filled.Download,
                 label = "Install SDK",
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                description = "Platforms & tools",
+                gradient = Brush.linearGradient(listOf(Cyan40, Indigo40)),
                 onClick = onInstallSdk
             )
         }
-        item {
-            QuickActionChip(
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            QuickActionCard(
+                modifier = Modifier.weight(1f),
                 icon = Icons.Filled.MedicalServices,
                 label = "Doctor",
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                description = "Health checks",
+                gradient = Brush.linearGradient(listOf(Green40, Cyan40)),
                 onClick = onDoctor
             )
-        }
-        item {
-            QuickActionChip(
+            QuickActionCard(
+                modifier = Modifier.weight(1f),
                 icon = Icons.Filled.BarChart,
                 label = "Status",
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                description = "View details",
+                gradient = Brush.linearGradient(listOf(Amber40, Red40)),
                 onClick = onStatus
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun QuickActionChip(
+private fun QuickActionCard(
+    modifier: Modifier = Modifier,
     icon: ImageVector,
     label: String,
-    containerColor: androidx.compose.ui.graphics.Color,
-    contentColor: androidx.compose.ui.graphics.Color,
+    description: String,
+    gradient: Brush,
     onClick: () -> Unit
 ) {
-    AssistChip(
-        onClick = onClick,
-        label = {
-            Text(
-                text = label,
-                color = contentColor,
-                style = MaterialTheme.typography.labelLarge
-            )
-        },
-        leadingIcon = {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = contentColor
-            )
-        },
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = containerColor
-        ),
-        shape = RoundedCornerShape(16.dp)
-    )
-}
-
-@Composable
-private fun EnvironmentStatusCard(status: EnvironmentStatus) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        shape = RoundedCornerShape(20.dp)
+        onClick = onClick,
+        modifier = modifier
+            .height(88.dp)
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(20.dp),
+                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            ),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            StatusRow("Java", status.java.version, status.java.isInstalled)
-            StatusRow("Gradle", status.gradle.version, status.gradle.isInstalled)
-            StatusRow("AAPT2", status.aapt2.version, status.aapt2.isInstalled)
-            StatusRow("cmdline-tools", status.cmdlineTools.version, status.cmdlineTools.isInstalled)
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            StatusRow("Platforms", "${status.platforms.size} installed", status.platforms.isNotEmpty())
-            StatusRow("Build-Tools", "${status.buildTools.size} installed", status.buildTools.isNotEmpty())
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(gradient, RoundedCornerShape(14.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun StatusRow(label: String, value: String?, isInstalled: Boolean) {
+private fun EnvironmentCard(status: EnvironmentStatus) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+            ),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Filled.Memory,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Environment Components",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            EnvironmentItem("Java", status.java.version, status.java.isInstalled)
+            EnvironmentItem("Gradle", status.gradle.version, status.gradle.isInstalled)
+            EnvironmentItem("AAPT2", status.aapt2.version, status.aapt2.isInstalled)
+            EnvironmentItem("cmdline-tools", status.cmdlineTools.version, status.cmdlineTools.isInstalled)
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 12.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                StatChip(
+                    label = "Platforms",
+                    count = status.platforms.size,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                StatChip(
+                    label = "Build-Tools",
+                    count = status.buildTools.size,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                StatChip(
+                    label = "NDK",
+                    count = status.ndk.size,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EnvironmentItem(name: String, version: String?, isInstalled: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            if (isInstalled) Icons.Filled.CheckCircle else Icons.Filled.Cancel,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = if (isInstalled) Green40 else Red40
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(
+                    color = if (isInstalled) Green40 else MaterialTheme.colorScheme.error,
+                    shape = CircleShape
+                )
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
-            text = label,
+            text = name,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = if (isInstalled) Green40.copy(alpha = 0.1f) else MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+        ) {
+            Text(
+                text = version ?: "Not installed",
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = if (isInstalled) Green40 else MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatChip(label: String, count: Int, color: Color) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
-            text = value ?: "Not installed",
-            style = MaterialTheme.typography.bodySmall,
-            color = if (isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
+            text = "$count",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
 @Composable
-private fun ProjectCard(project: Project, onClick: () -> Unit) {
-    OutlinedCard(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp)
+private fun RecentProjectsCard(
+    projects: List<Project>,
+    onOpenProject: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+            ),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Filled.Folder,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Recent Projects",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (projects.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        Icons.Outlined.FolderOpen,
+                        contentDescription = null,
+                        modifier = Modifier.size(56.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "No projects yet",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Run 'aurastudio init' to create your first project",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                projects.forEach { project ->
+                    ProjectRow(
+                        project = project,
+                        onClick = { onOpenProject(project.path) }
+                    )
+                    if (project != projects.last()) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectRow(project: Project, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .size(44.dp)
+                .background(
+                    MaterialTheme.colorScheme.primaryContainer,
+                    RoundedCornerShape(12.dp)
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 when (project.type) {
@@ -365,85 +666,131 @@ private fun ProjectCard(project: Project, onClick: () -> Unit) {
                     ProjectType.NDK_SHARED_LIB -> Icons.Filled.Layers
                 },
                 contentDescription = null,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(22.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = project.name,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = project.path.substringBeforeLast("/"),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+        Icon(
+            Icons.Filled.ChevronRight,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        )
+    }
+}
+
+@Composable
+private fun InstalledComponentsCard(
+    platforms: List<String>,
+    ndk: List<String>,
+    buildTools: List<String>
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+            ),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Filled Inventory2,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = project.name,
-                    style = MaterialTheme.typography.titleSmall,
+                    text = "Installed Components",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (platforms.isNotEmpty()) {
                 Text(
-                    text = project.path.substringAfterLast("/"),
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "Android Platforms",
+                    style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(platforms) { platform ->
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Text(
+                                text = platform,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
             }
-            Icon(
-                Icons.Filled.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
 
-@Composable
-private fun EmptyProjectsCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                Icons.Outlined.FolderOpen,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "No projects yet",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "Run 'aurastudio init' to create one",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-            )
-        }
-    }
-}
+            if (ndk.isNotEmpty()) {
+                Text(
+                    text = "NDK Versions",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(ndk) { ndkVersion ->
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.tertiaryContainer
+                        ) {
+                            Text(
+                                text = ndkVersion,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
+                }
+            }
 
-@Composable
-private fun InstalledChips(items: List<String>, containerColor: androidx.compose.ui.graphics.Color) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(items) { item ->
-            SuggestionChip(
-                onClick = {},
-                label = {
-                    Text(
-                        text = item,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                },
-                colors = SuggestionChipDefaults.suggestionChipColors(
-                    containerColor = containerColor
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
+            if (platforms.isEmpty() && ndk.isEmpty()) {
+                Text(
+                    text = "No components installed",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
         }
     }
 }

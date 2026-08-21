@@ -28,6 +28,22 @@ val Red80 = Color(0xFFFCA5A5)
 val DarkOnSurfaceVariant = Color(0xFFCAC4D0)
 val DarkSurface = Color(0xFF1C1B1F)
 
+// Gradient Colors
+val GradientStart = Color(0xFF6366F1)
+val GradientMid = Color(0xFF8B5CF6)
+val GradientEnd = Color(0xFFA855F7)
+val GradientHealthyStart = Color(0xFF16A34A)
+val GradientHealthyEnd = Color(0xFF22D3EE)
+val GradientWarningStart = Color(0xFFF59E0B)
+val GradientWarningEnd = Color(0xFFEF4444)
+val GradientCriticalStart = Color(0xFFEF4444)
+val GradientCriticalEnd = Color(0xFFDC2626)
+
+// Card Background Colors
+val CardDark = Color(0xFF1E1E2E)
+val CardSurface = Color(0xFF252536)
+val CardSurfaceLight = Color(0xFF2D2D44)
+
 // Terminal Colors
 val TerminalBg = Color(0xFF0D1117)
 val TerminalFg = Color(0xFFC9D1D9)
