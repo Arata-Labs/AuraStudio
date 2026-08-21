@@ -3,13 +3,13 @@
 ```text
   ╭──────────────────────────────────────────────────────────────╮
   │                                                              │
-  │    ⚡  AuraStudio CLI  v1.1                                  │
+  │    ⚡  AuraStudio CLI  v1.2                                  │
   │        Build Android, Anywhere                               │
   │                                                              │
   ╰──────────────────────────────────────────────────────────────╯
 ```
 
-# ⚡ AuraStudio CLI v1.1
+# ⚡ AuraStudio CLI v1.2
 
 **Turn your Android device into a full-fledged native Android development environment.**
 
@@ -35,8 +35,9 @@ Designed with truecolor RGB palettes, smooth background job spinners, and resili
 
 ## ✨ Features
 
-- 🚀 **Automated Environment Bootstrap**: Configures OpenJDK 21, Gradle, `cmdline-tools`, and accepts Android SDK licenses in one command.
+- 🚀 **Smart Setup with Status Dashboard**: Shows installed components with versions before setup, skips already installed, optional NDK/CMake at the end.
 - 📦 **Custom NDK & CMake Manager**: Integrates pre-built `aarch64-linux-musl` toolchains (NDK r26d through r30 beta2) to bypass glibc compatibility issues in Termux.
+- 🔧 **Standalone AAPT2 + Global Override**: Installs standalone `aapt2` from Termux packages and auto-configures `~/.gradle/gradle.properties` to avoid Gradle bundled aapt2 syntax errors.
 - ⚡ **Multi-Threaded Download Acceleration**: Automatically utilizes `aria2c` (16 connections) with seamless fallback to `curl` with resume capability (`-C -`).
 - 📁 **Modular System Architecture**: Code base cleanly divided into core configurations, UI libraries, system helpers, and modular command handlers.
 - 🔒 **XDG-Compliant Configuration**: Follows XDG Base Directory specification with configs in `~/.config/aurastudio/`, data in `~/.local/share/aurastudio/`, and cache in `~/.cache/aurastudio/`.
@@ -72,7 +73,7 @@ The installer will:
 1. Download the latest `.deb` package from [GitHub Releases](https://github.com/Arata-Labs/AuraStudio/releases/latest).
 2. Install it using Termux package manager:
    ```bash
-   pkg install ./aurastudio_1.1_all.deb
+   pkg install ./aurastudio_1.2_all.deb
    ```
 
 ---
@@ -96,7 +97,7 @@ source ~/.config/aurastudio/env.sh
 
 | Command | Arguments | Description |
 | :--- | :--- | :--- |
-| `aurastudio setup` | - | Full automated environment setup (Java 21, Gradle, SDK Manager, API 37/Custom). |
+| `aurastudio setup` | - | Smart environment setup with status dashboard, skip existing, optional NDK/CMake. |
 | `aurastudio install sdk` | `[platform <API>] [buildtools <ver>]` | Interactive or direct CLI installation for Android Platforms & Build-Tools. |
 | `aurastudio install ndk` | - | Interactive selector to install custom Native NDK versions (r26d - r30). |
 | `aurastudio install cmake` | - | Interactive selector to install native CMake binaries (3.10.2 - 4.1.2). |
@@ -170,8 +171,8 @@ chmod +x build_deb.sh
 ./build_deb.sh
 ```
 The output file and its SHA256 checksum will be generated inside the `dist/` directory:
-- `dist/aurastudio_1.1_all.deb`
-- `dist/aurastudio_1.1_all.deb.sha256`
+- `dist/aurastudio_1.2_all.deb`
+- `dist/aurastudio_1.2_all.deb.sha256`
 
 ### CI/CD Pipeline:
 When you push a version tag (`v*`), GitHub Actions automatically:

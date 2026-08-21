@@ -1,7 +1,7 @@
 # AuraStudio CLI
 
 ## Project Overview
-AuraStudio CLI v1.1 is a Bash-based command-line tool suite for Android development in Termux on Android. It automates installation and configuration of development toolchains (OpenJDK 21, Gradle, Android SDK, custom NDK aarch64-linux-musl, CMake).
+AuraStudio CLI v1.2 is a Bash-based command-line tool suite for Android development in Termux on Android. It automates installation and configuration of development toolchains (OpenJDK 21, Gradle, Android SDK, AAPT2, custom NDK aarch64-linux-musl, CMake).
 
 ## Language & Stack
 - **Primary Language:** Bash (shell scripts)
@@ -81,7 +81,7 @@ aurastudio/
 
 | Command | Handler Function | Description |
 |---------|------------------|-------------|
-| `aurastudio setup` | `cmd_setup` | Full environment setup (Java, Gradle, SDK) |
+| `aurastudio setup` | `cmd_setup` | Smart environment setup with status dashboard, skip existing, optional NDK/CMake |
 | `aurastudio install sdk` | `cmd_install_sdk` | Install Android SDK platforms/build-tools |
 | `aurastudio install ndk` | `cmd_install_ndk` | Install custom NDK versions |
 | `aurastudio install cmake` | `cmd_install_cmake` | Install CMake versions |
@@ -105,6 +105,7 @@ aurastudio/
 - **SDK Directory:** `$HOME/android-sdk`
 - **NDK Directory:** `$HOME/android-sdk/ndk`
 - **CMake Directory:** `$HOME/android-sdk/cmake`
+- **AAPT2 Global Override:** `~/.gradle/gradle.properties` (auto-configured during setup)
 - **Environment File:** `~/.config/aurastudio/env.sh` (XDG-compliant)
 - **Config Directory:** `~/.config/aurastudio/`
 - **Plugins Directory:** `~/.config/aurastudio/plugins/`
