@@ -19,13 +19,14 @@ data class NavItem(
     @StringRes val labelRes: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
-    val route: String
+    val route: String,
+    val isCreateButton: Boolean = false
 )
 
 val bottomNavItems = listOf(
     NavItem(R.string.nav_home, Icons.Filled.Home, Icons.Outlined.Home, Screen.Dashboard.route),
     NavItem(R.string.nav_projects, Icons.Filled.Folder, Icons.Outlined.Folder, Screen.Projects.route),
-    NavItem(R.string.nav_create_project, Icons.Filled.AddCircle, Icons.Outlined.AddCircle, Screen.CreateProject.route),
+    NavItem(R.string.nav_create_project, Icons.Filled.AddCircle, Icons.Outlined.AddCircle, Screen.CreateProject.route, isCreateButton = true),
     NavItem(R.string.nav_terminal, Icons.Filled.Terminal, Icons.Outlined.Terminal, Screen.Terminal.route),
     NavItem(R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings, Screen.Settings.route),
 )

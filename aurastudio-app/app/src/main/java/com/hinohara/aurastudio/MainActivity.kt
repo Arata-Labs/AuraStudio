@@ -67,7 +67,8 @@ fun AuraStudioApp(
             label = stringResource(it.labelRes),
             selectedIcon = it.selectedIcon,
             unselectedIcon = it.unselectedIcon,
-            route = it.route
+            route = it.route,
+            isCreateButton = it.isCreateButton
         )
     }
 
