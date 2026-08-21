@@ -13,6 +13,17 @@ AuraStudio CLI v1.2 is a Bash-based command-line tool suite for Android developm
 ```
 aurastudio/
 ├── aurastudio              # Main CLI entry point & command router
+├── aurastudio-app/         # Android GUI app (Kotlin + Jetpack Compose)
+│   ├── app/src/main/java/com/aurastudio/app/
+│   │   ├── MainActivity.kt
+│   │   ├── data/models/Models.kt
+│   │   ├── data/viewmodel/MainViewModel.kt
+│   │   ├── ui/components/Components.kt
+│   │   ├── ui/screens/terminal/TerminalScreen.kt
+│   │   ├── ui/screens/editor/EditorScreen.kt
+│   │   ├── ui/screens/editor/FileExplorerScreen.kt
+│   │   └── ui/theme/{Color,Theme,Type}.kt
+│   └── build.gradle.kts
 ├── install.sh              # Web installer script
 ├── build_deb.sh            # Debian package builder
 ├── config/
