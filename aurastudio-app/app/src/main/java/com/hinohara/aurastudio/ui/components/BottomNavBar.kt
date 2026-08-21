@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -30,7 +31,15 @@ fun ModernBottomNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.Black.copy(alpha = 0.6f))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Black.copy(alpha = 0.0f),
+                        Color.Black.copy(alpha = 0.3f),
+                        Color.Black.copy(alpha = 0.5f)
+                    )
+                )
+            )
             .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 20.dp)
     ) {
         Surface(
