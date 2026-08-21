@@ -17,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.hinohara.aurastudio.data.viewmodel.DashboardViewModel
+import com.hinohara.aurastudio.ui.components.AuraStudioTopBar
 import com.hinohara.aurastudio.ui.components.ModernBottomNavBar
 import com.hinohara.aurastudio.ui.navigation.Screen
 import com.hinohara.aurastudio.ui.navigation.bottomNavItems
@@ -75,17 +76,7 @@ fun AuraStudioApp(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+            AuraStudioTopBar()
         },
         bottomBar = {
             ModernBottomNavBar(
