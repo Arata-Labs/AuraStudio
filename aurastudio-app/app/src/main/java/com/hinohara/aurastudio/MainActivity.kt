@@ -88,9 +88,12 @@ fun AuraStudioApp(
         NavHost(
             navController = navController,
             startDestination = Screen.Dashboard.route,
-            modifier = Modifier.padding(
-                top = padding.calculateTopPadding()
-            )
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    top = padding.calculateTopPadding(),
+                    bottom = padding.calculateBottomPadding()
+                )
         ) {
             composable(Screen.Dashboard.route) {
                 DashboardScreen(

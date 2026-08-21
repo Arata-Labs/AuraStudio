@@ -49,7 +49,10 @@ fun DashboardScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
-        contentPadding = PaddingValues(vertical = 24.dp)
+        contentPadding = PaddingValues(
+            top = 12.dp,
+            bottom = 24.dp
+        )
     ) {
         item {
             HealthBanner(score = status.healthScore, status = status)
@@ -85,7 +88,7 @@ fun DashboardScreen(
             }
         }
 
-        item { Spacer(modifier = Modifier.height(80.dp)) }
+        item { Spacer(modifier = Modifier.height(8.dp)) }
     }
 }
 
