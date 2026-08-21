@@ -88,20 +88,20 @@ _show_status_summary() {
     fi
 
     # Print status table
-    _status_line "Java OpenJDK" "$java_ver" "openjdk-21"
-    _status_line "Gradle" "$gradle_ver" "gradle"
-    _status_line "AAPT2" "$aapt2_ver" "aapt2"
-    _status_line "cmdline-tools" "$cmdtools_ver" ""
-    _status_line "Platforms" "${platforms_str:-none}" ""
-    _status_line "Build-Tools" "${buildtools_str:-none}" ""
-    _status_line "NDK" "${ndk_str:-none}" ""
-    _status_line "CMake" "${cmake_str:-none}" ""
+    _status_line "Java OpenJDK" "$java_ver"
+    _status_line "Gradle" "$gradle_ver"
+    _status_line "AAPT2" "$aapt2_ver"
+    _status_line "cmdline-tools" "$cmdtools_ver"
+    _status_line "Platforms" "${platforms_str:-none}"
+    _status_line "Build-Tools" "${buildtools_str:-none}"
+    _status_line "NDK" "${ndk_str:-none}"
+    _status_line "CMake" "${cmake_str:-none}"
 
     echo ""
 }
 
 _status_line() {
-    local label="$1" value="$2" pkg="$3"
+    local label="$1" value="$2"
     if [ -n "$value" ]; then
         printf "  %b✔%b %-20s %b%s%b\n" "$GREEN" "$RESET" "$label" "$DIM" "$value" "$RESET"
     else
