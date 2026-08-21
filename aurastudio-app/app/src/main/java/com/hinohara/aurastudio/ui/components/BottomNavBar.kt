@@ -1,18 +1,21 @@
 package com.hinohara.aurastudio.ui.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,11 +36,14 @@ fun ModernBottomNavBar(
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val regularItems = items.filter { !it.isCreateButton }
+    val createItem = items.find { it.isCreateButton }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         Surface(
@@ -45,18 +51,15 @@ fun ModernBottomNavBar(
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),
             shadowElevation = 8.dp,
-            modifier = Modifier.height(58.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 8.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val regularItems = items.filter { !it.isCreateButton }
-                val createItem = items.find { it.isCreateButton }
-
                 regularItems.take(2).forEach { item ->
                     NavItemView(
                         item = item,
@@ -68,30 +71,6 @@ fun ModernBottomNavBar(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                if (createItem != null) {
-                    Box(
-                        modifier = Modifier.offset(y = (-12).dp)
-                    ) {
-                        FloatingActionButton(
-                            onClick = { onItemClick(createItem.route) },
-                            shape = CircleShape,
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(48.dp),
-                            elevation = FloatingActionButtonDefaults.elevation(
-                                defaultElevation = 6.dp,
-                                pressedElevation = 8.dp
-                            )
-                        ) {
-                            Icon(
-                                imageVector = createItem.selectedIcon,
-                                contentDescription = createItem.label,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                }
-
                 regularItems.drop(2).forEach { item ->
                     NavItemView(
                         item = item,
@@ -100,6 +79,43 @@ fun ModernBottomNavBar(
                         modifier = Modifier.weight(1f)
                     )
                 }
+            }
+        }
+
+        if (createItem != null) {
+            val isCreateActive = currentRoute == createItem.route
+            
+            // Smooth Rotation Animation with Spring Physics Effect
+            val rotationAngle by animateFloatAsState(
+                targetValue = if (isCreateActive) 135f else 0f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                ),
+                label = "fab_rotation_animation"
+            )
+
+            FloatingActionButton(
+                onClick = { onItemClick(createItem.route) },
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(y = (-18).dp)
+                    .size(54.dp),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 8.dp,
+                    pressedElevation = 12.dp
+                )
+            ) {
+                Icon(
+                    imageVector = createItem.selectedIcon,
+                    contentDescription = createItem.label,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .rotate(rotationAngle)
+                )
             }
         }
     }
@@ -125,7 +141,7 @@ private fun NavItemView(
                 indication = null,
                 onClick = onClick
             )
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -135,7 +151,7 @@ private fun NavItemView(
             tint = contentColor,
             modifier = Modifier.size(22.dp)
         )
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(1.dp))
         Text(
             text = item.label,
             fontSize = 10.sp,
