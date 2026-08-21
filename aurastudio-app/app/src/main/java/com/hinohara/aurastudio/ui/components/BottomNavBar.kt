@@ -29,15 +29,15 @@ fun ModernBottomNavBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 20.dp)
             .shadow(
                 elevation = 8.dp,
                 shape = RoundedCornerShape(24.dp),
                 ambientColor = Indigo40.copy(alpha = 0.15f)
             ),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 4.dp
+        color = Color(0xFF1A1A24).copy(alpha = 0.85f),
+        tonalElevation = 0.dp
     ) {
         Row(
             modifier = Modifier
