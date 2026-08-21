@@ -718,7 +718,7 @@ private fun InstalledComponentsCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    Icons.Filled Inventory2,
+                    Icons.Filled.Inventory2,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                     tint = MaterialTheme.colorScheme.primary
