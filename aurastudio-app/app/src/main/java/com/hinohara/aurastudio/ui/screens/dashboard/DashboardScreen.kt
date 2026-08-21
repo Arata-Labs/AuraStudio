@@ -434,13 +434,23 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Filled.Memory,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            Brush.linearGradient(listOf(Indigo40, Cyan40)),
+                            RoundedCornerShape(10.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.Memory,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.White
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = stringResource(R.string.env_title),
                     style = MaterialTheme.typography.titleMedium,
@@ -451,47 +461,72 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            EnvironmentItem(
-                name = stringResource(R.string.component_java),
-                version = status.java.version,
-                isInstalled = status.java.isInstalled
-            )
-            EnvironmentItem(
-                name = stringResource(R.string.component_gradle),
-                version = status.gradle.version,
-                isInstalled = status.gradle.isInstalled
-            )
-            EnvironmentItem(
-                name = stringResource(R.string.component_aapt2),
-                version = status.aapt2.version,
-                isInstalled = status.aapt2.isInstalled
-            )
-            EnvironmentItem(
-                name = stringResource(R.string.component_sdk),
-                version = status.cmdlineTools.version,
-                isInstalled = status.cmdlineTools.isInstalled
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 12.dp),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-            )
-
+            // Component grid - 2x2
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                StatChip(
+                ComponentMiniCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Filled.Coffee,
+                    name = stringResource(R.string.component_java),
+                    version = status.java.version,
+                    isInstalled = status.java.isInstalled,
+                    gradient = Brush.linearGradient(listOf(Green40, Cyan40))
+                )
+                ComponentMiniCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Filled.Build,
+                    name = stringResource(R.string.component_gradle),
+                    version = status.gradle.version,
+                    isInstalled = status.gradle.isInstalled,
+                    gradient = Brush.linearGradient(listOf(Indigo40, Purple40))
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                ComponentMiniCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Filled.Settings,
+                    name = stringResource(R.string.component_aapt2),
+                    version = status.aapt2.version,
+                    isInstalled = status.aapt2.isInstalled,
+                    gradient = Brush.linearGradient(listOf(Amber40, Red40))
+                )
+                ComponentMiniCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Filled.PhoneAndroid,
+                    name = stringResource(R.string.component_sdk),
+                    version = status.cmdlineTools.version,
+                    isInstalled = status.cmdlineTools.isInstalled,
+                    gradient = Brush.linearGradient(listOf(Purple40, Indigo40))
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Stats row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                StatPill(
+                    modifier = Modifier.weight(1f),
                     label = stringResource(R.string.env_platforms),
                     count = status.platforms.size,
                     color = MaterialTheme.colorScheme.primary
                 )
-                StatChip(
+                StatPill(
+                    modifier = Modifier.weight(1f),
                     label = stringResource(R.string.env_build_tools),
                     count = status.buildTools.size,
                     color = MaterialTheme.colorScheme.secondary
                 )
-                StatChip(
+                StatPill(
+                    modifier = Modifier.weight(1f),
                     label = stringResource(R.string.env_ndk),
                     count = status.ndk.size,
                     color = MaterialTheme.colorScheme.tertiary
@@ -502,58 +537,112 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
 }
 
 @Composable
-private fun EnvironmentItem(name: String, version: String?, isInstalled: Boolean) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+private fun ComponentMiniCard(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    name: String,
+    version: String?,
+    isInstalled: Boolean,
+    gradient: Brush
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
     ) {
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .background(
-                    color = if (isInstalled) Green40 else MaterialTheme.colorScheme.error,
-                    shape = CircleShape
-                )
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = name,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = if (isInstalled) Green40.copy(alpha = 0.1f) else MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+        Column(
+            modifier = Modifier.padding(12.dp)
         ) {
-            Text(
-                text = version ?: stringResource(R.string.env_not_installed),
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isInstalled) Green40 else MaterialTheme.colorScheme.error
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(
+                            if (isInstalled) gradient else Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                )
+                            ),
+                            RoundedCornerShape(7.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = if (isInstalled) Color.White else MaterialTheme.colorScheme.outline
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .background(
+                            if (isInstalled) Green40 else MaterialTheme.colorScheme.error,
+                            CircleShape
+                        )
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = version ?: stringResource(R.string.env_not_installed),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isInstalled) Green40 else MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                    maxLines = 1
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun StatChip(label: String, count: Int, color: Color) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+private fun StatPill(
+    modifier: Modifier = Modifier,
+    label: String,
+    count: Int,
+    color: Color
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = color.copy(alpha = 0.1f)
     ) {
-        Text(
-            text = "$count",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "$count",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = color.copy(alpha = 0.8f)
+            )
+        }
     }
 }
 
