@@ -1,4 +1,5 @@
 # AuraStudio CLI Bash Completion
+# shellcheck disable=SC2207
 _aurastudio_completions() {
     local cur prev opts
     COMPREPLY=()
