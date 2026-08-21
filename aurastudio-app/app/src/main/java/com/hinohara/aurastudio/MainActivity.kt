@@ -17,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.hinohara.aurastudio.data.viewmodel.DashboardViewModel
+import com.hinohara.aurastudio.ui.components.ModernBottomNavBar
 import com.hinohara.aurastudio.ui.navigation.Screen
 import com.hinohara.aurastudio.ui.navigation.bottomNavItems
 import com.hinohara.aurastudio.ui.screens.dashboard.DashboardScreen
@@ -61,6 +62,15 @@ fun AuraStudioApp(
         }
     }
 
+    val bottomNavItemsLocalized = bottomNavItems.map {
+        com.hinohara.aurastudio.ui.components.BottomNavItem(
+            label = stringResource(it.labelRes),
+            selectedIcon = it.selectedIcon,
+            unselectedIcon = it.unselectedIcon,
+            route = it.route
+        )
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -77,26 +87,11 @@ fun AuraStudioApp(
             )
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = NavigationBarDefaults.Elevation
-            ) {
-                bottomNavItems.forEach { item ->
-                    val selected = currentRoute == item.route
-                    val label = stringResource(item.labelRes)
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = { navigateToBottomTab(item.route) },
-                        icon = {
-                            Icon(
-                                if (selected) item.selectedIcon else item.unselectedIcon,
-                                contentDescription = label
-                            )
-                        },
-                        label = { Text(label) }
-                    )
-                }
-            }
+            ModernBottomNavBar(
+                items = bottomNavItemsLocalized,
+                currentRoute = currentRoute,
+                onItemClick = { navigateToBottomTab(it) }
+            )
         }
     ) { padding ->
         NavHost(
