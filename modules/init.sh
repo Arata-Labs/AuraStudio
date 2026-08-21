@@ -122,6 +122,7 @@ EOF
 org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
 android.useAndroidX=true
 android.nonTransitiveRClass=true
+android.aapt2FromMavenOverride=/data/data/com.termux/files/usr/bin/aapt2
 EOF
 
             mkdir -p "$target_dir/app/src/main/res/layout"

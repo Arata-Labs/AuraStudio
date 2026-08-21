@@ -160,6 +160,17 @@ cmd_setup() {
     write_env
     success "Environment written to ${CYAN}$AURA_CONFIG_DIR/env.sh${RESET}"
 
+    local gradle_props="$HOME/.gradle/gradle.properties"
+    if ! grep -q "aapt2FromMavenOverride" "$gradle_props" 2>/dev/null; then
+        mkdir -p "$HOME/.gradle"
+        cat >> "$gradle_props" << 'EOF'
+
+# AuraStudio: use standalone aapt2 instead of Gradle bundled
+android.aapt2FromMavenOverride=/data/data/com.termux/files/usr/bin/aapt2
+EOF
+        success "Global Gradle aapt2 override configured"
+    fi
+
     echo ""
     draw_divider
     printf "  %b\n" "${GREEN}${BOLD}✨ Setup Complete! AuraStudio Environment is Ready.${RESET}"
