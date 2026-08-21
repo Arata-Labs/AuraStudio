@@ -22,38 +22,45 @@ import com.hinohara.aurastudio.ui.theme.*
 
 @Composable
 fun ModernBottomNavBar(
+    modifier: Modifier = Modifier,
     items: List<BottomNavItem>,
     currentRoute: String?,
     onItemClick: (String) -> Unit
 ) {
-    Surface(
-        modifier = Modifier
+    Box(
+        modifier = modifier
             .fillMaxWidth()
+            .background(Color.Black.copy(alpha = 0.6f))
             .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 20.dp)
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(24.dp),
-                ambientColor = Indigo40.copy(alpha = 0.15f)
-            ),
-        shape = RoundedCornerShape(24.dp),
-        color = Color(0xFF1A1A24).copy(alpha = 0.85f),
-        tonalElevation = 0.dp
     ) {
-        Row(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Indigo40.copy(alpha = 0.15f)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.9f),
+            tonalElevation = 0.dp
         ) {
-            items.forEach { item ->
-                val selected = currentRoute == item.route
-                ModernNavItem(
-                    item = item,
-                    selected = selected,
-                    onClick = { onItemClick(item.route) },
-                    modifier = Modifier.weight(1f)
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items.forEach { item ->
+                    val selected = currentRoute == item.route
+                    ModernNavItem(
+                        item = item,
+                        selected = selected,
+                        onClick = { onItemClick(item.route) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
