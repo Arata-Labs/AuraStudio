@@ -52,10 +52,6 @@ fun DashboardScreen(
         contentPadding = PaddingValues(vertical = 24.dp)
     ) {
         item {
-            DashboardHeader()
-        }
-
-        item {
             HealthBanner(score = status.healthScore, status = status)
         }
 
@@ -90,52 +86,6 @@ fun DashboardScreen(
         }
 
         item { Spacer(modifier = Modifier.height(80.dp)) }
-    }
-}
-
-@Composable
-private fun DashboardHeader() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(GradientStart, GradientEnd)
-                        ),
-                        shape = RoundedCornerShape(14.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Filled.Code,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(14.dp))
-            Column {
-                Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = stringResource(R.string.dashboard_tagline),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
     }
 }
 
