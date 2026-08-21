@@ -59,32 +59,32 @@ _show_status_summary() {
     local java_ver gradle_ver aapt2_ver cmdtools_ver
     java_ver=$(java -version 2>&1 | head -1 | sed 's/.*"\(.*\)".*/\1/' 2>/dev/null) || java_ver=""
     gradle_ver=$(gradle --version 2>/dev/null | grep "^Gradle " | awk '{print $2}' 2>/dev/null) || gradle_ver=""
-    aapt2_ver=$(aapt2 version 2>/dev/null | head -1) || aapt2_ver=""
+    aapt2_ver=$(aapt2 version 2>&1 | head -1) || aapt2_ver=""
     cmdtools_ver=""
     [ -f "$SDKMANAGER" ] && cmdtools_ver=$("$SDKMANAGER" --version 2>/dev/null | head -1) || cmdtools_ver=""
 
     # Installed platforms
     local platforms_str=""
     if [ -d "$SDK_DIR/platforms" ]; then
-        platforms_str=$(ls "$SDK_DIR/platforms" 2>/dev/null | sed 's/android-/API /' | tr '\n' ', ' | sed 's/, $//')
+        platforms_str=$(ls "$SDK_DIR/platforms" 2>/dev/null | sed 's/android-/API /' | paste -sd ', ')
     fi
 
     # Installed build-tools
     local buildtools_str=""
     if [ -d "$SDK_DIR/build-tools" ]; then
-        buildtools_str=$(ls "$SDK_DIR/build-tools" 2>/dev/null | tr '\n' ', ' | sed 's/, $//')
+        buildtools_str=$(ls "$SDK_DIR/build-tools" 2>/dev/null | paste -sd ', ')
     fi
 
     # Installed NDK versions
     local ndk_str=""
     if [ -d "$NDK_DIR" ]; then
-        ndk_str=$(ls "$NDK_DIR" 2>/dev/null | tr '\n' ', ' | sed 's/, $//')
+        ndk_str=$(ls "$NDK_DIR" 2>/dev/null | paste -sd ', ')
     fi
 
     # Installed CMake versions
     local cmake_str=""
     if [ -d "$CMAKE_DIR" ]; then
-        cmake_str=$(ls "$CMAKE_DIR" 2>/dev/null | tr '\n' ', ' | sed 's/, $//')
+        cmake_str=$(ls "$CMAKE_DIR" 2>/dev/null | paste -sd ', ')
     fi
 
     # Print status table
@@ -226,10 +226,10 @@ _setup_sdk_platforms() {
 
     # Show installed
     if [ "${#installed_platforms[@]}" -gt 0 ]; then
-        printf "\n  %bInstalled Platforms:%b %s\n" "$GREEN" "$RESET" "$(IFS=', '; echo "${installed_platforms[*]}")"
+        printf "\n  %bInstalled Platforms:%b %s\n" "$GREEN" "$RESET" "$(printf '%s\n' "${installed_platforms[@]}" | sed 's/android-//' | paste -sd ', ')"
     fi
     if [ "${#installed_buildtools[@]}" -gt 0 ]; then
-        printf "  %bInstalled Build-Tools:%b %s\n" "$GREEN" "$RESET" "$(IFS=', '; echo "${installed_buildtools[*]}")"
+        printf "  %bInstalled Build-Tools:%b %s\n" "$GREEN" "$RESET" "$(printf '%s\n' "${installed_buildtools[@]}" | paste -sd ', ')"
     fi
 
     # If both platforms and build-tools exist, allow skipping entirely
@@ -357,7 +357,7 @@ _optional_ndk_cmake() {
         done < <(ls "$NDK_DIR" 2>/dev/null)
     fi
     if [ "${#ndk_list[@]}" -gt 0 ]; then
-        printf "  %bInstalled NDK:%b %s\n" "$GREEN" "$RESET" "$(IFS=', '; echo "${ndk_list[*]}")"
+        printf "  %bInstalled NDK:%b %s\n" "$GREEN" "$RESET" "$(printf '%s\n' "${ndk_list[@]}" | paste -sd ', ')"
     else
         printf "  %bInstalled NDK:%b none\n" "$MUTED" "$RESET"
     fi
@@ -370,7 +370,7 @@ _optional_ndk_cmake() {
         done < <(ls "$CMAKE_DIR" 2>/dev/null)
     fi
     if [ "${#cmake_list[@]}" -gt 0 ]; then
-        printf "  %bInstalled CMake:%b %s\n" "$GREEN" "$RESET" "$(IFS=', '; echo "${cmake_list[*]}")"
+        printf "  %bInstalled CMake:%b %s\n" "$GREEN" "$RESET" "$(printf '%s\n' "${cmake_list[@]}" | paste -sd ', ')"
     else
         printf "  %bInstalled CMake:%b none\n" "$MUTED" "$RESET"
     fi
