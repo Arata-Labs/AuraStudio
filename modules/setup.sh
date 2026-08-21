@@ -33,6 +33,12 @@ cmd_setup() {
         run_animated "Downloading & Installing gradle" pkg install -y gradle
     fi
 
+    if ! command -v aapt2 &>/dev/null; then
+        run_animated "Downloading & Installing aapt2 (standalone)" pkg install -y aapt2
+    else
+        success "aapt2 is already installed"
+    fi
+
     step "4/9" "Creating SDK Directory Structure..."
     mkdir -p "$SDK_DIR"/{cmdline-tools,platform-tools,platforms,build-tools,ndk,cmake,licenses}
     success "SDK Root Directory: ${CYAN}$SDK_DIR${RESET}"
