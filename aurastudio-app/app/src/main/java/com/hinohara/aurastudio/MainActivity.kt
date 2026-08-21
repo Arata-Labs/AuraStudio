@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -47,6 +48,19 @@ fun AuraStudioApp(
 
     var terminalCommand by remember { mutableStateOf<String?>(null) }
 
+    fun navigateToBottomTab(route: String) {
+        if (route == Screen.Terminal.route) {
+            terminalCommand = null
+        }
+        navController.navigate(route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -72,16 +86,7 @@ fun AuraStudioApp(
                     val label = stringResource(item.labelRes)
                     NavigationBarItem(
                         selected = selected,
-                        onClick = {
-                            if (item.route == Screen.Terminal.route) {
-                                terminalCommand = null
-                            }
-                            navController.navigate(item.route) {
-                                popUpTo(Screen.Dashboard.route) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
+                        onClick = { navigateToBottomTab(item.route) },
                         icon = {
                             Icon(
                                 if (selected) item.selectedIcon else item.unselectedIcon,
@@ -104,22 +109,21 @@ fun AuraStudioApp(
                     viewModel = dashboardViewModel,
                     onNavigateToTerminal = { cmd ->
                         terminalCommand = cmd
-                        navController.navigate(Screen.Terminal.route)
+                        navigateToBottomTab(Screen.Terminal.route)
                     },
                     onNavigateToEditor = {},
-                    onOpenProject = { /* TODO: open project */ }
+                    onOpenProject = { /* TODO */ }
                 )
             }
             composable(Screen.Projects.route) {
                 ProjectsScreen(
-                    onOpenProject = { /* TODO: open project */ }
+                    onOpenProject = { /* TODO */ }
                 )
             }
             composable(Screen.CreateProject.route) {
                 CreateProjectScreen(
                     onCreateProject = { name, type, path ->
-                        // TODO: create project via aurastudio init
-                        navController.navigate(Screen.Projects.route)
+                        navigateToBottomTab(Screen.Projects.route)
                     }
                 )
             }
