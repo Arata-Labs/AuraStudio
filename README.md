@@ -40,7 +40,6 @@ Designed with truecolor RGB palettes, smooth background job spinners, and resili
 - 🔧 **Standalone AAPT2 + Global Override**: Installs standalone `aapt2` from Termux packages and auto-configures `~/.gradle/gradle.properties` to avoid Gradle bundled aapt2 syntax errors.
 - ⚡ **Multi-Threaded Download Acceleration**: Automatically utilizes `aria2c` (16 connections) with seamless fallback to `curl` with resume capability (`-C -`).
 - 📁 **Modular System Architecture**: Code base cleanly divided into core configurations, UI libraries, system helpers, and modular command handlers.
-- 📱 **Android GUI App**: Native Kotlin + Jetpack Compose app with terminal emulator, code editor, file explorer, and CLI quick commands (coming soon).
 - 🔒 **XDG-Compliant Configuration**: Follows XDG Base Directory specification with configs in `~/.config/aurastudio/`, data in `~/.local/share/aurastudio/`, and cache in `~/.cache/aurastudio/`.
 - 🛠️ **Project Starter Initializer (`aurastudio init`)**: Instantly scaffolds Native C++ CMake console apps, NDK shared libraries (`libnative.so`), and full Android Gradle projects (Java/Kotlin) with automated `./gradlew` generation.
 - 📦 **Native Debian (.deb) & CI/CD Support**: Easily packaged into `.deb` installers with automated release builds via GitHub Actions workflow (ShellCheck lint + unit tests + changelog generation).
@@ -134,7 +133,6 @@ aurastudio/
 │   ├── pull_request_template.md  # PR template
 │   └── RELEASE_TEMPLATE.md       # Release notes template
 ├── aurastudio                    # Main CLI entry point & command router
-├── aurastudio-app/               # Android GUI app (Kotlin + Jetpack Compose)
 ├── install.sh                    # Official web installer script
 ├── build_deb.sh                  # Automated Debian package (.deb) builder
 ├── config/
