@@ -65,7 +65,7 @@ main() {
     printf "\n  %b\n" "${BOLD}${WHITE}Installing AuraStudio Environment to Termux${RESET}"
     draw_divider
 
-    step "1/4" "Checking & Installing Required Core Tools..."
+    step "1/5" "Checking & Installing Required Core Tools..."
     local required_pkgs=("git" "curl" "tar" "unzip")
     local missing_pkgs=()
 
@@ -81,7 +81,7 @@ main() {
         success "All core bootstrap tools are ready (${CYAN}git, curl, tar, unzip${RESET})"
     fi
 
-    step "2/4" "Preparing Environment Directory..."
+    step "2/5" "Preparing Environment Directory..."
     if [ -d "$INSTALL_DIR" ]; then
         warn "Existing installation found at $INSTALL_DIR. Cleaning up..."
         rm -rf "$INSTALL_DIR"
@@ -89,7 +89,7 @@ main() {
     mkdir -p "$INSTALL_DIR" "$BIN_DIR"
     success "Directories prepared at ${CYAN}$INSTALL_DIR${RESET}"
 
-    step "3/4" "Fetching Source Code from GitHub..."
+    step "3/5" "Fetching Source Code from GitHub..."
     (_clone_repo() { git clone --depth=1 "$REPO_URL" "$INSTALL_DIR"; }; _clone_repo) &
     spin $! "Cloning repository: $REPO_URL"
 
@@ -100,10 +100,33 @@ main() {
     fi
     success "Repository cloned successfully"
 
-    step "4/4" "Configuring Binary Symlink..."
+    step "4/5" "Configuring Binary Symlink..."
     chmod +x "$INSTALL_DIR/aurastudio"
     ln -sf "$INSTALL_DIR/aurastudio" "$BIN_DIR/aurastudio"
     success "Created symlink: ${CYAN}$BIN_DIR/aurastudio${RESET} -> ${CYAN}$INSTALL_DIR/aurastudio${RESET}"
+
+    step "5/5" "Setting Up Bash Autocompletion..."
+    local COMPLETION_DIR="$HOME/.config/aurastudio"
+    local COMPLETION_FILE="$COMPLETION_DIR/aurastudio-completion.bash"
+    mkdir -p "$COMPLETION_DIR"
+    cp "$INSTALL_DIR/lib/aurastudio-completion.bash" "$COMPLETION_FILE"
+    success "Copied completion script to ${CYAN}$COMPLETION_FILE${RESET}"
+
+    # Detect correct shell RC file for Termux
+    local BASHRC=""
+    [ -f "$HOME/.zshrc" ] && BASHRC="$HOME/.zshrc"
+    [ -z "$BASHRC" ] && [ -f "${PREFIX:-}/etc/bash.bashrc" ] && BASHRC="${PREFIX:-}/etc/bash.bashrc"
+    [ -z "$BASHRC" ] && BASHRC="/etc/bash.bashrc"
+
+    local SOURCE_LINE="[ -f \"$COMPLETION_FILE\" ] && source \"$COMPLETION_FILE\""
+    if ! grep -qF "aurastudio-completion.bash" "$BASHRC" 2>/dev/null; then
+        echo "" >> "$BASHRC"
+        echo "# AuraStudio CLI autocompletion" >> "$BASHRC"
+        echo "$SOURCE_LINE" >> "$BASHRC"
+        success "Added autocompletion to ${CYAN}$BASHRC${RESET}"
+    else
+        success "Autocompletion already configured in ${CYAN}$BASHRC${RESET}"
+    fi
 
     echo ""
     draw_divider
@@ -113,6 +136,7 @@ main() {
     printf "  %-18s %s\n" "Executable Link:" "$BIN_DIR/aurastudio"
     echo ""
     printf "  Get started by running: %b\n\n" "${CYAN}${BOLD}aurastudio setup${RESET}"
+    printf "  %b\n" "${MUTED}Note: Run 'source $BASHRC' or open a new terminal to enable autocompletion.${RESET}"
 }
 
 main "$@"
