@@ -1,4 +1,0 @@
-com.hinohara.aurastudio
-color seed
-mipmap ic_launcher
-string app_name
