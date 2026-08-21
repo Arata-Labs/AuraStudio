@@ -21,7 +21,6 @@ cmd_uninstall() {
 
     step "1/3" "Removing Binary Symlink & Environment Configuration..."
     rm -f "$PREFIX/bin/aurastudio"
-    rm -f "$HOME_DIR/.aurastudiorc"
     rm -rf "$AURA_CONFIG_DIR"
     success "Symlink and config directory successfully removed."
 

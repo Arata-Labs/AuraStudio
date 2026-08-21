@@ -56,6 +56,6 @@ cmd_update() {
     spin $! "Downloading latest updates"
 
     success "AuraStudio CLI successfully updated to the latest version!"
-    info "Reload your shell environment or run: ${CYAN}source ~/.aurastudiorc${RESET}"
+    info "Reload your shell environment or run: ${CYAN}source ~/.config/aurastudio/env.sh${RESET}"
     echo ""
 }
