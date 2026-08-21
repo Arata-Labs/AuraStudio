@@ -24,6 +24,10 @@ val Amber80 = Color(0xFFFDE68A)
 val Red40 = Color(0xFFDC2626)
 val Red80 = Color(0xFFFCA5A5)
 
+// Dark Theme Variants
+val DarkOnSurfaceVariant = Color(0xFFCAC4D0)
+val DarkSurface = Color(0xFF1C1B1F)
+
 // Terminal Colors
 val TerminalBg = Color(0xFF0D1117)
 val TerminalFg = Color(0xFFC9D1D9)
