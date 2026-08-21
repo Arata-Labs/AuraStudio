@@ -232,6 +232,24 @@ _setup_sdk_platforms() {
         printf "  %bInstalled Build-Tools:%b %s\n" "$GREEN" "$RESET" "$(IFS=', '; echo "${installed_buildtools[*]}")"
     fi
 
+    # If both platforms and build-tools exist, allow skipping entirely
+    local has_both=true
+    [ "${#installed_platforms[@]}" -eq 0 ] && has_both=false
+    [ "${#installed_buildtools[@]}" -eq 0 ] && has_both=false
+
+    local sel_api=""
+    local sel_bt=""
+
+    if $has_both; then
+        printf "\n  %bSkip platform & build-tools setup?%b (already installed)\n" "${MUTED}" "$RESET"
+        printf "  Select [y/N] (default: N): "
+        read -r skip_all
+        if [ "$skip_all" = "y" ] || [ "$skip_all" = "Y" ]; then
+            info "Skipping — keeping existing platforms and build-tools"
+            return
+        fi
+    fi
+
     printf "\n  %b\n\n" "${BOLD}Select Android Platform API level to install:${RESET}"
     local idx=1
     for api in "${PLATFORM_LIST[@]}"; do
@@ -245,7 +263,6 @@ _setup_sdk_platforms() {
     printf "\n  Select option [1-%d/c/s] (default: 1 [API 37]): " "${#PLATFORM_LIST[@]}"
     read -r p_sel
 
-    local sel_api=""
     if [ "$p_sel" = "s" ] || [ "$p_sel" = "S" ]; then
         info "Skipping platform installation"
     elif [ "$p_sel" = "c" ]; then
@@ -269,7 +286,6 @@ _setup_sdk_platforms() {
     printf "\n  Select option [1-%d/c/s] (default: 1 [37.0.0]): " "${#BUILDTOOLS_LIST[@]}"
     read -r bt_sel
 
-    local sel_bt=""
     if [ "$bt_sel" = "s" ] || [ "$bt_sel" = "S" ]; then
         info "Skipping build-tools installation"
     elif [ "$bt_sel" = "c" ]; then
