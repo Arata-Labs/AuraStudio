@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "AuraStudio"
-include ':app'
+include(":app")
