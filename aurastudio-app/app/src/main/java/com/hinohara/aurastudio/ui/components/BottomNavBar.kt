@@ -1,7 +1,7 @@
 package com.hinohara.aurastudio.ui.components
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -13,8 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -68,36 +66,28 @@ private fun ModernNavItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val transition = updateTransition(selectedState = selected, label = "nav_item")
+    val bgColor by animateColorAsState(
+        targetValue = if (selected) Indigo40.copy(alpha = 0.15f) else Color.Transparent,
+        animationSpec = tween(durationMillis = 250),
+        label = "bg"
+    )
 
-    val backgroundColor by transition.animateColor(
-        label = "bg_color"
-    ) { isSelected ->
-        if (isSelected) Indigo40.copy(alpha = 0.15f) else Color.Transparent
-    }
+    val iconTint by animateColorAsState(
+        targetValue = if (selected) Indigo40 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        animationSpec = tween(durationMillis = 250),
+        label = "icon"
+    )
 
-    val iconTint by transition.animateColor(
-        label = "icon_color"
-    ) { isSelected ->
-        if (isSelected) Indigo40 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-    }
-
-    val textColor by transition.animateColor(
-        label = "text_color"
-    ) { isSelected ->
-        if (isSelected) Indigo40 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-    }
-
-    val scale by transition.animateFloat(
-        label = "scale"
-    ) { isSelected ->
-        if (isSelected) 1f else 0.9f
-    }
+    val textColor by animateColorAsState(
+        targetValue = if (selected) Indigo40 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        animationSpec = tween(durationMillis = 250),
+        label = "text"
+    )
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(backgroundColor)
+            .background(bgColor)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -113,9 +103,7 @@ private fun ModernNavItem(
             Icon(
                 imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
                 contentDescription = null,
-                modifier = Modifier
-                    .size(22.dp)
-                    .then(if (selected) Modifier else Modifier),
+                modifier = Modifier.size(22.dp),
                 tint = iconTint
             )
 
