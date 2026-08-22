@@ -492,7 +492,8 @@ private fun ComponentMiniCard(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        color = CardSurface,
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
