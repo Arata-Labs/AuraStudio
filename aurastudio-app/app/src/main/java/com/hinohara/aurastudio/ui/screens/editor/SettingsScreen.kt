@@ -103,10 +103,8 @@ private fun SectionCard(
 
 @Composable
 private fun InfoRow(
-    icon: ImageVector,
     title: String,
     subtitle: String? = null,
-    iconGradient: Brush = Brush.linearGradient(listOf(Indigo40, Purple40)),
     showDivider: Boolean = false,
     trailing: @Composable (() -> Unit)? = null
 ) {
@@ -117,15 +115,6 @@ private fun InfoRow(
                 .padding(vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(iconGradient, RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
-            }
-            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
@@ -153,48 +142,29 @@ private fun InfoRow(
 
 @Composable
 private fun LabeledControl(
-    icon: ImageVector,
     title: String,
     subtitle: String? = null,
-    iconGradient: Brush = Brush.linearGradient(listOf(Indigo40, Purple40)),
     showDivider: Boolean = false,
     control: @Composable ColumnScope.() -> Unit
 ) {
     Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(iconGradient, RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                if (subtitle != null) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = 10.dp)
+        )
+        if (subtitle != null) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        Column(modifier = Modifier.padding(start = 44.dp)) {
-            control()
-        }
+        Spacer(modifier = Modifier.height(8.dp))
+        control()
+        Spacer(modifier = Modifier.height(4.dp))
         if (showDivider) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
         }
@@ -217,9 +187,7 @@ private fun GeneralSection() {
         )
 
         LabeledControl(
-            icon = Icons.Filled.Palette,
             title = stringResource(R.string.settings_theme),
-            iconGradient = Brush.linearGradient(listOf(Purple40, Indigo40)),
             showDivider = true
         ) {
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -248,10 +216,8 @@ private fun GeneralSection() {
         }
 
         InfoRow(
-            icon = Icons.Filled.Language,
             title = stringResource(R.string.settings_language),
-            subtitle = stringResource(R.string.settings_language_value),
-            iconGradient = Brush.linearGradient(listOf(Cyan40, Indigo40))
+            subtitle = stringResource(R.string.settings_language_value)
         )
     }
 }
@@ -264,24 +230,18 @@ private fun EnvironmentSection() {
         sectionGradient = Brush.linearGradient(listOf(Green40, Cyan40))
     ) {
         InfoRow(
-            icon = Icons.Filled.PhoneAndroid,
             title = stringResource(R.string.settings_sdk_path),
             subtitle = "~/android-sdk",
-            iconGradient = Brush.linearGradient(listOf(Green40, Cyan40)),
             showDivider = true
         )
         InfoRow(
-            icon = Icons.Filled.Memory,
             title = stringResource(R.string.settings_ndk_path),
             subtitle = "~/android-sdk/ndk",
-            iconGradient = Brush.linearGradient(listOf(Amber40, Red40)),
             showDivider = true
         )
         InfoRow(
-            icon = Icons.Filled.Coffee,
             title = stringResource(R.string.settings_java_path),
-            subtitle = "java-21-openjdk",
-            iconGradient = Brush.linearGradient(listOf(Green40, Amber40))
+            subtitle = "java-21-openjdk"
         )
     }
 }
@@ -296,10 +256,8 @@ private fun TerminalSection() {
         var fontSize by remember { mutableFloatStateOf(13f) }
 
         LabeledControl(
-            icon = Icons.Filled.FormatSize,
             title = stringResource(R.string.settings_terminal_font_size),
             subtitle = "${fontSize.toInt()} sp",
-            iconGradient = Brush.linearGradient(listOf(Indigo40, Purple40)),
             showDivider = true
         ) {
             Slider(
@@ -317,9 +275,7 @@ private fun TerminalSection() {
 
         var vibrate by remember { mutableStateOf(true) }
         InfoRow(
-            icon = Icons.Filled.Vibration,
-            title = stringResource(R.string.settings_terminal_vibrate),
-            iconGradient = Brush.linearGradient(listOf(Purple40, Indigo40))
+            title = stringResource(R.string.settings_terminal_vibrate)
         ) {
             Switch(
                 checked = vibrate,
@@ -341,31 +297,23 @@ private fun AboutSection() {
         sectionGradient = Brush.linearGradient(listOf(Purple40, Indigo40))
     ) {
         InfoRow(
-            icon = Icons.Filled.Tag,
             title = stringResource(R.string.settings_version),
             subtitle = "1.2",
-            iconGradient = Brush.linearGradient(listOf(Indigo40, Purple40)),
             showDivider = true
         )
         InfoRow(
-            icon = Icons.Filled.Code,
             title = stringResource(R.string.settings_build),
             subtitle = "dev-app",
-            iconGradient = Brush.linearGradient(listOf(Cyan40, Indigo40)),
             showDivider = true
         )
         InfoRow(
-            icon = Icons.Filled.Person,
             title = stringResource(R.string.settings_developer),
             subtitle = stringResource(R.string.settings_developer_value),
-            iconGradient = Brush.linearGradient(listOf(Green40, Cyan40)),
             showDivider = true
         )
         InfoRow(
-            icon = Icons.Filled.Link,
             title = stringResource(R.string.settings_github),
-            subtitle = "github.com/Arata-Labs/AuraStudio",
-            iconGradient = Brush.linearGradient(listOf(Amber40, Red40))
+            subtitle = "github.com/Arata-Labs/AuraStudio"
         )
     }
 }
