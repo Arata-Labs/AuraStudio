@@ -67,7 +67,9 @@ fun AuraStudioTopBar(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_logo),
+                        painter = painterResource(
+                            id = if (LocalIsAppDark.current) R.drawable.ic_logo else R.drawable.ic_logo_dark
+                        ),
                         contentDescription = null,
                         tint = Color.Unspecified,
                         modifier = Modifier.fillMaxWidth()
