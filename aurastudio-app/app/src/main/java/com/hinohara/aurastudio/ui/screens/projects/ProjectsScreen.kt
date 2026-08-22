@@ -25,6 +25,7 @@ import com.hinohara.aurastudio.ui.theme.*
 @Composable
 fun ProjectsScreen(
     projects: List<Project> = emptyList(),
+    scaffoldPadding: PaddingValues = PaddingValues(),
     onOpenProject: (String) -> Unit = {}
 ) {
     LazyColumn(
@@ -32,7 +33,10 @@ fun ProjectsScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
+        contentPadding = PaddingValues(
+            top = scaffoldPadding.calculateTopPadding() + 8.dp,
+            bottom = scaffoldPadding.calculateBottomPadding() + 16.dp
+        )
     ) {
         item {
             Text(
@@ -64,7 +68,7 @@ private fun EmptyProjectsState() {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 48.dp),
+            .padding(top = 24.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh

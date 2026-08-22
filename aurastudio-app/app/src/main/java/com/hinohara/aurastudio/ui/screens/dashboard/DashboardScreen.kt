@@ -36,6 +36,7 @@ import com.hinohara.aurastudio.ui.theme.*
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel,
+    scaffoldPadding: PaddingValues = PaddingValues(),
     onNavigateToTerminal: (String) -> Unit = {},
     onNavigateToEditor: () -> Unit = {},
     onOpenProject: (String) -> Unit = {}
@@ -50,8 +51,8 @@ fun DashboardScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(
-            top = 12.dp,
-            bottom = 24.dp
+            top = scaffoldPadding.calculateTopPadding() + 8.dp,
+            bottom = scaffoldPadding.calculateBottomPadding() + 16.dp
         )
     ) {
         item {

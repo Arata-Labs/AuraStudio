@@ -19,6 +19,7 @@ import com.hinohara.aurastudio.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateProjectScreen(
+    scaffoldPadding: PaddingValues = PaddingValues(),
     onCreateProject: (name: String, type: String, path: String) -> Unit = { _, _, _ -> }
 ) {
     var projectName by remember { mutableStateOf("") }
@@ -37,16 +38,20 @@ fun CreateProjectScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(
+                top = scaffoldPadding.calculateTopPadding() + 8.dp,
+                bottom = scaffoldPadding.calculateBottomPadding() + 16.dp,
+                start = 16.dp,
+                end = 16.dp
+            ),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Text(
             text = stringResource(R.string.create_project_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         // Project Name
@@ -187,7 +192,5 @@ fun CreateProjectScreen(
                 fontWeight = FontWeight.SemiBold
             )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
     }
 }

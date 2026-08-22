@@ -43,23 +43,22 @@ class MainActivity : ComponentActivity() {
 fun AuraStudioApp(
     dashboardViewModel: DashboardViewModel = viewModel()
 ) {
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
     var terminalCommand by remember { mutableStateOf<String?>(null) }
 
-    fun navigateToBottomTab(route: String) {
+    fun navigateToTab(route: String) {
         if (route == Screen.Terminal.route) {
             terminalCommand = null
         }
-        navController.navigate(route) {
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
+        val targetScreen = when (route) {
+            Screen.Dashboard.route -> Screen.Dashboard
+            Screen.Projects.route -> Screen.Projects
+            Screen.CreateProject.route -> Screen.CreateProject
+            Screen.Terminal.route -> Screen.Terminal
+            Screen.Settings.route -> Screen.Settings
+            else -> Screen.Dashboard
         }
+        currentScreen = targetScreen
     }
 
     val bottomNavItemsLocalized = bottomNavItems.map {
@@ -80,49 +79,49 @@ fun AuraStudioApp(
         bottomBar = {
             ModernBottomNavBar(
                 items = bottomNavItemsLocalized,
-                currentRoute = currentRoute,
-                onItemClick = { navigateToBottomTab(it) }
+                currentRoute = currentScreen.route,
+                onItemClick = { navigateToTab(it) }
             )
         }
-    ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Dashboard.route,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = padding.calculateTopPadding(),
-                    bottom = padding.calculateBottomPadding()
-                )
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            composable(Screen.Dashboard.route) {
-                DashboardScreen(
-                    viewModel = dashboardViewModel,
-                    onNavigateToTerminal = { cmd ->
-                        terminalCommand = cmd
-                        navigateToBottomTab(Screen.Terminal.route)
-                    },
-                    onNavigateToEditor = {},
-                    onOpenProject = { /* TODO */ }
-                )
-            }
-            composable(Screen.Projects.route) {
-                ProjectsScreen(
-                    onOpenProject = { /* TODO */ }
-                )
-            }
-            composable(Screen.CreateProject.route) {
-                CreateProjectScreen(
-                    onCreateProject = { name, type, path ->
-                        navigateToBottomTab(Screen.Projects.route)
-                    }
-                )
-            }
-            composable(Screen.Terminal.route) {
-                TerminalScreen(initialCommand = terminalCommand)
-            }
-            composable(Screen.Settings.route) {
-                com.hinohara.aurastudio.ui.screens.editor.SettingsScreen()
+            when (currentScreen) {
+                is Screen.Dashboard -> {
+                    DashboardScreen(
+                        viewModel = dashboardViewModel,
+                        scaffoldPadding = innerPadding,
+                        onNavigateToTerminal = { cmd ->
+                            terminalCommand = cmd
+                            navigateToTab(Screen.Terminal.route)
+                        },
+                        onNavigateToEditor = {},
+                        onOpenProject = { /* TODO */ }
+                    )
+                }
+                is Screen.Projects -> {
+                    ProjectsScreen(
+                        scaffoldPadding = innerPadding,
+                        onOpenProject = { /* TODO */ }
+                    )
+                }
+                is Screen.CreateProject -> {
+                    CreateProjectScreen(
+                        scaffoldPadding = innerPadding,
+                        onCreateProject = { name, type, path ->
+                            navigateToTab(Screen.Projects.route)
+                        }
+                    )
+                }
+                is Screen.Terminal -> {
+                    TerminalScreen(
+                        initialCommand = terminalCommand
+                    )
+                }
+                is Screen.Settings -> {
+                    com.hinohara.aurastudio.ui.screens.editor.SettingsScreen()
+                }
             }
         }
     }
