@@ -400,6 +400,14 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             availableVersions = listOf("12.0", "11.0", "10.0")
         ),
         EnvComponentItem(
+            name = stringResource(R.string.env_component_platforms),
+            icon = Icons.Filled.Apps,
+            isInstalled = status.platforms.isNotEmpty(),
+            version = status.platforms.firstOrNull(),
+            installedVersions = status.platforms,
+            availableVersions = listOf("API 36", "API 35", "API 34")
+        ),
+        EnvComponentItem(
             name = stringResource(R.string.env_component_build_tools),
             icon = Icons.Filled.Engineering,
             isInstalled = status.buildTools.isNotEmpty(),
@@ -496,89 +504,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Platform API card
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = if (status.platforms.isNotEmpty()) Green40.copy(alpha = 0.1f) else Red40.copy(alpha = 0.1f),
-                border = BorderStroke(1.dp, if (status.platforms.isNotEmpty()) Green40.copy(alpha = 0.2f) else Red40.copy(alpha = 0.2f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(
-                                if (status.platforms.isNotEmpty()) Green40.copy(alpha = 0.2f) else Red40.copy(alpha = 0.2f),
-                                RoundedCornerShape(10.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Filled.PhoneAndroid,
-                            contentDescription = null,
-                            modifier = Modifier.size(22.dp),
-                            tint = if (status.platforms.isNotEmpty()) Green40 else Red40
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.env_platforms),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = if (status.platforms.isNotEmpty()) {
-                                stringResource(R.string.env_platform_count, status.platforms.size)
-                            } else {
-                                stringResource(R.string.env_not_installed)
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (status.platforms.isNotEmpty()) Green40 else Red40
-                        )
-                    }
-                    if (status.platforms.isNotEmpty()) {
-                        status.platforms.take(2).forEach { platform ->
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Green40.copy(alpha = 0.15f)
-                            ) {
-                                Text(
-                                    text = platform,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Green40
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(4.dp))
-                        }
-                        if (status.platforms.size > 2) {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Green40.copy(alpha = 0.08f)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.env_and_others, status.platforms.size - 2),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Green40.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Component grid - 3 columns
-            val rows = components.chunked(3)
+            // Component grid - 2 columns x 4 rows
+            val rows = components.chunked(2)
             rows.forEach { row ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -592,7 +519,7 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
                         )
                     }
                     // Fill empty slots
-                    repeat(3 - row.size) {
+                    repeat(2 - row.size) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }

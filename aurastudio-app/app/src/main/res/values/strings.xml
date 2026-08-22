@@ -44,16 +44,15 @@
     <string name="env_cmake">CMake</string>
     <string name="env_not_installed">Not installed</string>
     <string name="env_installed">Installed</string>
-    <string name="env_and_others">and %1$d others</string>
     <string name="env_details_title">Environment Details</string>
     <string name="env_details_installed">Installed</string>
     <string name="env_details_not_installed">Not Installed</string>
     <string name="env_details_close">Close</string>
-    <string name="env_platform_count">%1$d platforms</string>
     <string name="env_component_java">Java</string>
     <string name="env_component_gradle">Gradle</string>
     <string name="env_component_aapt2">AAPT2</string>
     <string name="env_component_sdk">SDK Tools</string>
+    <string name="env_component_platforms">Platforms</string>
     <string name="env_component_build_tools">Build-Tools</string>
     <string name="env_component_ndk">NDK</string>
     <string name="env_component_cmake">CMake</string>
