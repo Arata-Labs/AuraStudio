@@ -96,22 +96,10 @@ fun DashboardScreen(
 
 @Composable
 private fun HealthBanner(score: Int, status: EnvironmentStatus) {
-    val gradient = when {
-        score >= 80 -> Brush.linearGradient(
-            colors = listOf(GradientHealthyStart, GradientHealthyEnd),
-            start = Offset(0f, 0f),
-            end = Offset(1000f, 1000f)
-        )
-        score >= 50 -> Brush.linearGradient(
-            colors = listOf(GradientWarningStart, GradientWarningEnd),
-            start = Offset(0f, 0f),
-            end = Offset(1000f, 1000f)
-        )
-        else -> Brush.linearGradient(
-            colors = listOf(GradientCriticalStart, GradientCriticalEnd),
-            start = Offset(0f, 0f),
-            end = Offset(1000f, 1000f)
-        )
+    val scoreColor = when {
+        score >= 80 -> Green40
+        score >= 50 -> Amber40
+        else -> Red40
     }
 
     val (statusTextRes, statusDescRes) = when {
@@ -126,131 +114,128 @@ private fun HealthBanner(score: Int, status: EnvironmentStatus) {
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 12.dp,
+                elevation = 8.dp,
                 shape = RoundedCornerShape(24.dp),
-                ambientColor = if (score >= 80) Green40 else if (score >= 50) Amber40 else Red40
+                ambientColor = scoreColor.copy(alpha = 0.15f)
             ),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = CardDefaults.cardColors(containerColor = CardDark),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(gradient)
-                .padding(24.dp)
+        Column(
+            modifier = Modifier.padding(20.dp)
         ) {
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier.size(88.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier.size(100.dp),
-                        contentAlignment = Alignment.Center
+                    val progress by animateFloatAsState(
+                        targetValue = score / 100f,
+                        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+                        label = "progress"
+                    )
+
+                    CircularProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxSize(),
+                        color = scoreColor.copy(alpha = 0.2f),
+                        trackColor = Color.Transparent,
+                        strokeWidth = 8.dp,
+                        strokeCap = StrokeCap.Round
+                    )
+
+                    CircularProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxSize(),
+                        color = scoreColor,
+                        trackColor = Color.Transparent,
+                        strokeWidth = 8.dp,
+                        strokeCap = StrokeCap.Round
+                    )
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        val progress by animateFloatAsState(
-                            targetValue = score / 100f,
-                            animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
-                            label = "progress"
-                        )
-
-                        CircularProgressIndicator(
-                            progress = { progress },
-                            modifier = Modifier.fillMaxSize(),
-                            color = Color.White.copy(alpha = 0.3f),
-                            trackColor = Color.Transparent,
-                            strokeWidth = 8.dp,
-                            strokeCap = StrokeCap.Round
-                        )
-
-                        CircularProgressIndicator(
-                            progress = { progress },
-                            modifier = Modifier.fillMaxSize(),
-                            color = Color.White,
-                            trackColor = Color.Transparent,
-                            strokeWidth = 8.dp,
-                            strokeCap = StrokeCap.Round
-                        )
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = stringResource(R.string.dashboard_health_score_format, score),
-                                style = MaterialTheme.typography.displaySmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                lineHeight = 32.sp
-                            )
-                            Text(
-                                text = stringResource(R.string.dashboard_health_score_max),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(20.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = stringResource(R.string.dashboard_health_title),
-                            style = MaterialTheme.typography.titleLarge,
+                            text = stringResource(R.string.dashboard_health_score_format, score),
+                            style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = stringResource(statusTextRes),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White.copy(alpha = 0.95f)
+                            color = scoreColor,
+                            lineHeight = 28.sp
                         )
                         Text(
-                            text = stringResource(statusDescRes),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.8f)
+                            text = stringResource(R.string.dashboard_health_score_max),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.width(16.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val components = listOf(
-                        Triple(stringResource(R.string.component_java), status.java.isInstalled, Icons.Filled.Coffee),
-                        Triple(stringResource(R.string.component_gradle), status.gradle.isInstalled, Icons.Filled.Build),
-                        Triple(stringResource(R.string.component_sdk), status.cmdlineTools.isInstalled, Icons.Filled.PhoneAndroid),
-                        Triple(stringResource(R.string.component_aapt2), status.aapt2.isInstalled, Icons.Filled.Settings)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.dashboard_health_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(statusTextRes),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = scoreColor
+                    )
+                    Text(
+                        text = stringResource(statusDescRes),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
-                    components.forEach { (name, installed, icon) ->
-                        Surface(
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            color = Color.White.copy(alpha = if (installed) 0.25f else 0.1f)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val components = listOf(
+                    Triple(stringResource(R.string.component_java), status.java.isInstalled, Icons.Filled.Coffee),
+                    Triple(stringResource(R.string.component_gradle), status.gradle.isInstalled, Icons.Filled.Build),
+                    Triple(stringResource(R.string.component_sdk), status.cmdlineTools.isInstalled, Icons.Filled.PhoneAndroid),
+                    Triple(stringResource(R.string.component_aapt2), status.aapt2.isInstalled, Icons.Filled.Settings)
+                )
+
+                components.forEach { (name, installed, icon) ->
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (installed) scoreColor.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, if (installed) scoreColor.copy(alpha = 0.2f) else Color.Transparent)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = if (installed) Color.White else Color.White.copy(alpha = 0.5f)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = name,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (installed) Color.White else Color.White.copy(alpha = 0.5f)
-                                )
-                            }
+                            Icon(
+                                icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = if (installed) scoreColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (installed) scoreColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
                         }
                     }
                 }
