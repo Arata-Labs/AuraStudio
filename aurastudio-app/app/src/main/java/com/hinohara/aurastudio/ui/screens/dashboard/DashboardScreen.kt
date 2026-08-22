@@ -353,7 +353,24 @@ private fun QuickActionCard(
 
 @Composable
 private fun EnvironmentCard(status: EnvironmentStatus) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    val allComponents = listOf(
+        Triple(stringResource(R.string.component_java), status.java.isInstalled, status.java.version),
+        Triple(stringResource(R.string.component_gradle), status.gradle.isInstalled, status.gradle.version),
+        Triple(stringResource(R.string.component_aapt2), status.aapt2.isInstalled, status.aapt2.version),
+        Triple(stringResource(R.string.component_sdk), status.cmdlineTools.isInstalled, status.cmdlineTools.version),
+        Triple(stringResource(R.string.env_platforms), status.platforms.isNotEmpty(), status.platforms.joinToString(", ")),
+        Triple(stringResource(R.string.env_build_tools), status.buildTools.isNotEmpty(), status.buildTools.joinToString(", ")),
+        Triple(stringResource(R.string.env_ndk), status.ndk.isNotEmpty(), status.ndk.joinToString(", "))
+    )
+
+    val installed = allComponents.filter { it.second }
+    val notInstalled = allComponents.filter { !it.second }
+    val maxVisible = 4
+
     Card(
+        onClick = { showDialog = true },
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
@@ -395,75 +412,278 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Component grid - 2x2
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                ComponentMiniCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Filled.Coffee,
-                    name = stringResource(R.string.component_java),
-                    version = status.java.version,
-                    isInstalled = status.java.isInstalled
+            // Installed components
+            if (installed.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.env_details_installed),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Green40
                 )
-                ComponentMiniCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Filled.Build,
-                    name = stringResource(R.string.component_gradle),
-                    version = status.gradle.version,
-                    isInstalled = status.gradle.isInstalled
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                ComponentMiniCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Filled.Settings,
-                    name = stringResource(R.string.component_aapt2),
-                    version = status.aapt2.version,
-                    isInstalled = status.aapt2.isInstalled
-                )
-                ComponentMiniCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Filled.PhoneAndroid,
-                    name = stringResource(R.string.component_sdk),
-                    version = status.cmdlineTools.version,
-                    isInstalled = status.cmdlineTools.isInstalled
-                )
+                Spacer(modifier = Modifier.height(8.dp))
+                val visibleInstalled = installed.take(maxVisible)
+                val remainingCount = installed.size - maxVisible
+
+                visibleInstalled.forEach { (name, _, version) ->
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Green40.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, Green40.copy(alpha = 0.2f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(Green40, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = version ?: "",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Green40
+                            )
+                        }
+                    }
+                }
+                if (remainingCount > 0) {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Green40.copy(alpha = 0.05f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                Icons.Filled.MoreHoriz,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = Green40
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.env_and_others, remainingCount),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Green40
+                            )
+                        }
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Not installed components
+            if (notInstalled.isNotEmpty()) {
+                if (installed.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                Text(
+                    text = stringResource(R.string.env_details_not_installed),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Red40
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                notInstalled.forEach { (name, _, _) ->
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Red40.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, Red40.copy(alpha = 0.2f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(Red40, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = stringResource(R.string.env_not_installed),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Red40
+                            )
+                        }
+                    }
+                }
+            }
 
-            // Stats row
+            // Tap hint
+            Spacer(modifier = Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                StatPill(
-                    modifier = Modifier.weight(1f),
-                    label = stringResource(R.string.env_platforms),
-                    count = status.platforms.size,
-                    color = MaterialTheme.colorScheme.primary
+                Icon(
+                    Icons.Filled.TouchApp,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
-                StatPill(
-                    modifier = Modifier.weight(1f),
-                    label = stringResource(R.string.env_build_tools),
-                    count = status.buildTools.size,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                StatPill(
-                    modifier = Modifier.weight(1f),
-                    label = stringResource(R.string.env_ndk),
-                    count = status.ndk.size,
-                    color = MaterialTheme.colorScheme.tertiary
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.env_details_title),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
             }
         }
     }
+
+    // Dialog
+    if (showDialog) {
+        EnvironmentDetailsDialog(
+            installed = installed,
+            notInstalled = notInstalled,
+            onDismiss = { showDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun EnvironmentDetailsDialog(
+    installed: List<Triple<String, Boolean, String?>>,
+    notInstalled: List<Triple<String, Boolean, String?>>,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = CardDark,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                text = stringResource(R.string.env_details_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        text = {
+            Column {
+                if (installed.isNotEmpty()) {
+                    Text(
+                        text = stringResource(R.string.env_details_installed),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Green40
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    installed.forEach { (name, _, version) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .background(Green40, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Text(
+                                text = version ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Green40
+                            )
+                        }
+                    }
+                }
+
+                if (notInstalled.isNotEmpty()) {
+                    if (installed.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                    Text(
+                        text = stringResource(R.string.env_details_not_installed),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Red40
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    notInstalled.forEach { (name, _, _) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .background(Red40, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.env_details_close),
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    )
 }
 
 @Composable

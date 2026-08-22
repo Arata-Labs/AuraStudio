@@ -42,6 +42,12 @@
     <string name="env_build_tools">Build-Tools</string>
     <string name="env_ndk">NDK</string>
     <string name="env_not_installed">Not installed</string>
+    <string name="env_installed">Installed</string>
+    <string name="env_and_others">and %1$d others</string>
+    <string name="env_details_title">Environment Details</string>
+    <string name="env_details_installed">Installed</string>
+    <string name="env_details_not_installed">Not Installed</string>
+    <string name="env_details_close">Close</string>
 
     <!-- Recent Projects -->
     <string name="projects_title">Recent Projects</string>
