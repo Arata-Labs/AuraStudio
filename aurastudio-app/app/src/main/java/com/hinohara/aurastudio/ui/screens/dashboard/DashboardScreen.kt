@@ -654,11 +654,14 @@ private fun RecentProjectsCard(
                     )
                 }
             } else {
-                projects.forEach { project ->
+                projects.forEachIndexed { index, project ->
                     ProjectRow(
                         project = project,
                         onClick = { onOpenProject(project.path) }
                     )
+                    if (index < projects.lastIndex) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
                 }
             }
         }
