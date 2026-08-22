@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -41,7 +43,9 @@ private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third:
 fun SettingsScreen(
     scaffoldPadding: PaddingValues = PaddingValues(),
     themeMode: Int = THEME_SYSTEM,
-    onThemeChange: (Int) -> Unit = {}
+    iconMode: Int = ICON_SYSTEM,
+    onThemeChange: (Int) -> Unit = {},
+    onIconChange: (Int) -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -54,7 +58,7 @@ fun SettingsScreen(
         )
     ) {
         item { SettingsHeader() }
-        item { AppearanceSection(themeMode = themeMode, onThemeChange = onThemeChange) }
+        item { AppearanceSection(themeMode = themeMode, iconMode = iconMode, onThemeChange = onThemeChange, onIconChange = onIconChange) }
         item { EnvironmentSection() }
         item { TerminalSection() }
         item { AboutSection() }
@@ -208,9 +212,95 @@ private fun ThemeOptionItem(
 }
 
 @Composable
+private fun IconOptionItem(
+    modifier: Modifier = Modifier,
+    title: String,
+    @DrawableRes iconRes: Int,
+    bgColor: Color,
+    fgTint: Color = Color.White,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    showSplitBg: Boolean = false
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+        modifier = modifier.height(92.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 2.dp, vertical = 2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (showSplitBg) {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .background(Color(0xFF1C1C22))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .background(Color(0xFFF5F5FA))
+                        )
+                    }
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = title,
+                        tint = Color.Unspecified,
+                            modifier = Modifier.size(40.dp)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(bgColor),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = iconRes),
+                            contentDescription = title,
+                            tint = Color.Unspecified,
+                        modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 11.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                ),
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
 private fun AppearanceSection(
     themeMode: Int = THEME_SYSTEM,
-    onThemeChange: (Int) -> Unit = {}
+    iconMode: Int = ICON_SYSTEM,
+    onThemeChange: (Int) -> Unit = {},
+    onIconChange: (Int) -> Unit = {}
 ) {
     SettingsCategory(
         icon = Icons.Filled.Palette,
@@ -255,6 +345,56 @@ private fun AppearanceSection(
                 icon = Icons.Filled.SettingsBrightness,
                 isSelected = themeMode == THEME_SYSTEM,
                 onClick = { onThemeChange(THEME_SYSTEM) }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(R.string.settings_icon),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = stringResource(R.string.settings_icon_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            IconOptionItem(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.settings_icon_dark),
+                iconRes = R.drawable.ic_logo_dark,
+                bgColor = Color(0xFF1C1C22),
+                isSelected = iconMode == ICON_DARK,
+                onClick = { onIconChange(ICON_DARK) }
+            )
+            IconOptionItem(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.settings_icon_light),
+                iconRes = R.drawable.ic_logo,
+                bgColor = Color(0xFFF5F5FA),
+                fgTint = Color(0xFF1C1C22),
+                isSelected = iconMode == ICON_LIGHT,
+                onClick = { onIconChange(ICON_LIGHT) }
+            )
+            IconOptionItem(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.settings_icon_system),
+                iconRes = R.drawable.ic_logo_dark,
+                bgColor = MaterialTheme.colorScheme.primary,
+                isSelected = iconMode == ICON_SYSTEM,
+                onClick = { onIconChange(ICON_SYSTEM) },
+                showSplitBg = true
             )
         }
     }

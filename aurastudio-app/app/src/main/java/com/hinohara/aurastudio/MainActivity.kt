@@ -1,23 +1,19 @@
 package com.hinohara.aurastudio
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import com.hinohara.aurastudio.data.viewmodel.DashboardViewModel
 import com.hinohara.aurastudio.ui.components.AuraStudioTopBar
 import com.hinohara.aurastudio.ui.components.ModernBottomNavBar
@@ -27,29 +23,76 @@ import com.hinohara.aurastudio.ui.screens.dashboard.DashboardScreen
 import com.hinohara.aurastudio.ui.screens.projects.CreateProjectScreen
 import com.hinohara.aurastudio.ui.screens.projects.ProjectsScreen
 import com.hinohara.aurastudio.ui.screens.terminal.TerminalScreen
-import com.hinohara.aurastudio.ui.theme.AuraStudioTheme
-import com.hinohara.aurastudio.ui.theme.THEME_SYSTEM
+import com.hinohara.aurastudio.ui.theme.*
 
 private const val PREFS_NAME = "aurastudio_settings"
 private const val KEY_THEME_MODE = "theme_mode"
+private const val KEY_ICON_MODE = "icon_mode"
+
+private val ICON_ALIASES = mapOf(
+    ICON_DARK to ComponentName(BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}.IconDark"),
+    ICON_LIGHT to ComponentName(BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}.IconLight"),
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val savedThemeMode = prefs.getInt(KEY_THEME_MODE, THEME_SYSTEM)
+        val savedIconMode = prefs.getInt(KEY_ICON_MODE, ICON_SYSTEM)
+        val isDark = resolveIsDark(savedThemeMode)
+        applyIcon(this, savedIconMode, isDark)
+
         setContent {
-            val prefs = remember { getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
-            var themeMode by remember { mutableIntStateOf(prefs.getInt(KEY_THEME_MODE, THEME_SYSTEM)) }
+            var themeMode by remember { mutableIntStateOf(savedThemeMode) }
+            var iconMode by remember { mutableIntStateOf(savedIconMode) }
+            val isSystemDark = isSystemInDarkTheme()
+            val currentIsDark = resolveIsDark(themeMode, isSystemDark)
+
+            LaunchedEffect(currentIsDark, iconMode) {
+                applyIcon(this@MainActivity, iconMode, currentIsDark)
+            }
 
             AuraStudioTheme(themeMode = themeMode) {
                 AuraStudioApp(
                     themeMode = themeMode,
+                    iconMode = iconMode,
                     onThemeChange = { mode ->
                         themeMode = mode
                         prefs.edit().putInt(KEY_THEME_MODE, mode).apply()
+                    },
+                    onIconChange = { mode ->
+                        iconMode = mode
+                        prefs.edit().putInt(KEY_ICON_MODE, mode).apply()
                     }
                 )
             }
+        }
+    }
+
+    private fun resolveIsDark(themeMode: Int, systemDark: Boolean = resources.configuration.uiMode and 0x20 != 0): Boolean {
+        return when (themeMode) {
+            THEME_DARK -> true
+            THEME_LIGHT -> false
+            else -> systemDark
+        }
+    }
+
+    private fun applyIcon(context: Context, iconMode: Int, isDark: Boolean) {
+        val pm = context.packageManager
+        val effectiveMode = when (iconMode) {
+            ICON_SYSTEM -> if (isDark) ICON_DARK else ICON_LIGHT
+            else -> iconMode
+        }
+        ICON_ALIASES.forEach { (mode, component) ->
+            pm.setComponentEnabledSetting(
+                component,
+                if (mode == effectiveMode) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP
+            )
         }
     }
 }
@@ -57,7 +100,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AuraStudioApp(
     themeMode: Int,
+    iconMode: Int,
     onThemeChange: (Int) -> Unit,
+    onIconChange: (Int) -> Unit,
     dashboardViewModel: DashboardViewModel = viewModel()
 ) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
@@ -140,7 +185,9 @@ fun AuraStudioApp(
                     com.hinohara.aurastudio.ui.screens.editor.SettingsScreen(
                         scaffoldPadding = innerPadding,
                         themeMode = themeMode,
-                        onThemeChange = onThemeChange
+                        iconMode = iconMode,
+                        onThemeChange = onThemeChange,
+                        onIconChange = onIconChange
                     )
                 }
             }

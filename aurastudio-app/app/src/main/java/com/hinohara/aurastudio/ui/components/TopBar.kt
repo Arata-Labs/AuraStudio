@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -63,18 +63,14 @@ fun AuraStudioTopBar(
                             shape = CircleShape,
                             ambientColor = Indigo40.copy(alpha = 0.3f),
                             spotColor = Purple40.copy(alpha = 0.3f)
-                        )
-                        .background(
-                            brush = Brush.linearGradient(colors = listOf(Indigo40, Purple40)),
-                            shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Filled.Code,
+                        painter = painterResource(id = R.drawable.ic_logo),
                         contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        tint = Color.Unspecified,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 

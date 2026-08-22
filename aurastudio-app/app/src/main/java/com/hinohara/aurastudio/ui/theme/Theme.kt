@@ -65,6 +65,10 @@ const val THEME_DARK = 0
 const val THEME_LIGHT = 1
 const val THEME_SYSTEM = 2
 
+const val ICON_SYSTEM = 0
+const val ICON_DARK = 1
+const val ICON_LIGHT = 2
+
 @Composable
 fun AuraStudioTheme(
     themeMode: Int = THEME_SYSTEM,

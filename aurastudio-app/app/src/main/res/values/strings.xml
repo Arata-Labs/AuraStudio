@@ -97,6 +97,12 @@
     <string name="settings_theme_system">System</string>
     <string name="settings_theme_desc">Choose your preferred theme</string>
 
+    <string name="settings_icon">App Icon</string>
+    <string name="settings_icon_dark">Dark</string>
+    <string name="settings_icon_light">Light</string>
+    <string name="settings_icon_system">System</string>
+    <string name="settings_icon_desc">Choose your preferred app icon</string>
+
     <string name="settings_language">Language</string>
     <string name="settings_language_value">English</string>
 
