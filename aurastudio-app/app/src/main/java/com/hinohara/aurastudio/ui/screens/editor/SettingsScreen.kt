@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import com.hinohara.aurastudio.R
 import com.hinohara.aurastudio.ui.theme.*
 
+private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
 @Composable
 fun SettingsScreen(
     scaffoldPadding: PaddingValues = PaddingValues()
@@ -247,18 +249,18 @@ private fun AppearanceSection() {
 private fun EnvironmentSection() {
     var selectedPath by remember { mutableIntStateOf(0) }
     val paths = listOf(
-        Triple(stringResource(R.string.settings_java_path), "/data/data/com.termux/files/usr/lib/jvm/java-21-openjdk", Icons.Filled.Coffee),
-        Triple(stringResource(R.string.settings_sdk_path), "~/android-sdk", Icons.Filled.PhoneAndroid),
-        Triple(stringResource(R.string.settings_ndk_path), "~/android-sdk/ndk", Icons.Filled.Memory),
-        Triple(stringResource(R.string.settings_cmake_path), "~/android-sdk/cmake", Icons.Filled.AccountTree),
-        Triple(stringResource(R.string.settings_build_tools_path), "~/android-sdk/build-tools", Icons.Filled.Engineering),
-        Triple(stringResource(R.string.settings_aapt2_path), "~/.gradle/gradle.properties", Icons.Filled.Settings),
-        Triple(stringResource(R.string.settings_gradle_path), "~/android-sdk/cmdline-tools", Icons.Filled.Build),
-        Triple(stringResource(R.string.settings_config_path), "~/.config/aurastudio", Icons.Filled.Folder),
-        Triple(stringResource(R.string.settings_plugins_path), "~/.config/aurastudio/plugins", Icons.Filled.Extension),
-        Triple(stringResource(R.string.settings_cache_path), "~/.cache/aurastudio", Icons.Filled.Cached),
-        Triple(stringResource(R.string.settings_env_file), "~/.config/aurastudio/env.sh", Icons.Filled.Description),
-        Triple(stringResource(R.string.settings_home_path), "~/", Icons.Filled.Home)
+        Quadruple(stringResource(R.string.settings_java_path), "/data/data/com.termux/files/usr/lib/jvm/java-21-openjdk", Icons.Filled.Coffee, stringResource(R.string.settings_java_desc)),
+        Quadruple(stringResource(R.string.settings_sdk_path), "~/android-sdk", Icons.Filled.PhoneAndroid, stringResource(R.string.settings_sdk_desc)),
+        Quadruple(stringResource(R.string.settings_ndk_path), "~/android-sdk/ndk", Icons.Filled.Memory, stringResource(R.string.settings_ndk_desc)),
+        Quadruple(stringResource(R.string.settings_cmake_path), "~/android-sdk/cmake", Icons.Filled.AccountTree, stringResource(R.string.settings_cmake_desc)),
+        Quadruple(stringResource(R.string.settings_build_tools_path), "~/android-sdk/build-tools", Icons.Filled.Engineering, stringResource(R.string.settings_build_tools_desc)),
+        Quadruple(stringResource(R.string.settings_aapt2_path), "~/.gradle/gradle.properties", Icons.Filled.Settings, stringResource(R.string.settings_aapt2_desc)),
+        Quadruple(stringResource(R.string.settings_gradle_path), "~/android-sdk/cmdline-tools", Icons.Filled.Build, stringResource(R.string.settings_gradle_desc)),
+        Quadruple(stringResource(R.string.settings_config_path), "~/.config/aurastudio", Icons.Filled.Folder, stringResource(R.string.settings_config_desc)),
+        Quadruple(stringResource(R.string.settings_plugins_path), "~/.config/aurastudio/plugins", Icons.Filled.Extension, stringResource(R.string.settings_plugins_desc)),
+        Quadruple(stringResource(R.string.settings_cache_path), "~/.cache/aurastudio", Icons.Filled.Cached, stringResource(R.string.settings_cache_desc)),
+        Quadruple(stringResource(R.string.settings_env_file), "~/.config/aurastudio/env.sh", Icons.Filled.Description, stringResource(R.string.settings_env_file_desc)),
+        Quadruple(stringResource(R.string.settings_home_path), "~/", Icons.Filled.Home, stringResource(R.string.settings_home_desc))
     )
 
     SettingsCategory(
@@ -328,7 +330,7 @@ private fun EnvironmentSection() {
         )
         Spacer(modifier = Modifier.height(6.dp))
 
-        paths.forEachIndexed { index, (title, path, icon) ->
+        paths.forEachIndexed { index, (title, path, icon, desc) ->
             val isSelected = selectedPath == index
             Surface(
                 onClick = { selectedPath = index },
@@ -365,9 +367,11 @@ private fun EnvironmentSection() {
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = path,
+                                text = if (isSelected) path else desc,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
