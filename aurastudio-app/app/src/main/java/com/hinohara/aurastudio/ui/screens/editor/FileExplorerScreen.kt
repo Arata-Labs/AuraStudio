@@ -18,15 +18,15 @@ fun FileExplorerScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TerminalBg),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = stringResource(R.string.file_explorer_title),
-            color = DarkOnSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = TextStyle(
                 fontFamily = FontFamily.Monospace,
-                fontSize = 14.sp
+                fontSize = 16.sp
             )
         )
     }

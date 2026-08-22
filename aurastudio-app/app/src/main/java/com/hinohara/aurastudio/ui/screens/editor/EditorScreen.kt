@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hinohara.aurastudio.R
 import com.hinohara.aurastudio.ui.theme.*
@@ -18,16 +19,27 @@ fun EditorScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TerminalBg),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "${stringResource(R.string.editor_no_file)}\n${stringResource(R.string.editor_no_file_hint)}",
-            color = DarkOnSurfaceVariant,
-            style = TextStyle(
-                fontFamily = FontFamily.Monospace,
-                fontSize = 14.sp
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = stringResource(R.string.editor_no_file),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = TextStyle(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 16.sp
+                )
             )
-        )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.editor_no_file_hint),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                style = TextStyle(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp
+                )
+            )
+        }
     }
 }

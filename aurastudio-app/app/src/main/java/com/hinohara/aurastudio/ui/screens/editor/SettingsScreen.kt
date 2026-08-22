@@ -1,10 +1,18 @@
 package com.hinohara.aurastudio.ui.screens.editor
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -14,12 +22,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.hinohara.aurastudio.R
 import com.hinohara.aurastudio.ui.theme.*
 
@@ -27,7 +39,9 @@ private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third:
 
 @Composable
 fun SettingsScreen(
-    scaffoldPadding: PaddingValues = PaddingValues()
+    scaffoldPadding: PaddingValues = PaddingValues(),
+    themeMode: Int = THEME_SYSTEM,
+    onThemeChange: (Int) -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -40,7 +54,7 @@ fun SettingsScreen(
         )
     ) {
         item { SettingsHeader() }
-        item { AppearanceSection() }
+        item { AppearanceSection(themeMode = themeMode, onThemeChange = onThemeChange) }
         item { EnvironmentSection() }
         item { TerminalSection() }
         item { AboutSection() }
@@ -65,9 +79,9 @@ private fun SettingsCategory(
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardDark),
+        colors = CardDefaults.cardColors(containerColor = cardBg()),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -194,9 +208,10 @@ private fun ThemeOptionItem(
 }
 
 @Composable
-private fun AppearanceSection() {
-    var selectedTheme by remember { mutableIntStateOf(0) }
-
+private fun AppearanceSection(
+    themeMode: Int = THEME_SYSTEM,
+    onThemeChange: (Int) -> Unit = {}
+) {
     SettingsCategory(
         icon = Icons.Filled.Palette,
         title = stringResource(R.string.settings_section_general)
@@ -222,24 +237,24 @@ private fun AppearanceSection() {
                 title = stringResource(R.string.settings_theme_dark),
                 subtitle = stringResource(R.string.settings_theme_dark),
                 icon = Icons.Filled.DarkMode,
-                isSelected = selectedTheme == 0,
-                onClick = { selectedTheme = 0 }
+                isSelected = themeMode == THEME_DARK,
+                onClick = { onThemeChange(THEME_DARK) }
             )
             ThemeOptionItem(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.settings_theme_light),
                 subtitle = stringResource(R.string.settings_theme_light),
                 icon = Icons.Filled.LightMode,
-                isSelected = selectedTheme == 1,
-                onClick = { selectedTheme = 1 }
+                isSelected = themeMode == THEME_LIGHT,
+                onClick = { onThemeChange(THEME_LIGHT) }
             )
             ThemeOptionItem(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.settings_theme_system),
                 subtitle = stringResource(R.string.settings_theme_system),
                 icon = Icons.Filled.SettingsBrightness,
-                isSelected = selectedTheme == 2,
-                onClick = { selectedTheme = 2 }
+                isSelected = themeMode == THEME_SYSTEM,
+                onClick = { onThemeChange(THEME_SYSTEM) }
             )
         }
     }
@@ -390,40 +405,6 @@ private fun EnvironmentSection() {
 }
 
 @Composable
-private fun SettingsInfoRow(
-    title: String,
-    subtitle: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Icon(
-            Icons.Filled.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-            modifier = Modifier.size(18.dp)
-        )
-    }
-}
-
-@Composable
 private fun TerminalSection() {
     var fontSize by remember { mutableFloatStateOf(13f) }
     var vibrate by remember { mutableStateOf(true) }
@@ -467,6 +448,10 @@ private fun TerminalSection() {
 
 @Composable
 private fun AboutSection() {
+    val context = LocalContext.current
+    var showDeveloperDialog by remember { mutableStateOf(false) }
+    var showLicenseDialog by remember { mutableStateOf(false) }
+
     SettingsCategory(
         icon = Icons.Filled.Info,
         title = stringResource(R.string.settings_section_about)
@@ -534,16 +519,49 @@ private fun AboutSection() {
         )
         Spacer(modifier = Modifier.height(6.dp))
 
-        val items = listOf(
-            Triple(stringResource(R.string.settings_version), "1.2", Icons.Filled.Tag),
-            Triple(stringResource(R.string.settings_build), "dev-app", Icons.Filled.Build),
-            Triple(stringResource(R.string.settings_developer), stringResource(R.string.settings_developer_value), Icons.Filled.Person),
-            Triple(stringResource(R.string.settings_github), stringResource(R.string.settings_github_value), Icons.Filled.Link),
-            Triple(stringResource(R.string.settings_about_license), stringResource(R.string.settings_about_license_value), Icons.Filled.Description)
+        val aboutItems = listOf(
+            AboutItem(
+                titleRes = R.string.settings_version,
+                subtitle = "1.2",
+                icon = Icons.Filled.Tag,
+                onClick = {
+                    copyToClipboard(context, "1.2", "Version")
+                }
+            ),
+            AboutItem(
+                titleRes = R.string.settings_build,
+                subtitle = "dev-app",
+                icon = Icons.Filled.Build,
+                onClick = {
+                    copyToClipboard(context, "dev-app", "Build")
+                }
+            ),
+            AboutItem(
+                titleRes = R.string.settings_developer,
+                subtitleRes = R.string.settings_developer_value,
+                icon = Icons.Filled.Person,
+                onClick = { showDeveloperDialog = true }
+            ),
+            AboutItem(
+                titleRes = R.string.settings_github,
+                subtitleRes = R.string.settings_github_value,
+                icon = Icons.Filled.Link,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Arata-Labs/AuraStudio"))
+                    context.startActivity(intent)
+                }
+            ),
+            AboutItem(
+                titleRes = R.string.settings_about_license,
+                subtitleRes = R.string.settings_about_license_value,
+                icon = Icons.Filled.Description,
+                onClick = { showLicenseDialog = true }
+            )
         )
 
-        items.forEachIndexed { index, (title, subtitle, icon) ->
+        aboutItems.forEach { item ->
             Surface(
+                onClick = item.onClick,
                 shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
@@ -563,7 +581,7 @@ private fun AboutSection() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = icon,
+                            imageVector = item.icon,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
@@ -571,13 +589,13 @@ private fun AboutSection() {
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = title,
+                                text = stringResource(item.titleRes),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = subtitle,
+                                text = if (item.subtitleRes != null) stringResource(item.subtitleRes) else item.subtitle ?: "",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
@@ -585,6 +603,299 @@ private fun AboutSection() {
                             )
                         }
                     }
+                    Icon(
+                        Icons.Filled.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    if (showDeveloperDialog) {
+        DeveloperDialog(onDismiss = { showDeveloperDialog = false })
+    }
+
+    if (showLicenseDialog) {
+        LicenseDialog(onDismiss = { showLicenseDialog = false })
+    }
+}
+
+private data class AboutItem(
+    val titleRes: Int,
+    val subtitle: String? = null,
+    val subtitleRes: Int? = null,
+    val icon: ImageVector,
+    val onClick: () -> Unit
+)
+
+private fun copyToClipboard(context: Context, text: String, label: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText(label, text)
+    clipboard.setPrimaryClip(clip)
+}
+
+@Composable
+private fun DeveloperDialog(onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBg()),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),
+            modifier = Modifier
+                .fillMaxWidth(0.88f)
+                .wrapContentHeight()
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(R.string.dev_profile_name),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.dev_profile_role),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                val socials = listOf(
+                    Triple(stringResource(R.string.dev_social_github), stringResource(R.string.dev_social_github_value), Icons.Filled.Code),
+                    Triple(stringResource(R.string.dev_social_email), stringResource(R.string.dev_social_email_value), Icons.Filled.Email),
+                    Triple(stringResource(R.string.dev_social_website), stringResource(R.string.dev_social_website_value), Icons.Filled.Language),
+                )
+
+                socials.forEach { (label, value, icon) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = value,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(R.string.dev_profile_bio),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 18.sp
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Surface(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.env_details_close),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LicenseDialog(onDismiss: () -> Unit) {
+    val licenseText = """
+MIT License
+
+Copyright (c) 2026 HinohArata (AuraStudio CLI)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+    """.trimIndent()
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = termBg()),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .heightIn(min = 200.dp, max = 520.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(7.dp))
+                            .background(termGreen().copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Description,
+                            contentDescription = null,
+                            tint = termGreen(),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "LICENSE",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = termGreen(),
+                        letterSpacing = 1.sp
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                ) {
+                    SelectionContainer {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 380.dp)
+                                .verticalScroll(rememberScrollState())
+                                .padding(14.dp)
+                        ) {
+                            Text(
+                                text = "MIT License",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = termGreen(),
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 13.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Copyright (c) 2026 HinohArata",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 11.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = licenseText.removePrefix("MIT License\n\nCopyright (c) 2026 HinohArata (AuraStudio CLI)\n\n"),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 11.sp,
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Surface(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.env_details_close),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }

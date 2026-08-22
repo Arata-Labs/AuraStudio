@@ -1,5 +1,6 @@
 package com.hinohara.aurastudio
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -26,14 +28,27 @@ import com.hinohara.aurastudio.ui.screens.projects.CreateProjectScreen
 import com.hinohara.aurastudio.ui.screens.projects.ProjectsScreen
 import com.hinohara.aurastudio.ui.screens.terminal.TerminalScreen
 import com.hinohara.aurastudio.ui.theme.AuraStudioTheme
+import com.hinohara.aurastudio.ui.theme.THEME_SYSTEM
+
+private const val PREFS_NAME = "aurastudio_settings"
+private const val KEY_THEME_MODE = "theme_mode"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AuraStudioTheme {
-                AuraStudioApp()
+            val prefs = remember { getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+            var themeMode by remember { mutableIntStateOf(prefs.getInt(KEY_THEME_MODE, THEME_SYSTEM)) }
+
+            AuraStudioTheme(themeMode = themeMode) {
+                AuraStudioApp(
+                    themeMode = themeMode,
+                    onThemeChange = { mode ->
+                        themeMode = mode
+                        prefs.edit().putInt(KEY_THEME_MODE, mode).apply()
+                    }
+                )
             }
         }
     }
@@ -41,6 +56,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AuraStudioApp(
+    themeMode: Int,
+    onThemeChange: (Int) -> Unit,
     dashboardViewModel: DashboardViewModel = viewModel()
 ) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
@@ -121,7 +138,9 @@ fun AuraStudioApp(
                 }
                 is Screen.Settings -> {
                     com.hinohara.aurastudio.ui.screens.editor.SettingsScreen(
-                        scaffoldPadding = innerPadding
+                        scaffoldPadding = innerPadding,
+                        themeMode = themeMode,
+                        onThemeChange = onThemeChange
                     )
                 }
             }

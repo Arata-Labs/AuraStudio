@@ -110,8 +110,8 @@ private fun HealthBanner(score: Int, status: EnvironmentStatus) {
                 ambientColor = scoreColor.copy(alpha = 0.15f)
             ),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = CardDark),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+        colors = CardDefaults.cardColors(containerColor = cardBg()),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -302,8 +302,8 @@ private fun QuickActionCard(
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardDark),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+        colors = CardDefaults.cardColors(containerColor = cardBg()),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
     ) {
         Row(
             modifier = Modifier
@@ -435,8 +435,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardDark),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+        colors = CardDefaults.cardColors(containerColor = cardBg()),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -592,8 +592,8 @@ private fun EnvComponentCard(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = CardSurface,
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+        color = cardContentBg(),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
     ) {
         Column(
             modifier = Modifier
@@ -665,7 +665,7 @@ private fun EnvironmentAllDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CardDark,
+        containerColor = cardBg(),
         shape = RoundedCornerShape(24.dp),
         title = {
             Text(
@@ -844,7 +844,7 @@ private fun ComponentDetailDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CardDark,
+        containerColor = cardBg(),
         shape = RoundedCornerShape(24.dp),
         title = {
             Row(
@@ -1057,8 +1057,8 @@ private fun RecentProjectsCard(
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardDark),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+        colors = CardDefaults.cardColors(containerColor = cardBg()),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -1131,8 +1131,8 @@ private fun ProjectRow(project: Project, onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        color = CardSurface,
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+        color = cardContentBg(),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
     ) {
         Row(
             modifier = Modifier

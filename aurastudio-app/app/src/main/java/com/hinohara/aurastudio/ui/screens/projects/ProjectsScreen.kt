@@ -74,9 +74,9 @@ private fun EmptyProjectsState() {
             .padding(top = 24.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardDark
+            containerColor = cardBg()
         ),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier
@@ -115,9 +115,9 @@ private fun ProjectCard(project: Project, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardDark
+            containerColor = cardBg()
         ),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
     ) {
         Row(
             modifier = Modifier

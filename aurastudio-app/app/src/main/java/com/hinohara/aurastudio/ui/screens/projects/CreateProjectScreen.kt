@@ -61,9 +61,9 @@ fun CreateProjectScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = CardDark
+                containerColor = cardBg()
             ),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
@@ -100,9 +100,9 @@ fun CreateProjectScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = CardDark
+                containerColor = cardBg()
             ),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)

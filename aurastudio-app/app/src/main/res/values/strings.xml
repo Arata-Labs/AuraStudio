@@ -144,6 +144,17 @@
     <string name="settings_about_license">License</string>
     <string name="settings_about_license_value">MIT License</string>
 
+    <!-- Developer Profile Dialog -->
+    <string name="dev_profile_name">HinohArata</string>
+    <string name="dev_profile_role">Lead Developer</string>
+    <string name="dev_profile_bio">Building tools for Android development in Termux. Passionate about making mobile development accessible anywhere.</string>
+    <string name="dev_social_github">GitHub</string>
+    <string name="dev_social_github_value">github.com/Arata-Labs</string>
+    <string name="dev_social_email">Email</string>
+    <string name="dev_social_email_value">hinoharata@aurastudio.dev</string>
+    <string name="dev_social_website">Website</string>
+    <string name="dev_social_website_value">aurastudio.dev</string>
+
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_projects">Projects</string>

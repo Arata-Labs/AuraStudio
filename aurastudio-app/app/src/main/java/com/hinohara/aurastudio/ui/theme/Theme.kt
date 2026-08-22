@@ -3,12 +3,13 @@ package com.hinohara.aurastudio.ui.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// Brand seed color
 private val SeedColor = Color(0xFF6366F1)
+
+val LocalIsAppDark = staticCompositionLocalOf { true }
 
 private val LightColorScheme = lightColorScheme(
     primary = Indigo40,
@@ -30,6 +31,9 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = Color(0xFFE7E0EC),
     onSurfaceVariant = Color(0xFF49454F),
     outline = Color(0xFF79747E),
+    surfaceContainer = Color(0xFFF0EDF5),
+    surfaceContainerLow = Color(0xFFFAF8FF),
+    surfaceContainerHigh = Color(0xFFE5E2EC),
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -57,24 +61,36 @@ private val DarkColorScheme = darkColorScheme(
     surfaceContainerHigh = Color(0xFF262638),
 )
 
+const val THEME_DARK = 0
+const val THEME_LIGHT = 1
+const val THEME_SYSTEM = 2
+
 @Composable
 fun AuraStudioTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: Int = THEME_SYSTEM,
     content: @Composable () -> Unit
 ) {
+    val isSystemDark = isSystemInDarkTheme()
+    val isDark = when (themeMode) {
+        THEME_DARK -> true
+        THEME_LIGHT -> false
+        else -> isSystemDark
+    }
+
     val colorScheme = when {
-        // Dynamic color on Android 12+
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
+        isDark -> DarkColorScheme
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = AppTypography,
-        content = content
-    )
+    CompositionLocalProvider(LocalIsAppDark provides isDark) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = AppTypography,
+            content = content
+        )
+    }
 }

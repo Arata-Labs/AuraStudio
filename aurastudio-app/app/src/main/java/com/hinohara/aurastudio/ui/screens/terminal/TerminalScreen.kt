@@ -35,7 +35,7 @@ fun TerminalScreen(initialCommand: String? = null) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(TerminalBg)
+            .background(termBg())
     ) {
         Box(
             modifier = Modifier
@@ -44,7 +44,7 @@ fun TerminalScreen(initialCommand: String? = null) {
         ) {
             Text(
                 text = output,
-                color = TerminalFg,
+                color = termFg(),
                 style = TextStyle(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 13.sp,
@@ -53,7 +53,7 @@ fun TerminalScreen(initialCommand: String? = null) {
             )
         }
 
-        Surface(color = DarkSurface) {
+        Surface(color = termSurface()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -62,7 +62,7 @@ fun TerminalScreen(initialCommand: String? = null) {
             ) {
                 Text(
                     "$ ",
-                    color = TerminalGreen,
+                    color = termGreen(),
                     fontFamily = FontFamily.Monospace,
                     fontSize = 14.sp
                 )
@@ -73,14 +73,14 @@ fun TerminalScreen(initialCommand: String? = null) {
                     textStyle = TextStyle(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 14.sp,
-                        color = TerminalFg
+                        color = termFg()
                     ),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = TerminalGreen
+                        cursorColor = termGreen()
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = {
@@ -97,7 +97,7 @@ fun TerminalScreen(initialCommand: String? = null) {
                         input = ""
                     }
                 }) {
-                    Icon(Icons.Filled.Send, stringResource(R.string.terminal_title), tint = TerminalGreen)
+                    Icon(Icons.Filled.Send, stringResource(R.string.terminal_title), tint = termGreen())
                 }
             }
         }
