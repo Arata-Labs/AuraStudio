@@ -659,12 +659,6 @@ private fun RecentProjectsCard(
                         project = project,
                         onClick = { onOpenProject(project.path) }
                     )
-                    if (project != projects.last()) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                        )
-                    }
                 }
             }
         }
@@ -673,56 +667,62 @@ private fun RecentProjectsCard(
 
 @Composable
 private fun ProjectRow(project: Project, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = CardSurface,
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(44.dp)
-                .background(
-                    MaterialTheme.colorScheme.primaryContainer,
-                    RoundedCornerShape(12.dp)
-                ),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    when (project.type) {
+                        ProjectType.GRADLE_JAVA -> Icons.Filled.Code
+                        ProjectType.GRADLE_KOTLIN -> Icons.Filled.Code
+                        ProjectType.NATIVE_CPP -> Icons.Filled.Memory
+                        ProjectType.NDK_SHARED_LIB -> Icons.Filled.Layers
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = project.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = project.path.substringBeforeLast("/"),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
             Icon(
-                when (project.type) {
-                    ProjectType.GRADLE_JAVA -> Icons.Filled.Code
-                    ProjectType.GRADLE_KOTLIN -> Icons.Filled.Code
-                    ProjectType.NATIVE_CPP -> Icons.Filled.Memory
-                    ProjectType.NDK_SHARED_LIB -> Icons.Filled.Layers
-                },
+                Icons.Filled.ChevronRight,
                 contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = MaterialTheme.colorScheme.primary
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
         }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = project.name,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = project.path.substringBeforeLast("/"),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-        }
-        Icon(
-            Icons.Filled.ChevronRight,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-        )
     }
 }
 
