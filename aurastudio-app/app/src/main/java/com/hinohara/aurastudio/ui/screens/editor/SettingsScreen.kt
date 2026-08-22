@@ -204,7 +204,7 @@ private fun AppearanceSection() {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "Choose your preferred theme",
+            text = stringResource(R.string.settings_theme_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -216,7 +216,7 @@ private fun AppearanceSection() {
             ThemeOptionItem(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.settings_theme_dark),
-                subtitle = "Dark",
+                subtitle = stringResource(R.string.settings_theme_dark),
                 icon = Icons.Filled.DarkMode,
                 isSelected = selectedTheme == 0,
                 onClick = { selectedTheme = 0 }
@@ -224,7 +224,7 @@ private fun AppearanceSection() {
             ThemeOptionItem(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.settings_theme_light),
-                subtitle = "Light",
+                subtitle = stringResource(R.string.settings_theme_light),
                 icon = Icons.Filled.LightMode,
                 isSelected = selectedTheme == 1,
                 onClick = { selectedTheme = 1 }
@@ -232,7 +232,7 @@ private fun AppearanceSection() {
             ThemeOptionItem(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.settings_theme_system),
-                subtitle = "Auto",
+                subtitle = stringResource(R.string.settings_theme_system),
                 icon = Icons.Filled.SettingsBrightness,
                 isSelected = selectedTheme == 2,
                 onClick = { selectedTheme = 2 }
@@ -255,7 +255,7 @@ private fun EnvironmentSection() {
         title = stringResource(R.string.settings_section_environment)
     ) {
         Text(
-            text = "Detected paths in your Termux environment",
+            text = stringResource(R.string.settings_env_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -289,7 +289,7 @@ private fun EnvironmentSection() {
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "Active",
+                            text = stringResource(R.string.settings_env_active),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
@@ -310,7 +310,7 @@ private fun EnvironmentSection() {
         Spacer(modifier = Modifier.height(14.dp))
 
         Text(
-            text = "Available Components",
+            text = stringResource(R.string.settings_env_available),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -443,7 +443,7 @@ private fun TerminalSection() {
         HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
         SettingsSwitchRow(
             title = stringResource(R.string.settings_terminal_vibrate),
-            subtitle = "Haptic feedback on keypress",
+            subtitle = stringResource(R.string.settings_terminal_vibrate_desc),
             checked = vibrate,
             onCheckedChange = { vibrate = it }
         )
@@ -456,24 +456,122 @@ private fun AboutSection() {
         icon = Icons.Filled.Info,
         title = stringResource(R.string.settings_section_about)
     ) {
-        SettingsInfoRow(
-            title = stringResource(R.string.settings_version),
-            subtitle = "1.2"
+        Text(
+            text = stringResource(R.string.settings_about_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-        SettingsInfoRow(
-            title = stringResource(R.string.settings_build),
-            subtitle = "dev-app"
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Code,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.settings_about_info),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_about_version_value),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Text(
+            text = stringResource(R.string.settings_section_about),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-        SettingsInfoRow(
-            title = stringResource(R.string.settings_developer),
-            subtitle = stringResource(R.string.settings_developer_value)
+        Spacer(modifier = Modifier.height(6.dp))
+
+        val items = listOf(
+            Triple(stringResource(R.string.settings_version), "1.2", Icons.Filled.Tag),
+            Triple(stringResource(R.string.settings_build), "dev-app", Icons.Filled.Build),
+            Triple(stringResource(R.string.settings_developer), stringResource(R.string.settings_developer_value), Icons.Filled.Person),
+            Triple(stringResource(R.string.settings_github), stringResource(R.string.settings_github_value), Icons.Filled.Link),
+            Triple(stringResource(R.string.settings_about_license), stringResource(R.string.settings_about_license_value), Icons.Filled.Description)
         )
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-        SettingsInfoRow(
-            title = stringResource(R.string.settings_github),
-            subtitle = "github.com/Arata-Labs/AuraStudio"
-        )
+
+        items.forEachIndexed { index, (title, subtitle, icon) ->
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 3.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = subtitle,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

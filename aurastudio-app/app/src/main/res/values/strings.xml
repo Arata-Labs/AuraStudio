@@ -67,7 +67,7 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_section_general">General</string>
+    <string name="settings_section_general">Appearance</string>
     <string name="settings_section_environment">Environment</string>
     <string name="settings_section_terminal">Terminal</string>
     <string name="settings_section_about">About</string>
@@ -76,6 +76,7 @@
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_system">System</string>
+    <string name="settings_theme_desc">Choose your preferred theme</string>
 
     <string name="settings_language">Language</string>
     <string name="settings_language_value">English</string>
@@ -83,16 +84,25 @@
     <string name="settings_sdk_path">SDK Path</string>
     <string name="settings_ndk_path">NDK Path</string>
     <string name="settings_java_path">Java Home</string>
-    <string name="settings_default_value">Default</string>
+    <string name="settings_env_desc">Detected paths in your Termux environment</string>
+    <string name="settings_env_active">Active</string>
+    <string name="settings_env_available">Available Components</string>
 
     <string name="settings_terminal_font_size">Font Size</string>
     <string name="settings_terminal_vibrate">Vibrate on keypress</string>
+    <string name="settings_terminal_vibrate_desc">Haptic feedback on keypress</string>
 
     <string name="settings_version">Version</string>
     <string name="settings_build">Build</string>
     <string name="settings_developer">Developer</string>
     <string name="settings_developer_value">Arata Labs</string>
     <string name="settings_github">GitHub Repository</string>
+    <string name="settings_github_value">github.com/Arata-Labs/AuraStudio</string>
+    <string name="settings_about_desc">AuraStudio CLI for Android development in Termux</string>
+    <string name="settings_about_info">Info</string>
+    <string name="settings_about_version_value">AuraStudio CLI v1.2</string>
+    <string name="settings_about_license">License</string>
+    <string name="settings_about_license_value">MIT License</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
