@@ -243,24 +243,134 @@ private fun AppearanceSection() {
 
 @Composable
 private fun EnvironmentSection() {
+    var selectedPath by remember { mutableIntStateOf(0) }
+    val paths = listOf(
+        Triple(stringResource(R.string.settings_sdk_path), "~/android-sdk", Icons.Filled.PhoneAndroid),
+        Triple(stringResource(R.string.settings_ndk_path), "~/android-sdk/ndk", Icons.Filled.Memory),
+        Triple(stringResource(R.string.settings_java_path), "java-21-openjdk", Icons.Filled.Coffee)
+    )
+
     SettingsCategory(
         icon = Icons.Filled.Folder,
         title = stringResource(R.string.settings_section_environment)
     ) {
-        SettingsInfoRow(
-            title = stringResource(R.string.settings_sdk_path),
-            subtitle = "~/android-sdk"
+        Text(
+            text = "Detected paths in your Termux environment",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-        SettingsInfoRow(
-            title = stringResource(R.string.settings_ndk_path),
-            subtitle = "~/android-sdk/ndk"
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Active",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = paths[selectedPath].second,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Text(
+            text = "Available Components",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-        SettingsInfoRow(
-            title = stringResource(R.string.settings_java_path),
-            subtitle = "java-21-openjdk"
-        )
+        Spacer(modifier = Modifier.height(6.dp))
+
+        paths.forEachIndexed { index, (title, path, icon) ->
+            val isSelected = selectedPath == index
+            Surface(
+                onClick = { selectedPath = index },
+                shape = RoundedCornerShape(12.dp),
+                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 3.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = path,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = "Selected",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
