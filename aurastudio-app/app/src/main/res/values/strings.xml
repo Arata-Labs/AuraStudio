@@ -37,10 +37,11 @@
     <string name="action_status_desc">View details</string>
 
     <!-- Environment Card -->
-    <string name="env_title">Environment Components</string>
+    <string name="env_title">Environment</string>
     <string name="env_platforms">Platforms</string>
     <string name="env_build_tools">Build-Tools</string>
     <string name="env_ndk">NDK</string>
+    <string name="env_cmake">CMake</string>
     <string name="env_not_installed">Not installed</string>
     <string name="env_installed">Installed</string>
     <string name="env_and_others">and %1$d others</string>
@@ -48,6 +49,19 @@
     <string name="env_details_installed">Installed</string>
     <string name="env_details_not_installed">Not Installed</string>
     <string name="env_details_close">Close</string>
+    <string name="env_platform_count">%1$d platforms</string>
+    <string name="env_component_java">Java</string>
+    <string name="env_component_gradle">Gradle</string>
+    <string name="env_component_aapt2">AAPT2</string>
+    <string name="env_component_sdk">SDK Tools</string>
+    <string name="env_component_build_tools">Build-Tools</string>
+    <string name="env_component_ndk">NDK</string>
+    <string name="env_component_cmake">CMake</string>
+    <string name="env_versions_installed">Installed Versions</string>
+    <string name="env_versions_available">Available Versions</string>
+    <string name="env_install">Install</string>
+    <string name="env_uninstall">Uninstall</string>
+    <string name="env_no_versions">No versions available</string>
 
     <!-- Recent Projects -->
     <string name="projects_title">Recent Projects</string>
