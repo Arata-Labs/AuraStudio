@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hinohara.aurastudio.R
 import com.hinohara.aurastudio.data.models.*
-import com.hinohara.aurastudio.data.viewmodel.DashboardViewModel
 import com.hinohara.aurastudio.ui.theme.*
+import com.hinohara.aurastudio.data.viewmodel.DashboardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -326,8 +326,8 @@ private fun QuickActionCard(
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        colors = CardDefaults.cardColors(containerColor = CardDark),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Row(
             modifier = Modifier
@@ -377,8 +377,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        colors = CardDefaults.cardColors(containerColor = CardDark),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -599,8 +599,8 @@ private fun RecentProjectsCard(
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        colors = CardDefaults.cardColors(containerColor = CardDark),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -740,8 +740,8 @@ private fun InstalledComponentsCard(
                 ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        colors = CardDefaults.cardColors(containerColor = CardDark),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
