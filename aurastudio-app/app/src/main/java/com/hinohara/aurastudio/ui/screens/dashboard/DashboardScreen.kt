@@ -914,17 +914,30 @@ private fun ComponentDetailDialog(
                                     color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
-                                TextButton(
+                                Surface(
                                     onClick = { onUninstall(version) },
-                                    colors = ButtonDefaults.textButtonColors(
-                                        contentColor = Red40
-                                    )
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Red40.copy(alpha = 0.12f),
+                                    border = BorderStroke(1.dp, Red40.copy(alpha = 0.25f))
                                 ) {
-                                    Text(
-                                        text = stringResource(R.string.env_uninstall),
-                                        fontWeight = FontWeight.SemiBold,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Delete,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = Red40
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = stringResource(R.string.env_uninstall),
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Red40
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -975,17 +988,30 @@ private fun ComponentDetailDialog(
                                     color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
-                                TextButton(
+                                Surface(
                                     onClick = { onInstall(version) },
-                                    colors = ButtonDefaults.textButtonColors(
-                                        contentColor = Green40
-                                    )
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Green40.copy(alpha = 0.12f),
+                                    border = BorderStroke(1.dp, Green40.copy(alpha = 0.25f))
                                 ) {
-                                    Text(
-                                        text = stringResource(R.string.env_install),
-                                        fontWeight = FontWeight.SemiBold,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.InstallMobile,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = Green40
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = stringResource(R.string.env_install),
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Green40
+                                        )
+                                    }
                                 }
                             }
                         }
