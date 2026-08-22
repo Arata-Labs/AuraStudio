@@ -275,7 +275,6 @@ private fun QuickActionsGrid(
                 icon = Icons.Filled.Rocket,
                 label = stringResource(R.string.action_setup),
                 description = stringResource(R.string.action_setup_desc),
-                gradient = Brush.linearGradient(listOf(Indigo40, Purple40)),
                 onClick = onSetup
             )
             QuickActionCard(
@@ -283,7 +282,6 @@ private fun QuickActionsGrid(
                 icon = Icons.Filled.Download,
                 label = stringResource(R.string.action_install_sdk),
                 description = stringResource(R.string.action_install_sdk_desc),
-                gradient = Brush.linearGradient(listOf(Cyan40, Indigo40)),
                 onClick = onInstallSdk
             )
         }
@@ -296,7 +294,6 @@ private fun QuickActionsGrid(
                 icon = Icons.Filled.MedicalServices,
                 label = stringResource(R.string.action_doctor),
                 description = stringResource(R.string.action_doctor_desc),
-                gradient = Brush.linearGradient(listOf(Green40, Cyan40)),
                 onClick = onDoctor
             )
             QuickActionCard(
@@ -304,7 +301,6 @@ private fun QuickActionsGrid(
                 icon = Icons.Filled.BarChart,
                 label = stringResource(R.string.action_status),
                 description = stringResource(R.string.action_status_desc),
-                gradient = Brush.linearGradient(listOf(Amber40, Red40)),
                 onClick = onStatus
             )
         }
@@ -317,7 +313,6 @@ private fun QuickActionCard(
     icon: ImageVector,
     label: String,
     description: String,
-    gradient: Brush,
     onClick: () -> Unit
 ) {
     Card(
@@ -341,13 +336,13 @@ private fun QuickActionCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(gradient, RoundedCornerShape(14.dp)),
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     icon,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -391,17 +386,14 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .background(
-                            Brush.linearGradient(listOf(Indigo40, Cyan40)),
-                            RoundedCornerShape(10.dp)
-                        ),
+                        .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Filled.Memory,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp),
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
@@ -425,16 +417,14 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
                     icon = Icons.Filled.Coffee,
                     name = stringResource(R.string.component_java),
                     version = status.java.version,
-                    isInstalled = status.java.isInstalled,
-                    gradient = Brush.linearGradient(listOf(Green40, Cyan40))
+                    isInstalled = status.java.isInstalled
                 )
                 ComponentMiniCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Filled.Build,
                     name = stringResource(R.string.component_gradle),
                     version = status.gradle.version,
-                    isInstalled = status.gradle.isInstalled,
-                    gradient = Brush.linearGradient(listOf(Indigo40, Purple40))
+                    isInstalled = status.gradle.isInstalled
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
@@ -447,16 +437,14 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
                     icon = Icons.Filled.Settings,
                     name = stringResource(R.string.component_aapt2),
                     version = status.aapt2.version,
-                    isInstalled = status.aapt2.isInstalled,
-                    gradient = Brush.linearGradient(listOf(Amber40, Red40))
+                    isInstalled = status.aapt2.isInstalled
                 )
                 ComponentMiniCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Filled.PhoneAndroid,
                     name = stringResource(R.string.component_sdk),
                     version = status.cmdlineTools.version,
-                    isInstalled = status.cmdlineTools.isInstalled,
-                    gradient = Brush.linearGradient(listOf(Purple40, Indigo40))
+                    isInstalled = status.cmdlineTools.isInstalled
                 )
             }
 
@@ -496,8 +484,7 @@ private fun ComponentMiniCard(
     icon: ImageVector,
     name: String,
     version: String?,
-    isInstalled: Boolean,
-    gradient: Brush
+    isInstalled: Boolean
 ) {
     Surface(
         modifier = modifier,
@@ -514,12 +501,7 @@ private fun ComponentMiniCard(
                     modifier = Modifier
                         .size(28.dp)
                         .background(
-                            if (isInstalled) gradient else Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                )
-                            ),
+                            if (isInstalled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                             RoundedCornerShape(7.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -528,7 +510,7 @@ private fun ComponentMiniCard(
                         icon,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = if (isInstalled) Color.White else MaterialTheme.colorScheme.outline
+                        tint = if (isInstalled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.outline
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
