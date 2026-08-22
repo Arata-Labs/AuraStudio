@@ -1,5 +1,6 @@
 package com.hinohara.aurastudio.ui.screens.projects
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,7 +61,8 @@ fun CreateProjectScreen(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-            )
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
@@ -98,7 +100,8 @@ fun CreateProjectScreen(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-            )
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
