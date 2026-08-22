@@ -367,7 +367,7 @@ private fun EnvironmentSection() {
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = if (isSelected) path else desc,
+                                text = desc,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 2,
