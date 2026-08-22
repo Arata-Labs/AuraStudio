@@ -247,9 +247,18 @@ private fun AppearanceSection() {
 private fun EnvironmentSection() {
     var selectedPath by remember { mutableIntStateOf(0) }
     val paths = listOf(
+        Triple(stringResource(R.string.settings_java_path), "/data/data/com.termux/files/usr/lib/jvm/java-21-openjdk", Icons.Filled.Coffee),
         Triple(stringResource(R.string.settings_sdk_path), "~/android-sdk", Icons.Filled.PhoneAndroid),
         Triple(stringResource(R.string.settings_ndk_path), "~/android-sdk/ndk", Icons.Filled.Memory),
-        Triple(stringResource(R.string.settings_java_path), "java-21-openjdk", Icons.Filled.Coffee)
+        Triple(stringResource(R.string.settings_cmake_path), "~/android-sdk/cmake", Icons.Filled.AccountTree),
+        Triple(stringResource(R.string.settings_build_tools_path), "~/android-sdk/build-tools", Icons.Filled.Engineering),
+        Triple(stringResource(R.string.settings_aapt2_path), "~/.gradle/gradle.properties", Icons.Filled.Settings),
+        Triple(stringResource(R.string.settings_gradle_path), "~/android-sdk/cmdline-tools", Icons.Filled.Build),
+        Triple(stringResource(R.string.settings_config_path), "~/.config/aurastudio", Icons.Filled.Folder),
+        Triple(stringResource(R.string.settings_plugins_path), "~/.config/aurastudio/plugins", Icons.Filled.Extension),
+        Triple(stringResource(R.string.settings_cache_path), "~/.cache/aurastudio", Icons.Filled.Cached),
+        Triple(stringResource(R.string.settings_env_file), "~/.config/aurastudio/env.sh", Icons.Filled.Description),
+        Triple(stringResource(R.string.settings_home_path), "~/", Icons.Filled.Home)
     )
 
     SettingsCategory(

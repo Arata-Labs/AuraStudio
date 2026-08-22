@@ -100,9 +100,18 @@
     <string name="settings_language">Language</string>
     <string name="settings_language_value">English</string>
 
-    <string name="settings_sdk_path">SDK Path</string>
-    <string name="settings_ndk_path">NDK Path</string>
+    <string name="settings_sdk_path">Android SDK</string>
+    <string name="settings_ndk_path">NDK</string>
     <string name="settings_java_path">Java Home</string>
+    <string name="settings_cmake_path">CMake</string>
+    <string name="settings_build_tools_path">Build-Tools</string>
+    <string name="settings_aapt2_path">AAPT2 Config</string>
+    <string name="settings_gradle_path">Gradle Cmdline</string>
+    <string name="settings_config_path">Config Dir</string>
+    <string name="settings_plugins_path">Plugins Dir</string>
+    <string name="settings_cache_path">Cache Dir</string>
+    <string name="settings_env_file">Environment File</string>
+    <string name="settings_home_path">Home Directory</string>
     <string name="settings_env_desc">Detected paths in your Termux environment</string>
     <string name="settings_env_active">Active</string>
     <string name="settings_env_available">Available Components</string>
