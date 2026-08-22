@@ -120,7 +120,9 @@ fun AuraStudioApp(
                     )
                 }
                 is Screen.Settings -> {
-                    com.hinohara.aurastudio.ui.screens.editor.SettingsScreen()
+                    com.hinohara.aurastudio.ui.screens.editor.SettingsScreen(
+                        scaffoldPadding = innerPadding
+                    )
                 }
             }
         }
