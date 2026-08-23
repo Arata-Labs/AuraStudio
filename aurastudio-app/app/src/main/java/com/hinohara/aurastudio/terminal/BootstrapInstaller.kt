@@ -20,6 +20,8 @@ object BootstrapInstaller {
     private const val BOOTSTRAP_BASE_URL =
         "https://github.com/termux/termux-packages/releases/download"
 
+    private const val TERMUX_PREFIX = "/data/data/com.termux/files/usr"
+
     enum class State {
         NOT_INSTALLED,
         DOWNLOADING,
@@ -77,7 +79,6 @@ object BootstrapInstaller {
 
         val prefixDir = File(getPrefixDir(context))
         val stagingDir = File(context.filesDir, "usr_staging")
-        val tmpDir = File(context.filesDir, "usr_tmp")
 
         if (prefixDir.exists() && !isInstalled(context)) {
             prefixDir.deleteRecursively()
@@ -97,11 +98,12 @@ object BootstrapInstaller {
 
             onProgress(Progress(state = State.SETTING_UP, message = "Setting up environment..."))
 
+            rewriteTermuxPaths(stagingDir)
             setupEnvironment(stagingDir, context)
 
             if (prefixDir.exists()) prefixDir.deleteRecursively()
             if (!stagingDir.renameTo(prefixDir)) {
-                throw RuntimeException("Failed to rename staging dir to prefix dir")
+                throw RuntimeException("Failed to rename staging to prefix")
             }
 
             createHomeDir(context)
@@ -111,26 +113,20 @@ object BootstrapInstaller {
             return true
 
         } catch (e: Exception) {
-            Log.e(TAG, "Bootstrap installation failed", e)
+            Log.e(TAG, "Bootstrap install failed", e)
             stagingDir.deleteRecursively()
-            onProgress(Progress(
-                state = State.ERROR,
-                error = "Installation failed: ${e.message}"
-            ))
+            onProgress(Progress(state = State.ERROR, error = "Install failed: ${e.message}"))
             return false
         }
     }
 
-    private fun downloadBootstrap(
-        outputFile: File,
-        onProgress: (Progress) -> Unit
-    ) {
+    private fun downloadBootstrap(outputFile: File, onProgress: (Progress) -> Unit) {
         val url = URL(getBootstrapUrl())
         Log.d(TAG, "Downloading: $url")
 
         val conn = url.openConnection() as HttpURLConnection
         conn.connectTimeout = 30_000
-        conn.readTimeout = 60_000
+        conn.readTimeout = 120_000
         conn.connect()
 
         val totalSize = conn.contentLength.toLong()
@@ -144,11 +140,10 @@ object BootstrapInstaller {
                     output.write(buffer, 0, bytesRead)
                     downloaded += bytesRead
                     if (totalSize > 0) {
-                        val pct = (downloaded.toFloat() / totalSize * 100).toInt()
                         onProgress(Progress(
                             state = State.DOWNLOADING,
                             progress = downloaded.toFloat() / totalSize,
-                            message = "Downloading... $pct%"
+                            message = "Downloading... ${(downloaded * 100 / totalSize).toInt()}%"
                         ))
                     }
                 }
@@ -161,6 +156,7 @@ object BootstrapInstaller {
         targetDir: File,
         onProgress: (Progress) -> Unit
     ) {
+        val ourPrefix = targetDir.absolutePath
         val zipIn = ZipInputStream(zipFile.inputStream().buffered())
         var entryCount = 0
         val symlinks = mutableListOf<Pair<String, String>>()
@@ -176,8 +172,14 @@ object BootstrapInstaller {
                     while (line != null) {
                         val parts = line.split("\u2190")
                         if (parts.size == 2) {
-                            val oldPath = parts[0].trim()
-                            val newPath = "${targetDir.absolutePath}/${parts[1].trim()}"
+                            var oldPath = parts[0].trim()
+                            val relativeNewPath = parts[1].trim()
+
+                            if (oldPath.startsWith(TERMUX_PREFIX)) {
+                                oldPath = ourPrefix + oldPath.removePrefix(TERMUX_PREFIX)
+                            }
+
+                            val newPath = "$ourPrefix/${relativeNewPath.removePrefix("./")}"
                             symlinks.add(Pair(oldPath, newPath))
                             File(newPath).parentFile?.mkdirs()
                         }
@@ -210,7 +212,7 @@ object BootstrapInstaller {
                             try {
                                 Os.chmod(outFile.absolutePath, 448)
                             } catch (e: Exception) {
-                                Log.w(TAG, "chmod failed for $entryName: ${e.message}")
+                                Log.w(TAG, "Os.chmod failed for $entryName: ${e.message}")
                                 outFile.setExecutable(true, false)
                             }
                         }
@@ -227,6 +229,7 @@ object BootstrapInstaller {
         }
 
         Log.d(TAG, "Creating ${symlinks.size} symlinks...")
+        var failed = 0
         for ((oldPath, newPath) in symlinks) {
             try {
                 val newFile = File(newPath)
@@ -235,50 +238,74 @@ object BootstrapInstaller {
                 }
                 Os.symlink(oldPath, newPath)
             } catch (e: Exception) {
-                Log.w(TAG, "Symlink failed: $oldPath -> $newPath: ${e.message}")
+                failed++
+                if (failed <= 5) {
+                    Log.w(TAG, "Symlink failed: $oldPath -> $newPath: ${e.message}")
+                }
             }
+        }
+        if (failed > 0) {
+            Log.w(TAG, "Total symlink failures: $failed / ${symlinks.size}")
+        }
+    }
+
+    private fun rewriteTermuxPaths(stagingDir: File) {
+        val ourPrefix = stagingDir.absolutePath
+        val textExtensions = setOf("sh", "conf", "cfg", "list", "txt", "gpg")
+        val textDirs = listOf("bin", "etc", "share", "lib/apt", "libexec")
+
+        for (dirName in textDirs) {
+            val dir = File(stagingDir, dirName)
+            if (!dir.exists()) continue
+            rewriteFilesInDir(dir, TERMUX_PREFIX, ourPrefix, textExtensions)
+        }
+
+        val secondStage = File(stagingDir, "etc/termux/termux-bootstrap/second-stage/termux-bootstrap-second-stage.sh")
+        if (secondStage.exists()) {
+            rewriteFile(secondStage, TERMUX_PREFIX, ourPrefix)
+        }
+
+        val profileD = File(stagingDir, "etc/profile.d")
+        if (profileD.exists()) {
+            profileD.listFiles()?.forEach { rewriteFile(it, TERMUX_PREFIX, ourPrefix) }
+        }
+    }
+
+    private fun rewriteFilesInDir(dir: File, oldPrefix: String, newPrefix: String, extensions: Set<String>) {
+        dir.listFiles()?.forEach { file ->
+            if (file.isDirectory) {
+                rewriteFilesInDir(file, oldPrefix, newPrefix, extensions)
+            } else {
+                val ext = file.extension.lowercase()
+                if (ext in extensions || file.nameWithoutExtension in listOf("sources.list", "bash.bashrc")) {
+                    rewriteFile(file, oldPrefix, newPrefix)
+                }
+            }
+        }
+    }
+
+    private fun rewriteFile(file: File, oldPrefix: String, newPrefix: String) {
+        try {
+            val content = file.readText()
+            if (content.contains(oldPrefix)) {
+                file.writeText(content.replace(oldPrefix, newPrefix))
+                Log.d(TAG, "Rewrote paths in: ${file.absolutePath}")
+            }
+        } catch (_: Exception) {
         }
     }
 
     private fun setupEnvironment(prefixDir: File, context: Context) {
         File(prefixDir, "tmp").mkdirs()
-        File(prefixDir, "var").mkdirs()
         File(prefixDir, "var/tmp").mkdirs()
-        File(prefixDir, "var/lib").mkdirs()
         File(prefixDir, "var/lib/dpkg").mkdirs()
         File(prefixDir, "var/cache").mkdirs()
         File(prefixDir, "var/log").mkdirs()
         File(prefixDir, "etc/apt").mkdirs()
-
-        val bashrc = File(prefixDir, "etc/bash.bashrc")
-        if (!bashrc.exists()) {
-            bashrc.writeText("""
-export HOME="${getHomeDir(context)}"
-export TMPDIR="${prefixDir.absolutePath}/tmp"
-export LANG="en_US.UTF-8"
-export TERM="xterm-256color"
-export COLORTERM="truecolor"
-export PREFIX="${prefixDir.absolutePath}"
-export PATH="${prefixDir.absolutePath}/bin:/system/bin:/system/xbin"
-export BASH_SILENCE_DEPRECATION_WARNING=1
-PS1='\[\033[1;38;2;130;170;255m\]aurastudio\[\033[0m\] \[\033[38;2;180;180;200m\]\w\[\033[0m\] \[\033[1;38;2;130;255;170m\]\$\[\033[0m\] '
-alias ll='ls -la'
-alias la='ls -A'
-alias l='ls -CF'
-""".trimIndent())
-        }
     }
 
     private fun createHomeDir(context: Context) {
         val homeDir = File(getHomeDir(context))
         homeDir.mkdirs()
-
-        val profile = File(homeDir, ".profile")
-        if (!profile.exists()) {
-            profile.writeText("""
-export HOME="${homeDir.absolutePath}"
-export PATH="${getPrefixDir(context)}/bin:/system/bin:/system/xbin"
-""".trimIndent())
-        }
     }
 }
