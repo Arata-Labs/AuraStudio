@@ -1,7 +1,7 @@
 package com.hinohara.aurastudio.terminal.engine;
 
 /**
- * Native methods for creating and managing pseudoterminal subprocesses. C code is in jni/termux.c.
+ * Native methods for creating and managing pseudoterminal subprocesses. C code is in cpp/pty.c.
  */
 final class JNI {
 

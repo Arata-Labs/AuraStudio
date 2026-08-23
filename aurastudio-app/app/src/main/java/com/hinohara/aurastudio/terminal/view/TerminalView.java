@@ -1211,14 +1211,14 @@ public final class TerminalView extends View {
      * display timeout with double tap and not power button.
      *
      * It should also be called on the
-     * {@link com.termux.terminal.TerminalSessionClient#onTerminalCursorStateChange(boolean)}
+     * {@link com.hinohara.aurastudio.terminal.engine.TerminalSessionClient#onTerminalCursorStateChange(boolean)}
      * callback when cursor is enabled or disabled so that blinker is disabled if cursor is not
      * to be shown. It should also be checked if activity is visible if blinker is to be started
      * before calling this.
      *
      * It should also be called after terminal is reset with {@link TerminalSession#reset()} in case
      * cursor blinker was disabled before reset due to call to
-     * {@link com.termux.terminal.TerminalSessionClient#onTerminalCursorStateChange(boolean)}.
+     * {@link com.hinohara.aurastudio.terminal.engine.TerminalSessionClient#onTerminalCursorStateChange(boolean)}.
      *
      * How cursor blinker starting works is by registering a {@link Runnable} with the looper of
      * the main thread of the app which when run, toggles the cursor blinking state and re-registers
@@ -1424,7 +1424,7 @@ public final class TerminalView extends View {
 
         if (mTextSelectionCursorController != null) {
             // Might solve the following exception
-            // android.view.WindowLeaked: Activity com.termux.app.TermuxActivity has leaked window android.widget.PopupWindow
+            // android.view.WindowLeaked: Activity has leaked window android.widget.PopupWindow
             stopTextSelectionMode();
 
             getViewTreeObserver().removeOnTouchModeChangeListener(mTextSelectionCursorController);
