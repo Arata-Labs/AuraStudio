@@ -18,31 +18,45 @@ object ShellEnvironment {
             "/storage/emulated/0"
         }
         val bootClassPath = System.getenv("BOOTCLASSPATH") ?: ""
+        val lang = System.getenv("LANG") ?: "en_US.UTF-8"
 
         return arrayOf(
             "HOME=$homeDir",
             "PREFIX=$prefixDir",
+            "SYSROOT=$prefixDir",
             "TMPDIR=$prefixDir/tmp",
             "TERM=xterm-256color",
             "COLORTERM=truecolor",
-            "LANG=en_US.UTF-8",
-            "PATH=$prefixDir/bin:$androidRoot/bin:$androidRoot/xbin",
+            "LANG=$lang",
+            "PATH=$prefixDir/bin",
             "PWD=$homeDir",
-            "LD_LIBRARY_PATH=",
+            "LD_LIBRARY_PATH=$prefixDir/lib",
             "ANDROID_ROOT=$androidRoot",
             "ANDROID_DATA=$androidData",
             "EXTERNAL_STORAGE=$externalStorage",
             "BOOTCLASSPATH=$bootClassPath",
             "PACKAGE_NAME=${context.packageName}",
             "APP_NAME=AuraStudio",
-            "BASH_SILENCE_DEPRECATION_WARNING=1"
+            "BASH_SILENCE_DEPRECATION_WARNING=1",
+            "TERMUX_PKG_NO_MIRROR_SELECT=true"
         )
     }
 
     fun getShellPath(context: Context): String {
-        val bash = "${BootstrapInstaller.getPrefixDir(context)}/bin/bash"
-        if (File(bash).exists()) return bash
+        val login = File(BootstrapInstaller.getPrefixDir(context), "bin/login")
+        if (login.exists() && login.canExecute()) return login.absolutePath
+        val bash = File(BootstrapInstaller.getPrefixDir(context), "bin/bash")
+        if (bash.exists() && bash.canExecute()) return bash.absolutePath
         return "/system/bin/sh"
+    }
+
+    fun getShellArgs(context: Context): Array<String> {
+        val shellPath = getShellPath(context)
+        return if (shellPath.endsWith("login")) {
+            arrayOf("-l")
+        } else {
+            arrayOf("--norc", "--noprofile")
+        }
     }
 
     fun getWorkingDirectory(context: Context): String {

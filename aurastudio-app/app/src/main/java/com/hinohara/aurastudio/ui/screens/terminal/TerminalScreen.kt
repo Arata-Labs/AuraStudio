@@ -3,15 +3,11 @@ package com.hinohara.aurastudio.ui.screens.terminal
 import android.content.Context
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -181,12 +177,6 @@ private fun BootstrapLoadingScreen(
     scaffoldPadding: PaddingValues,
     onRetry: () -> Unit
 ) {
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = tween(durationMillis = 300, easing = LinearEasing),
-        label = "bootstrap_progress"
-    )
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -244,16 +234,6 @@ private fun BootstrapLoadingScreen(
             }
         } else {
             when (state) {
-                BootstrapInstaller.State.DOWNLOADING -> {
-                    LinearProgressIndicator(
-                        progress = { animatedProgress },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(4.dp),
-                        color = Color(0xFF82AAFF),
-                        trackColor = Color(0xFF222233),
-                    )
-                }
                 BootstrapInstaller.State.EXTRACTING,
                 BootstrapInstaller.State.SETTING_UP -> {
                     CircularProgressIndicator(
@@ -271,7 +251,6 @@ private fun BootstrapLoadingScreen(
                 text = message.ifEmpty {
                     when (state) {
                         BootstrapInstaller.State.NOT_INSTALLED -> "Preparing environment..."
-                        BootstrapInstaller.State.DOWNLOADING -> "Downloading packages..."
                         BootstrapInstaller.State.EXTRACTING -> "Extracting packages..."
                         BootstrapInstaller.State.SETTING_UP -> "Setting up..."
                         else -> ""

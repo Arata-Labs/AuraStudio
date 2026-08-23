@@ -33,13 +33,17 @@ class TerminalSessionManager(private val context: Context) : TerminalSessionClie
 
     fun createSession(): TerminalSessionInfo {
         val shellPath = ShellEnvironment.getShellPath(context)
+        val shellArgs = ShellEnvironment.getShellArgs(context)
         val cwd = ShellEnvironment.getWorkingDirectory(context)
         val env = ShellEnvironment.getEnvironment(context)
+
+        val processName = if (shellPath.endsWith("login")) "-login" else "bash"
+        val args = arrayOf(processName, *shellArgs)
 
         val session = TerminalSession(
             shellPath,
             cwd,
-            arrayOf(shellPath, "--norc", "--noprofile"),
+            args,
             env,
             5000,
             this
