@@ -24,10 +24,18 @@ import com.hinohara.aurastudio.ui.theme.*
 @Composable
 fun ExtraKeysRow(
     terminalView: TerminalView?,
+    viewClient: TerminalViewClientImpl? = null,
     modifier: Modifier = Modifier
 ) {
     var ctrlActive by remember { mutableStateOf(false) }
     var altActive by remember { mutableStateOf(false) }
+
+    LaunchedEffect(ctrlActive) {
+        viewClient?.ctrlPressed = { ctrlActive }
+    }
+    LaunchedEffect(altActive) {
+        viewClient?.altPressed = { altActive }
+    }
 
     Column(
         modifier = modifier

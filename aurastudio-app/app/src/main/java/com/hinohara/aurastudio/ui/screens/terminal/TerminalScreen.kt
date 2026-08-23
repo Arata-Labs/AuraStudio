@@ -100,6 +100,7 @@ fun TerminalScreen(
 
         ExtraKeysRow(
             terminalView = terminalView,
+            viewClient = viewClient,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -107,5 +108,8 @@ fun TerminalScreen(
 
 private fun showKeyboard(context: Context) {
     val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-    imm?.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
+    if (imm != null) {
+        @Suppress("DEPRECATION")
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
+    }
 }

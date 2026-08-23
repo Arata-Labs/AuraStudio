@@ -7,10 +7,10 @@ import com.hinohara.aurastudio.terminal.view.TerminalViewClient
 
 class TerminalViewClientImpl : TerminalViewClient {
 
-    var readControlKey: () -> Boolean = { false }
-    var readAltKey: () -> Boolean = { false }
-    var readShiftKey: () -> Boolean = { false }
-    var readFnKey: () -> Boolean = { false }
+    var ctrlPressed: () -> Boolean = { false }
+    var altPressed: () -> Boolean = { false }
+    var shiftPressed: () -> Boolean = { false }
+    var fnPressed: () -> Boolean = { false }
 
     override fun onScale(scale: Float): Float = scale
 
@@ -32,13 +32,13 @@ class TerminalViewClientImpl : TerminalViewClient {
 
     override fun onLongPress(event: MotionEvent): Boolean = false
 
-    override fun readControlKey(): Boolean = readControlKey()
+    override fun readControlKey(): Boolean = ctrlPressed()
 
-    override fun readAltKey(): Boolean = readAltKey()
+    override fun readAltKey(): Boolean = altPressed()
 
-    override fun readShiftKey(): Boolean = readShiftKey()
+    override fun readShiftKey(): Boolean = shiftPressed()
 
-    override fun readFnKey(): Boolean = readFnKey()
+    override fun readFnKey(): Boolean = fnPressed()
 
     override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean = false
 
