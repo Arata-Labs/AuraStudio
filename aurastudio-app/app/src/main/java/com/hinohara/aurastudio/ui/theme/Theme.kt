@@ -7,8 +7,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val SeedColor = Color(0xFF6366F1)
-
 val LocalIsAppDark = staticCompositionLocalOf { true }
 
 private val LightColorScheme = lightColorScheme(

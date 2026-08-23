@@ -38,10 +38,6 @@
 
     <!-- Environment Card -->
     <string name="env_title">Environment</string>
-    <string name="env_platforms">Platforms</string>
-    <string name="env_build_tools">Build-Tools</string>
-    <string name="env_ndk">NDK</string>
-    <string name="env_cmake">CMake</string>
     <string name="env_not_installed">Not installed</string>
     <string name="env_installed">Installed</string>
     <string name="env_details_title">Environment Details</string>
@@ -67,20 +63,6 @@
     <string name="projects_empty">No projects yet</string>
     <string name="projects_empty_hint">Run \'aurastudio init\' to create your first project</string>
 
-    <!-- Installed Components -->
-    <string name="installed_title">Installed Components</string>
-    <string name="installed_platforms">Android Platforms</string>
-    <string name="installed_ndk">NDK Versions</string>
-    <string name="installed_empty">No components installed</string>
-
-    <!-- Editor -->
-    <string name="editor_title">Code Editor</string>
-    <string name="editor_no_file">No file open</string>
-    <string name="editor_no_file_hint">Open a file from the Files tab</string>
-
-    <!-- File Explorer -->
-    <string name="file_explorer_title">File Explorer</string>
-
     <!-- Terminal -->
     <string name="terminal_title">Terminal</string>
 
@@ -102,9 +84,6 @@
     <string name="settings_icon_light">Light</string>
     <string name="settings_icon_system">System</string>
     <string name="settings_icon_desc">Choose your preferred app icon</string>
-
-    <string name="settings_language">Language</string>
-    <string name="settings_language_value">English</string>
 
     <string name="settings_sdk_path">Android SDK</string>
     <string name="settings_ndk_path">NDK</string>
@@ -178,7 +157,6 @@
     <string name="create_project_name_label">Project Name</string>
     <string name="create_project_name_hint">my_awesome_app</string>
     <string name="create_project_type_label">Project Type</string>
-    <string name="create_project_path_label">Location</string>
     <string name="create_project_btn">Create Project</string>
     <string name="create_project_type_gradle_java">Gradle + Java</string>
     <string name="create_project_type_gradle_kotlin">Gradle + Kotlin</string>

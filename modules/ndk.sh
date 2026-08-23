@@ -102,10 +102,26 @@ cmd_install_ndk() {
             done
             return 0
         }
-        
+
+        _symlink_gradle_version() {
+            local source_props="$ndk_install_dir/source.properties"
+            if [ -f "$source_props" ]; then
+                local real_version
+                real_version=$(grep "^Pkg.Revision" "$source_props" | cut -d'=' -f2 | tr -d ' ')
+                if [ -n "$real_version" ] && [ "$real_version" != "$ndk_ver" ]; then
+                    local gradle_ndk_dir="$NDK_DIR/$real_version"
+                    if [ ! -e "$gradle_ndk_dir" ]; then
+                        ln -s "$ndk_install_dir" "$gradle_ndk_dir" 2>/dev/null
+                        info "Gradle symlink: $real_version -> $ndk_ver"
+                    fi
+                fi
+            fi
+        }
+
         if ! (_symlink_musl); then
             warn "Failed to create some musl symlinks (non-critical)"
         fi
+        _symlink_gradle_version
         success "NDK $ndk_name ready at ${CYAN}$ndk_install_dir${RESET}"
     fi
 

@@ -6,8 +6,7 @@ import kotlinx.serialization.Serializable
 data class Project(
     val name: String,
     val path: String,
-    val type: ProjectType,
-    val lastModified: Long = System.currentTimeMillis()
+    val type: ProjectType
 )
 
 @Serializable
@@ -36,11 +35,4 @@ data class EnvironmentStatus(
     val healthScore: Int
 )
 
-enum class DashboardQuickAction(val label: String, val icon: String) {
-    SETUP("Setup", "rocket"),
-    INSTALL_SDK("Install SDK", "download"),
-    INSTALL_NDK("Install NDK", "cpu"),
-    DOCTOR("Doctor", "stethoscope"),
-    STATUS("Status", "bar_chart"),
-    CLEAN("Clean", "cleaning_services")
-}
+

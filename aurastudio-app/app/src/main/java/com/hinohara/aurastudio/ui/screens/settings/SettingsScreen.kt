@@ -1,4 +1,4 @@
-package com.hinohara.aurastudio.ui.screens.editor
+package com.hinohara.aurastudio.ui.screens.settings
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -157,7 +157,6 @@ private fun SettingsSwitchRow(
 @Composable
 private fun ThemeOptionItem(
     title: String,
-    subtitle: String,
     icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -195,18 +194,6 @@ private fun ThemeOptionItem(
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(1.dp))
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 10.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                ),
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center
-            )
         }
     }
 }
@@ -217,7 +204,6 @@ private fun IconOptionItem(
     title: String,
     @DrawableRes iconRes: Int,
     bgColor: Color,
-    fgTint: Color = Color.White,
     isSelected: Boolean,
     onClick: () -> Unit,
     showSplitBg: Boolean = false
@@ -325,7 +311,6 @@ private fun AppearanceSection(
             ThemeOptionItem(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.settings_theme_dark),
-                subtitle = stringResource(R.string.settings_theme_dark),
                 icon = Icons.Filled.DarkMode,
                 isSelected = themeMode == THEME_DARK,
                 onClick = { onThemeChange(THEME_DARK) }
@@ -333,7 +318,6 @@ private fun AppearanceSection(
             ThemeOptionItem(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.settings_theme_light),
-                subtitle = stringResource(R.string.settings_theme_light),
                 icon = Icons.Filled.LightMode,
                 isSelected = themeMode == THEME_LIGHT,
                 onClick = { onThemeChange(THEME_LIGHT) }
@@ -341,7 +325,6 @@ private fun AppearanceSection(
             ThemeOptionItem(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.settings_theme_system),
-                subtitle = stringResource(R.string.settings_theme_system),
                 icon = Icons.Filled.SettingsBrightness,
                 isSelected = themeMode == THEME_SYSTEM,
                 onClick = { onThemeChange(THEME_SYSTEM) }
@@ -383,7 +366,6 @@ private fun AppearanceSection(
                 title = stringResource(R.string.settings_icon_light),
                 iconRes = R.drawable.ic_logo,
                 bgColor = Color(0xFFF5F5FA),
-                fgTint = Color(0xFF1C1C22),
                 isSelected = iconMode == ICON_LIGHT,
                 onClick = { onIconChange(ICON_LIGHT) }
             )

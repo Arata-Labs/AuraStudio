@@ -106,6 +106,7 @@ fun AuraStudioApp(
     dashboardViewModel: DashboardViewModel = viewModel()
 ) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
+    var previousScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
     var terminalCommand by remember { mutableStateOf<String?>(null) }
 
     fun navigateToTab(route: String) {
@@ -120,7 +121,14 @@ fun AuraStudioApp(
             Screen.Settings.route -> Screen.Settings
             else -> Screen.Dashboard
         }
-        currentScreen = targetScreen
+        if (targetScreen == Screen.CreateProject && currentScreen != Screen.CreateProject) {
+            previousScreen = currentScreen
+        }
+        if (currentScreen == Screen.CreateProject && targetScreen == Screen.CreateProject) {
+            currentScreen = previousScreen
+        } else {
+            currentScreen = targetScreen
+        }
     }
 
     val bottomNavItemsLocalized = bottomNavItems.map {
@@ -182,7 +190,7 @@ fun AuraStudioApp(
                     )
                 }
                 is Screen.Settings -> {
-                    com.hinohara.aurastudio.ui.screens.editor.SettingsScreen(
+                    com.hinohara.aurastudio.ui.screens.settings.SettingsScreen(
                         scaffoldPadding = innerPadding,
                         themeMode = themeMode,
                         iconMode = iconMode,
