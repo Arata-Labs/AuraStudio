@@ -2,9 +2,12 @@ package com.hinohara.aurastudio.terminal
 
 import android.content.Context
 import android.os.Build
+import android.system.Os
 import android.util.Log
+import java.io.BufferedReader
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.zip.ZipInputStream
@@ -46,13 +49,6 @@ object BootstrapInstaller {
         return bash.exists() && bash.length() > 0 && bash.canExecute()
     }
 
-    fun ensurePermissions(context: Context) {
-        val prefixDir = File(getPrefixDir(context))
-        if (prefixDir.exists()) {
-            Runtime.getRuntime().exec(arrayOf("/system/bin/chmod", "-R", "755", prefixDir.absolutePath)).waitFor()
-        }
-    }
-
     fun getArchName(): String {
         val primaryAbi = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
         return when (primaryAbi) {
@@ -80,11 +76,13 @@ object BootstrapInstaller {
         }
 
         val prefixDir = File(getPrefixDir(context))
+        val stagingDir = File(context.filesDir, "usr_staging")
         val tmpDir = File(context.filesDir, "usr_tmp")
 
         if (prefixDir.exists() && !isInstalled(context)) {
             prefixDir.deleteRecursively()
         }
+        stagingDir.deleteRecursively()
 
         try {
             onProgress(Progress(state = State.DOWNLOADING, message = "Downloading bootstrap..."))
@@ -94,15 +92,17 @@ object BootstrapInstaller {
 
             onProgress(Progress(state = State.EXTRACTING, message = "Extracting packages..."))
 
-            tmpDir.mkdirs()
-            extractZip(zipFile, tmpDir, onProgress)
+            stagingDir.mkdirs()
+            extractZip(zipFile, stagingDir, onProgress)
 
             onProgress(Progress(state = State.SETTING_UP, message = "Setting up environment..."))
 
-            setupEnvironment(tmpDir, context)
+            setupEnvironment(stagingDir, context)
 
             if (prefixDir.exists()) prefixDir.deleteRecursively()
-            tmpDir.renameTo(prefixDir)
+            if (!stagingDir.renameTo(prefixDir)) {
+                throw RuntimeException("Failed to rename staging dir to prefix dir")
+            }
 
             createHomeDir(context)
 
@@ -112,7 +112,7 @@ object BootstrapInstaller {
 
         } catch (e: Exception) {
             Log.e(TAG, "Bootstrap installation failed", e)
-            tmpDir.deleteRecursively()
+            stagingDir.deleteRecursively()
             onProgress(Progress(
                 state = State.ERROR,
                 error = "Installation failed: ${e.message}"
@@ -163,26 +163,57 @@ object BootstrapInstaller {
     ) {
         val zipIn = ZipInputStream(zipFile.inputStream().buffered())
         var entryCount = 0
+        val symlinks = mutableListOf<Pair<String, String>>()
 
         zipIn.use { zip ->
             var entry = zip.nextEntry
             while (entry != null) {
-                entryCount++
-                if (entryCount % 100 == 0) {
-                    onProgress(Progress(
-                        state = State.EXTRACTING,
-                        message = "Extracting... ($entryCount files)"
-                    ))
-                }
+                val entryName = entry.name
 
-                val outFile = File(targetDir, entry.name)
-
-                if (entry.isDirectory) {
-                    outFile.mkdirs()
+                if (entryName == "SYMLINKS.txt") {
+                    val reader = BufferedReader(InputStreamReader(zip))
+                    var line = reader.readLine()
+                    while (line != null) {
+                        val parts = line.split("\u2190")
+                        if (parts.size == 2) {
+                            val oldPath = parts[0].trim()
+                            val newPath = "${targetDir.absolutePath}/${parts[1].trim()}"
+                            symlinks.add(Pair(oldPath, newPath))
+                            File(newPath).parentFile?.mkdirs()
+                        }
+                        line = reader.readLine()
+                    }
                 } else {
-                    outFile.parentFile?.mkdirs()
-                    FileOutputStream(outFile).use { out ->
-                        zip.copyTo(out)
+                    entryCount++
+                    if (entryCount % 200 == 0) {
+                        onProgress(Progress(
+                            state = State.EXTRACTING,
+                            message = "Extracting... ($entryCount files)"
+                        ))
+                    }
+
+                    val outFile = File(targetDir, entryName)
+
+                    if (entry.isDirectory) {
+                        outFile.mkdirs()
+                    } else {
+                        outFile.parentFile?.mkdirs()
+                        FileOutputStream(outFile).use { out ->
+                            zip.copyTo(out)
+                        }
+
+                        if (entryName.startsWith("bin/") ||
+                            entryName.startsWith("libexec") ||
+                            entryName.startsWith("lib/apt/apt-helper") ||
+                            entryName.startsWith("lib/apt/methods")
+                        ) {
+                            try {
+                                Os.chmod(outFile.absolutePath, 448)
+                            } catch (e: Exception) {
+                                Log.w(TAG, "chmod failed for $entryName: ${e.message}")
+                                outFile.setExecutable(true, false)
+                            }
+                        }
                     }
                 }
 
@@ -190,16 +221,28 @@ object BootstrapInstaller {
                 entry = zip.nextEntry
             }
         }
+
+        if (symlinks.isEmpty()) {
+            throw RuntimeException("No SYMLINKS.txt found in bootstrap zip")
+        }
+
+        Log.d(TAG, "Creating ${symlinks.size} symlinks...")
+        for ((oldPath, newPath) in symlinks) {
+            try {
+                val newFile = File(newPath)
+                if (newFile.exists() || newFile.createNewFile()) {
+                    newFile.delete()
+                }
+                Os.symlink(oldPath, newPath)
+            } catch (e: Exception) {
+                Log.w(TAG, "Symlink failed: $oldPath -> $newPath: ${e.message}")
+            }
+        }
     }
 
     private fun setupEnvironment(prefixDir: File, context: Context) {
-        Runtime.getRuntime().exec(arrayOf("/system/bin/chmod", "-R", "755", prefixDir.absolutePath)).waitFor()
-
-        val tmpDir = File(prefixDir, "tmp")
-        tmpDir.mkdirs()
-
-        val varDir = File(prefixDir, "var")
-        varDir.mkdirs()
+        File(prefixDir, "tmp").mkdirs()
+        File(prefixDir, "var").mkdirs()
         File(prefixDir, "var/tmp").mkdirs()
         File(prefixDir, "var/lib").mkdirs()
         File(prefixDir, "var/lib/dpkg").mkdirs()
@@ -210,25 +253,19 @@ object BootstrapInstaller {
         val bashrc = File(prefixDir, "etc/bash.bashrc")
         if (!bashrc.exists()) {
             bashrc.writeText("""
-# AuraStudio bash configuration
 export HOME="${getHomeDir(context)}"
 export TMPDIR="${prefixDir.absolutePath}/tmp"
 export LANG="en_US.UTF-8"
 export TERM="xterm-256color"
 export COLORTERM="truecolor"
-export PATH="${prefixDir.absolutePath}/bin:/system/bin:/system/xbin"
 export PREFIX="${prefixDir.absolutePath}"
+export PATH="${prefixDir.absolutePath}/bin:/system/bin:/system/xbin"
 export BASH_SILENCE_DEPRECATION_WARNING=1
 PS1='\[\033[1;38;2;130;170;255m\]aurastudio\[\033[0m\] \[\033[38;2;180;180;200m\]\w\[\033[0m\] \[\033[1;38;2;130;255;170m\]\$\[\033[0m\] '
 alias ll='ls -la'
 alias la='ls -A'
 alias l='ls -CF'
 """.trimIndent())
-        }
-
-        val profile = File(prefixDir, "etc/profile")
-        if (!profile.exists()) {
-            profile.writeText("# AuraStudio profile\n. \"${prefixDir.absolutePath}/etc/bash.bashrc\"\n")
         }
     }
 
