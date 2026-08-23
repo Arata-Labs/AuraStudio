@@ -162,4 +162,9 @@
     <string name="create_project_type_gradle_kotlin">Gradle + Kotlin</string>
     <string name="create_project_type_native_cpp">Native C++</string>
     <string name="create_project_type_ndk">NDK Shared Lib</string>
+
+    <!-- Text Selection -->
+    <string name="copy_text">Copy</string>
+    <string name="paste_text">Paste</string>
+    <string name="text_selection_more">Select All</string>
 </resources>

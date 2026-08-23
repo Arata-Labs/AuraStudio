@@ -10,7 +10,6 @@ object ShellEnvironment {
         val homeDir = "$filesDir/home"
         val prefixDir = "$filesDir/usr"
 
-        // Ensure directories exist
         File(homeDir).mkdirs()
         File(prefixDir).mkdirs()
         File("$prefixDir/bin").mkdirs()
@@ -40,14 +39,11 @@ object ShellEnvironment {
             "ANDROID_DATA=$androidData",
             "EXTERNAL_STORAGE=$externalStorage",
             "BOOTCLASSPATH=$bootClassPath",
-            "PACKAGE_NAME=${context.packageName}",
-            "LANG=en_US.UTF-8",
-            "TMP=$prefixDir/tmp"
+            "PACKAGE_NAME=${context.packageName}"
         )
     }
 
     fun getShellPath(): String {
-        // Prefer Termux bash if available, fallback to Android sh
         val termuxBash = "/data/data/com.termux/files/usr/bin/bash"
         if (File(termuxBash).exists()) return termuxBash
         return "/system/bin/sh"

@@ -29,7 +29,9 @@ static int create_subprocess(JNIEnv* env,
         char** envp,
         int* pProcessId,
         jint rows,
-        jint columns)
+        jint columns,
+        jint cell_width,
+        jint cell_height)
 {
     int ptm = open("/dev/ptmx", O_RDWR | O_CLOEXEC);
     if (ptm < 0) return throw_runtime_exception(env, "Cannot open /dev/ptmx");
@@ -49,13 +51,14 @@ static int create_subprocess(JNIEnv* env,
         return throw_runtime_exception(env, "Cannot grantpt()/unlockpt()/ptsname_r() on /dev/ptmx");
     }
 
+    // Enable UTF-8 mode and disable flow control to prevent Ctrl+S from locking up the display.
     struct termios tios;
     tcgetattr(ptm, &tios);
     tios.c_iflag |= IUTF8;
     tios.c_iflag &= ~(IXON | IXOFF);
     tcsetattr(ptm, TCSANOW, &tios);
 
-    struct winsize sz = { .ws_row = (unsigned short) rows, .ws_col = (unsigned short) columns };
+    struct winsize sz = { .ws_row = (unsigned short) rows, .ws_col = (unsigned short) columns, .ws_xpixel = (unsigned short) (columns * cell_width), .ws_ypixel = (unsigned short) (rows * cell_height)};
     ioctl(ptm, TIOCSWINSZ, &sz);
 
     pid_t pid = fork();
@@ -65,6 +68,7 @@ static int create_subprocess(JNIEnv* env,
         *pProcessId = (int) pid;
         return ptm;
     } else {
+        // Clear signals which the Android java process may have blocked:
         sigset_t signals_to_unblock;
         sigfillset(&signals_to_unblock);
         sigprocmask(SIG_UNBLOCK, &signals_to_unblock, 0);
@@ -107,7 +111,7 @@ static int create_subprocess(JNIEnv* env,
     }
 }
 
-JNIEXPORT jint JNICALL Java_com_hinohara_aurastudio_terminal_JNI_createSubprocess(
+JNIEXPORT jint JNICALL Java_com_hinohara_aurastudio_terminal_engine_JNI_createSubprocess(
         JNIEnv* env,
         jclass TERMUX_UNUSED(clazz),
         jstring cmd,
@@ -116,7 +120,9 @@ JNIEXPORT jint JNICALL Java_com_hinohara_aurastudio_terminal_JNI_createSubproces
         jobjectArray envVars,
         jintArray processIdArray,
         jint rows,
-        jint columns)
+        jint columns,
+        jint cell_width,
+        jint cell_height)
 {
     jsize size = args ? (*env)->GetArrayLength(env, args) : 0;
     char** argv = NULL;
@@ -151,7 +157,7 @@ JNIEXPORT jint JNICALL Java_com_hinohara_aurastudio_terminal_JNI_createSubproces
     int procId = 0;
     char const* cmd_cwd = (*env)->GetStringUTFChars(env, cwd, NULL);
     char const* cmd_utf8 = (*env)->GetStringUTFChars(env, cmd, NULL);
-    int ptm = create_subprocess(env, cmd_utf8, cmd_cwd, argv, envp, &procId, rows, columns);
+    int ptm = create_subprocess(env, cmd_utf8, cmd_cwd, argv, envp, &procId, rows, columns, cell_width, cell_height);
     (*env)->ReleaseStringUTFChars(env, cmd, cmd_utf8);
     (*env)->ReleaseStringUTFChars(env, cmd, cmd_cwd);
 
@@ -173,13 +179,23 @@ JNIEXPORT jint JNICALL Java_com_hinohara_aurastudio_terminal_JNI_createSubproces
     return ptm;
 }
 
-JNIEXPORT void JNICALL Java_com_hinohara_aurastudio_terminal_JNI_setPtyWindowSize(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint fd, jint rows, jint cols)
+JNIEXPORT void JNICALL Java_com_hinohara_aurastudio_terminal_engine_JNI_setPtyWindowSize(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint fd, jint rows, jint cols, jint cell_width, jint cell_height)
 {
-    struct winsize sz = { .ws_row = (unsigned short) rows, .ws_col = (unsigned short) cols };
+    struct winsize sz = { .ws_row = (unsigned short) rows, .ws_col = (unsigned short) cols, .ws_xpixel = (unsigned short) (cols * cell_width), .ws_ypixel = (unsigned short) (rows * cell_height) };
     ioctl(fd, TIOCSWINSZ, &sz);
 }
 
-JNIEXPORT jint JNICALL Java_com_hinohara_aurastudio_terminal_JNI_waitFor(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint pid)
+JNIEXPORT void JNICALL Java_com_hinohara_aurastudio_terminal_engine_JNI_setPtyUTF8Mode(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint fd)
+{
+    struct termios tios;
+    tcgetattr(fd, &tios);
+    if ((tios.c_iflag & IUTF8) == 0) {
+        tios.c_iflag |= IUTF8;
+        tcsetattr(fd, TCSANOW, &tios);
+    }
+}
+
+JNIEXPORT jint JNICALL Java_com_hinohara_aurastudio_terminal_engine_JNI_waitFor(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint pid)
 {
     int status;
     waitpid(pid, &status, 0);
@@ -192,7 +208,7 @@ JNIEXPORT jint JNICALL Java_com_hinohara_aurastudio_terminal_JNI_waitFor(JNIEnv*
     }
 }
 
-JNIEXPORT void JNICALL Java_com_hinohara_aurastudio_terminal_JNI_close(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint fileDescriptor)
+JNIEXPORT void JNICALL Java_com_hinohara_aurastudio_terminal_engine_JNI_close(JNIEnv* TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz), jint fileDescriptor)
 {
     close(fileDescriptor);
 }
