@@ -1,6 +1,8 @@
 package com.hinohara.aurastudio.ui.screens.terminal
 
+import android.content.Context
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -37,8 +39,6 @@ fun TerminalScreen(
         onDispose { manager.finishAll() }
     }
 
-    val currentIndex = manager.currentIndex.intValue
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,8 +67,23 @@ fun TerminalScreen(
                             setBackgroundColor(0xFF111118.toInt())
                             setTerminalViewClient(viewClient)
                             setTextSize(14)
+                            isFocusable = true
+                            isFocusableInTouchMode = true
+                            setOnTouchListener { v, event ->
+                                if (event.action == android.view.MotionEvent.ACTION_UP) {
+                                    v.requestFocus()
+                                    showKeyboard(ctx)
+                                }
+                                false
+                            }
                             attachSession(session)
                             terminalView = this
+
+                            // Initial focus + keyboard show
+                            post {
+                                requestFocus()
+                                showKeyboard(ctx)
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxSize(),
@@ -88,4 +103,9 @@ fun TerminalScreen(
             modifier = Modifier.fillMaxWidth()
         )
     }
+}
+
+private fun showKeyboard(context: Context) {
+    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+    imm?.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
 }
