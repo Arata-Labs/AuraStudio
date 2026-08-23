@@ -6,13 +6,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.hinohara.aurastudio.terminal.*
 import com.hinohara.aurastudio.terminal.view.TerminalView
 import com.hinohara.aurastudio.ui.theme.*
 
 @Composable
-fun TerminalScreen(initialCommand: String? = null) {
+fun TerminalScreen(
+    initialCommand: String? = null,
+    scaffoldPadding: PaddingValues = PaddingValues()
+) {
     val context = LocalContext.current
 
     val manager = remember { TerminalSessionManager(context) }
@@ -39,6 +43,10 @@ fun TerminalScreen(initialCommand: String? = null) {
         modifier = Modifier
             .fillMaxSize()
             .background(termBg())
+            .padding(
+                top = scaffoldPadding.calculateTopPadding(),
+                bottom = scaffoldPadding.calculateBottomPadding()
+            )
     ) {
         SessionTabs(manager = manager)
 

@@ -186,7 +186,8 @@ fun AuraStudioApp(
                 }
                 is Screen.Terminal -> {
                     TerminalScreen(
-                        initialCommand = terminalCommand
+                        initialCommand = terminalCommand,
+                        scaffoldPadding = innerPadding
                     )
                 }
                 is Screen.Settings -> {
