@@ -28,8 +28,14 @@ fun TerminalScreen(
     var terminalView by remember { mutableStateOf<TerminalView?>(null) }
 
     LaunchedEffect(Unit) {
-        manager.onScreenUpdate = { screenUpdateCounter++ }
+        manager.onScreenUpdate = {
+            screenUpdateCounter++
+            terminalView?.onScreenUpdated()
+        }
     }
+
+    @Suppress("UNUSED_EXPRESSION")
+    screenUpdateCounter
 
     LaunchedEffect(Unit) {
         manager.createSession()

@@ -39,7 +39,7 @@ class TerminalSessionManager(private val context: Context) : TerminalSessionClie
         val session = TerminalSession(
             shellPath,
             cwd,
-            arrayOf(shellPath),
+            arrayOf(shellPath, "--norc", "--noprofile"),
             env,
             5000,
             this
