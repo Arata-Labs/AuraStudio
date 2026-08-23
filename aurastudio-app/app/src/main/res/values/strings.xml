@@ -108,8 +108,8 @@
     <string name="settings_plugins_desc">Custom AuraStudio plugin scripts</string>
     <string name="settings_cache_desc">Temporary files and download cache</string>
     <string name="settings_env_file_desc">Environment variables and path setup</string>
-    <string name="settings_home_desc">Termux user home directory</string>
-    <string name="settings_env_desc">Detected paths in your Termux environment</string>
+    <string name="settings_home_desc">User home directory</string>
+    <string name="settings_env_desc">Detected paths in your environment</string>
     <string name="settings_env_active">Active</string>
     <string name="settings_env_available">Available Components</string>
 
@@ -123,7 +123,7 @@
     <string name="settings_developer_value">Arata Labs</string>
     <string name="settings_github">GitHub Repository</string>
     <string name="settings_github_value">github.com/Arata-Labs/AuraStudio</string>
-    <string name="settings_about_desc">AuraStudio CLI for Android development in Termux</string>
+    <string name="settings_about_desc">AuraStudio CLI for Android development</string>
     <string name="settings_about_info">Info</string>
     <string name="settings_about_version_value">AuraStudio CLI v1.2</string>
     <string name="settings_about_license">License</string>
@@ -132,7 +132,7 @@
     <!-- Developer Profile Dialog -->
     <string name="dev_profile_name">HinohArata</string>
     <string name="dev_profile_role">Lead Developer</string>
-    <string name="dev_profile_bio">Building tools for Android development in Termux. Passionate about making mobile development accessible anywhere.</string>
+    <string name="dev_profile_bio">Building tools for Android development on mobile. Passionate about making development accessible anywhere.</string>
     <string name="dev_social_github">GitHub</string>
     <string name="dev_social_github_value">github.com/Arata-Labs</string>
     <string name="dev_social_email">Email</string>

@@ -58,6 +58,7 @@ fun TerminalScreen(initialCommand: String? = null) {
                             )
                             setBackgroundColor(0xFF111118.toInt())
                             setTerminalViewClient(viewClient)
+                            setTextSize(14)
                             attachSession(session)
                             terminalView = this
                         }

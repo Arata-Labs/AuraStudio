@@ -6,7 +6,7 @@ package com.hinohara.aurastudio.terminal.engine;
 final class JNI {
 
     static {
-        System.loadLibrary("termux");
+        System.loadLibrary("aurastudio");
     }
 
     /**
