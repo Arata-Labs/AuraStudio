@@ -2,11 +2,13 @@ package com.hinohara.aurastudio.terminal
 
 import android.content.Context
 import android.os.Build
+import android.os.StatFs
 import android.system.Os
 import android.util.Log
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -23,12 +25,7 @@ object BootstrapInstaller {
     private const val TERMUX_PREFIX = "/data/data/com.termux/files/usr"
 
     enum class State {
-        NOT_INSTALLED,
-        DOWNLOADING,
-        EXTRACTING,
-        SETTING_UP,
-        READY,
-        ERROR
+        NOT_INSTALLED, DOWNLOADING, EXTRACTING, SETTING_UP, READY, ERROR
     }
 
     data class Progress(
@@ -38,22 +35,20 @@ object BootstrapInstaller {
         val error: String? = null
     )
 
-    fun getPrefixDir(context: Context): String {
-        return "${context.filesDir.absolutePath}/usr"
-    }
+    fun getPrefixDir(context: Context): String =
+        "${context.filesDir.absolutePath}/usr"
 
-    fun getHomeDir(context: Context): String {
-        return "${context.filesDir.absolutePath}/home"
-    }
+    fun getHomeDir(context: Context): String =
+        "${context.filesDir.absolutePath}/home"
 
     fun isInstalled(context: Context): Boolean {
         val bash = File(getPrefixDir(context), "bin/bash")
         return bash.exists() && bash.length() > 0 && bash.canExecute()
     }
 
-    fun getArchName(): String {
-        val primaryAbi = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
-        return when (primaryAbi) {
+    private fun getArchName(): String {
+        val abi = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
+        return when (abi) {
             "arm64-v8a" -> "aarch64"
             "armeabi-v7a" -> "arm"
             "x86" -> "i686"
@@ -64,14 +59,12 @@ object BootstrapInstaller {
 
     private fun getBootstrapUrl(): String {
         val arch = getArchName()
-        val encodedVariant = BOOTSTRAP_VARIANT.replace("+", "%2B")
-        return "$BOOTSTRAP_BASE_URL/bootstrap-$BOOTSTRAP_VERSION%2B$encodedVariant/bootstrap-$arch.zip"
+        val v = BOOTSTRAP_VERSION.replace("+", "%2B")
+        val vr = BOOTSTRAP_VARIANT.replace("+", "%2B")
+        return "$BOOTSTRAP_BASE_URL/bootstrap-$v%2B$vr/bootstrap-$arch.zip"
     }
 
-    fun install(
-        context: Context,
-        onProgress: (Progress) -> Unit
-    ): Boolean {
+    fun install(context: Context, onProgress: (Progress) -> Unit): Boolean {
         if (isInstalled(context)) {
             onProgress(Progress(state = State.READY))
             return true
@@ -79,39 +72,37 @@ object BootstrapInstaller {
 
         val prefixDir = File(getPrefixDir(context))
         val stagingDir = File(context.filesDir, "usr_staging")
+        val downloadDir = File(context.filesDir, "downloads")
 
-        if (prefixDir.exists() && !isInstalled(context)) {
-            prefixDir.deleteRecursively()
-        }
+        prefixDir.deleteRecursively()
         stagingDir.deleteRecursively()
 
         try {
-            onProgress(Progress(state = State.DOWNLOADING, message = "Downloading bootstrap..."))
+            downloadDir.mkdirs()
 
-            val cacheDir = File(context.filesDir, "cache")
-            cacheDir.mkdirs()
-            val zipFile = File(cacheDir, "bootstrap-${getArchName()}.zip")
+            onProgress(Progress(state = State.DOWNLOADING, message = "Downloading bootstrap..."))
+            val zipFile = File(downloadDir, "bootstrap-${getArchName()}.zip")
             downloadBootstrap(zipFile, onProgress)
 
-            onProgress(Progress(state = State.EXTRACTING, message = "Extracting packages..."))
+            if (!zipFile.exists() || zipFile.length() == 0L) {
+                throw RuntimeException("Download failed - file is empty or missing")
+            }
 
+            onProgress(Progress(state = State.EXTRACTING, message = "Extracting packages..."))
             stagingDir.mkdirs()
             extractZip(zipFile, stagingDir, onProgress)
 
             onProgress(Progress(state = State.SETTING_UP, message = "Setting up environment..."))
-
-            rewriteTermuxPaths(stagingDir)
             setupEnvironment(stagingDir, context)
 
-            if (prefixDir.exists()) prefixDir.deleteRecursively()
             if (!stagingDir.renameTo(prefixDir)) {
-                throw RuntimeException("Failed to rename staging to prefix")
+                throw RuntimeException("Failed to finalize prefix directory")
             }
 
             createHomeDir(context)
+            zipFile.delete()
 
             onProgress(Progress(state = State.READY, message = "Ready!"))
-            zipFile.delete()
             return true
 
         } catch (e: Exception) {
@@ -122,34 +113,77 @@ object BootstrapInstaller {
         }
     }
 
-    private fun downloadBootstrap(outputFile: File, onProgress: (Progress) -> Unit) {
+    private fun downloadBootstrap(zipFile: File, onProgress: (Progress) -> Unit) {
+        if (zipFile.exists() && zipFile.length() > 1_000_000) {
+            Log.d(TAG, "Using cached bootstrap: ${zipFile.length()} bytes")
+            return
+        }
+
         val url = URL(getBootstrapUrl())
         Log.d(TAG, "Downloading: $url")
 
         val conn = url.openConnection() as HttpURLConnection
-        conn.connectTimeout = 30_000
-        conn.readTimeout = 120_000
+        conn.connectTimeout = 60_000
+        conn.readTimeout = 300_000
+        conn.instanceFollowRedirects = true
+        conn.setRequestProperty("User-Agent", "AuraStudio/1.0")
         conn.connect()
+
+        val code = conn.responseCode
+        if (code !in 200..299) {
+            conn.disconnect()
+            throw RuntimeException("HTTP $code downloading bootstrap")
+        }
 
         val totalSize = conn.contentLength.toLong()
         var downloaded = 0L
 
-        conn.inputStream.use { input ->
-            FileOutputStream(outputFile).use { output ->
-                val buffer = ByteArray(8192)
-                var bytesRead: Int
-                while (input.read(buffer).also { bytesRead = it } != -1) {
-                    output.write(buffer, 0, bytesRead)
-                    downloaded += bytesRead
-                    if (totalSize > 0) {
-                        onProgress(Progress(
-                            state = State.DOWNLOADING,
-                            progress = downloaded.toFloat() / totalSize,
-                            message = "Downloading... ${(downloaded * 100 / totalSize).toInt()}%"
-                        ))
+        val tmpFile = File(zipFile.parent, "${zipFile.name}.tmp")
+        try {
+            FileOutputStream(tmpFile).use { output ->
+                conn.inputStream.use { input ->
+                    copyWithProgress(input, output, totalSize, downloaded) { bytes ->
+                        downloaded = bytes
+                        if (totalSize > 0) {
+                            onProgress(Progress(
+                                state = State.DOWNLOADING,
+                                progress = downloaded.toFloat() / totalSize,
+                                message = "Downloading... ${(downloaded * 100 / totalSize).toInt()}%"
+                            ))
+                        }
                     }
                 }
             }
+
+            if (tmpFile.length() < 1_000_000) {
+                throw RuntimeException("Downloaded file too small (${tmpFile.length()} bytes)")
+            }
+
+            tmpFile.renameTo(zipFile)
+            Log.d(TAG, "Download complete: ${zipFile.length()} bytes")
+
+        } catch (e: Exception) {
+            tmpFile.delete()
+            throw e
+        } finally {
+            conn.disconnect()
+        }
+    }
+
+    private fun copyWithProgress(
+        input: InputStream,
+        output: FileOutputStream,
+        totalSize: Long,
+        initial: Long,
+        onBytes: (Long) -> Unit
+    ) {
+        val buffer = ByteArray(16384)
+        var total = initial
+        var read: Int
+        while (input.read(buffer).also { read = it } != -1) {
+            output.write(buffer, 0, read)
+            total += read
+            onBytes(total)
         }
     }
 
@@ -175,13 +209,13 @@ object BootstrapInstaller {
                         val parts = line.split("\u2190")
                         if (parts.size == 2) {
                             var oldPath = parts[0].trim()
-                            val relativeNewPath = parts[1].trim()
+                            val relNewPath = parts[1].trim()
 
                             if (oldPath.startsWith(TERMUX_PREFIX)) {
                                 oldPath = ourPrefix + oldPath.removePrefix(TERMUX_PREFIX)
                             }
 
-                            val newPath = "$ourPrefix/${relativeNewPath.removePrefix("./")}"
+                            val newPath = "$ourPrefix/${relNewPath.removePrefix("./")}"
                             symlinks.add(Pair(oldPath, newPath))
                             File(newPath).parentFile?.mkdirs()
                         }
@@ -189,7 +223,7 @@ object BootstrapInstaller {
                     }
                 } else {
                     entryCount++
-                    if (entryCount % 200 == 0) {
+                    if (entryCount % 300 == 0) {
                         onProgress(Progress(
                             state = State.EXTRACTING,
                             message = "Extracting... ($entryCount files)"
@@ -214,7 +248,7 @@ object BootstrapInstaller {
                             try {
                                 Os.chmod(outFile.absolutePath, 448)
                             } catch (e: Exception) {
-                                Log.w(TAG, "Os.chmod failed for $entryName: ${e.message}")
+                                Log.w(TAG, "chmod failed: $entryName: ${e.message}")
                                 outFile.setExecutable(true, false)
                             }
                         }
@@ -227,73 +261,21 @@ object BootstrapInstaller {
         }
 
         if (symlinks.isEmpty()) {
-            throw RuntimeException("No SYMLINKS.txt found in bootstrap zip")
+            throw RuntimeException("No SYMLINKS.txt in bootstrap")
         }
 
         Log.d(TAG, "Creating ${symlinks.size} symlinks...")
-        var failed = 0
         for ((oldPath, newPath) in symlinks) {
             try {
-                val newFile = File(newPath)
-                if (newFile.exists() || newFile.createNewFile()) {
-                    newFile.delete()
-                }
+                val f = File(newPath)
+                if (!f.parentFile?.exists()!!) f.parentFile?.mkdirs()
+                if (f.exists()) f.delete()
+                f.createNewFile()
+                f.delete()
                 Os.symlink(oldPath, newPath)
             } catch (e: Exception) {
-                failed++
-                if (failed <= 5) {
-                    Log.w(TAG, "Symlink failed: $oldPath -> $newPath: ${e.message}")
-                }
+                Log.w(TAG, "Symlink failed: $oldPath -> $newPath: ${e.message}")
             }
-        }
-        if (failed > 0) {
-            Log.w(TAG, "Total symlink failures: $failed / ${symlinks.size}")
-        }
-    }
-
-    private fun rewriteTermuxPaths(stagingDir: File) {
-        val ourPrefix = stagingDir.absolutePath
-        val textExtensions = setOf("sh", "conf", "cfg", "list", "txt", "gpg")
-        val textDirs = listOf("bin", "etc", "share", "lib/apt", "libexec")
-
-        for (dirName in textDirs) {
-            val dir = File(stagingDir, dirName)
-            if (!dir.exists()) continue
-            rewriteFilesInDir(dir, TERMUX_PREFIX, ourPrefix, textExtensions)
-        }
-
-        val secondStage = File(stagingDir, "etc/termux/termux-bootstrap/second-stage/termux-bootstrap-second-stage.sh")
-        if (secondStage.exists()) {
-            rewriteFile(secondStage, TERMUX_PREFIX, ourPrefix)
-        }
-
-        val profileD = File(stagingDir, "etc/profile.d")
-        if (profileD.exists()) {
-            profileD.listFiles()?.forEach { rewriteFile(it, TERMUX_PREFIX, ourPrefix) }
-        }
-    }
-
-    private fun rewriteFilesInDir(dir: File, oldPrefix: String, newPrefix: String, extensions: Set<String>) {
-        dir.listFiles()?.forEach { file ->
-            if (file.isDirectory) {
-                rewriteFilesInDir(file, oldPrefix, newPrefix, extensions)
-            } else {
-                val ext = file.extension.lowercase()
-                if (ext in extensions || file.nameWithoutExtension in listOf("sources.list", "bash.bashrc")) {
-                    rewriteFile(file, oldPrefix, newPrefix)
-                }
-            }
-        }
-    }
-
-    private fun rewriteFile(file: File, oldPrefix: String, newPrefix: String) {
-        try {
-            val content = file.readText()
-            if (content.contains(oldPrefix)) {
-                file.writeText(content.replace(oldPrefix, newPrefix))
-                Log.d(TAG, "Rewrote paths in: ${file.absolutePath}")
-            }
-        } catch (_: Exception) {
         }
     }
 
@@ -307,7 +289,6 @@ object BootstrapInstaller {
     }
 
     private fun createHomeDir(context: Context) {
-        val homeDir = File(getHomeDir(context))
-        homeDir.mkdirs()
+        File(getHomeDir(context)).mkdirs()
     }
 }
