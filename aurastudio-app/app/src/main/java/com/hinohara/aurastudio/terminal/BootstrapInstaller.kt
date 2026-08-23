@@ -46,8 +46,12 @@ object BootstrapInstaller {
         val prefixDir = File(finalPrefix)
         val stagingDir = File(context.filesDir, "usr_staging")
 
-        prefixDir.deleteRecursively()
-        stagingDir.deleteRecursively()
+        if (prefixDir.exists()) prefixDir.deleteRecursively()
+        if (stagingDir.exists()) stagingDir.deleteRecursively()
+
+        if (prefixDir.exists()) {
+            throw RuntimeException("Cannot remove existing prefix directory")
+        }
 
         try {
             onProgress(Progress(state = State.EXTRACTING, message = "Extracting bootstrap..."))
@@ -59,7 +63,12 @@ object BootstrapInstaller {
             makeExecutable(stagingDir)
 
             if (!stagingDir.renameTo(prefixDir)) {
-                throw RuntimeException("Failed to finalize prefix directory")
+                if (prefixDir.exists()) {
+                    prefixDir.deleteRecursively()
+                }
+                if (!stagingDir.renameTo(prefixDir)) {
+                    throw RuntimeException("Failed to finalize prefix directory")
+                }
             }
 
             makeExecutable(prefixDir)

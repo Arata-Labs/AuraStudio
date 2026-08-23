@@ -5,9 +5,9 @@ dist/
 
 # Temporary & Download Caches
 tmp/
-*.zip
 *.tar.xz
 *.tar.gz
+!bootstrap-*.zip
 
 # Local Android SDK Test Data
 android-sdk/

@@ -86,30 +86,3 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
-
-tasks.register<Copy>("copyBootstrap") {
-    description = "Copy bootstrap zip to assets if not already present"
-    val arch = when {
-        org.gradle.internal.os.OperatingSystem.current().isLinux -> "aarch64"
-        else -> "aarch64"
-    }
-    val destFile = file("src/main/assets/bootstrap-$arch.zip")
-    val candidates = listOf(
-        System.getProperty("user.home") + "/bootstrap-$arch.zip",
-        System.getProperty("user.home") + "/termux-app/app/src/main/jniLibs/arm64-v8a/libtermux-bootstrap.so"
-    )
-    val source = candidates.map { file(it) }.firstOrNull { it.exists() }
-    if (source != null && source.length() > 1_000_000 && !destFile.exists()) {
-        from(source)
-        into("src/main/assets")
-        if (source.name.endsWith(".so")) {
-            rename { "bootstrap-$arch.zip" }
-        }
-    } else {
-        enabled = false
-    }
-}
-
-tasks.withType<AbstractArchiveTask>().configureEach {
-    dependsOn("copyBootstrap")
-}
