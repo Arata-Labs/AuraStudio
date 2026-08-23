@@ -32,7 +32,7 @@ class TerminalSessionManager(private val context: Context) : TerminalSessionClie
     val maxSessions = 8
 
     fun createSession(): TerminalSessionInfo {
-        val shellPath = ShellEnvironment.getShellPath()
+        val shellPath = ShellEnvironment.getShellPath(context)
         val cwd = ShellEnvironment.getWorkingDirectory(context)
         val env = ShellEnvironment.getEnvironment(context)
 
