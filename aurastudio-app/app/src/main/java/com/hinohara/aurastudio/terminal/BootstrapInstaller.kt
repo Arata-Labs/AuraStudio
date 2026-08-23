@@ -88,7 +88,9 @@ object BootstrapInstaller {
         try {
             onProgress(Progress(state = State.DOWNLOADING, message = "Downloading bootstrap..."))
 
-            val zipFile = File(context.cacheDir, "bootstrap-${getArchName()}.zip")
+            val cacheDir = File(context.filesDir, "cache")
+            cacheDir.mkdirs()
+            val zipFile = File(cacheDir, "bootstrap-${getArchName()}.zip")
             downloadBootstrap(zipFile, onProgress)
 
             onProgress(Progress(state = State.EXTRACTING, message = "Extracting packages..."))
