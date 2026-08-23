@@ -43,7 +43,14 @@ object BootstrapInstaller {
 
     fun isInstalled(context: Context): Boolean {
         val bash = File(getPrefixDir(context), "bin/bash")
-        return bash.exists() && bash.length() > 0
+        return bash.exists() && bash.length() > 0 && bash.canExecute()
+    }
+
+    fun ensurePermissions(context: Context) {
+        val prefixDir = File(getPrefixDir(context))
+        if (prefixDir.exists()) {
+            Runtime.getRuntime().exec(arrayOf("/system/bin/chmod", "-R", "755", prefixDir.absolutePath)).waitFor()
+        }
     }
 
     fun getArchName(): String {
@@ -74,6 +81,10 @@ object BootstrapInstaller {
 
         val prefixDir = File(getPrefixDir(context))
         val tmpDir = File(context.filesDir, "usr_tmp")
+
+        if (prefixDir.exists() && !isInstalled(context)) {
+            prefixDir.deleteRecursively()
+        }
 
         try {
             onProgress(Progress(state = State.DOWNLOADING, message = "Downloading bootstrap..."))
@@ -182,23 +193,7 @@ object BootstrapInstaller {
     }
 
     private fun setupEnvironment(prefixDir: File, context: Context) {
-        val binDirs = listOf(
-            File(prefixDir, "bin"),
-            File(prefixDir, "libexec/apt"),
-            File(prefixDir, "lib/apt"),
-            File(prefixDir, "lib"),
-            File(prefixDir, "share"),
-        )
-
-        for (dir in binDirs) {
-            if (!dir.exists()) continue
-            dir.listFiles()?.forEach { file ->
-                if (file.isFile) {
-                    file.setExecutable(true, false)
-                    file.setReadable(true, false)
-                }
-            }
-        }
+        Runtime.getRuntime().exec(arrayOf("/system/bin/chmod", "-R", "755", prefixDir.absolutePath)).waitFor()
 
         val tmpDir = File(prefixDir, "tmp")
         tmpDir.mkdirs()
@@ -229,6 +224,11 @@ alias ll='ls -la'
 alias la='ls -A'
 alias l='ls -CF'
 """.trimIndent())
+        }
+
+        val profile = File(prefixDir, "etc/profile")
+        if (!profile.exists()) {
+            profile.writeText("# AuraStudio profile\n. \"${prefixDir.absolutePath}/etc/bash.bashrc\"\n")
         }
     }
 
