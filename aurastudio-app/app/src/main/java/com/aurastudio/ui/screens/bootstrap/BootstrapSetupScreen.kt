@@ -19,7 +19,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
@@ -33,6 +35,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -230,6 +233,11 @@ private fun StatusCard(state: BootstrapState, extractedLabel: String) {
     }
 }
 
+private val systemTextSelectionColors = TextSelectionColors(
+    handleColor = Color(0xFF33B5E5),
+    backgroundColor = Color(0x6633B5E5),
+)
+
 @Composable
 private fun TerminalLogBox(log: List<String>, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
@@ -244,27 +252,29 @@ private fun TerminalLogBox(log: List<String>, modifier: Modifier = Modifier) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         color = termBg(),
     ) {
-        SelectionContainer {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(termBg())
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                if (log.isEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.bootstrap_log_empty),
-                            style = MaterialTheme.typography.bodySmall,
-                            fontFamily = FontFamily.Monospace,
-                            color = termFg().copy(alpha = 0.6f),
-                        )
+        CompositionLocalProvider(LocalTextSelectionColors provides systemTextSelectionColors) {
+            SelectionContainer {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(termBg())
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    if (log.isEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.bootstrap_log_empty),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = FontFamily.Monospace,
+                                color = termFg().copy(alpha = 0.6f),
+                            )
+                        }
                     }
-                }
-                itemsIndexed(log) { index, line ->
-                    LogLine(line = line, isLast = index == log.lastIndex)
+                    itemsIndexed(log) { index, line ->
+                        LogLine(line = line, isLast = index == log.lastIndex)
+                    }
                 }
             }
         }

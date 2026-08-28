@@ -184,5 +184,5 @@
     <!-- Text Selection -->
     <string name="copy_text">Copy</string>
     <string name="paste_text">Paste</string>
-    <string name="text_selection_more">Select All</string>
+    <string name="text_selection_more">More…</string>
 </resources>
