@@ -1,5 +1,6 @@
 package com.aurastudio
 
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
@@ -12,18 +13,24 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aurastudio.data.bootstrap.BootstrapCoordinator
 import com.aurastudio.data.viewmodel.DashboardViewModel
 import com.aurastudio.ui.components.AuraStudioTopBar
 import com.aurastudio.ui.components.ModernBottomNavBar
 import com.aurastudio.ui.navigation.Screen
 import com.aurastudio.ui.navigation.bottomNavItems
+import com.aurastudio.ui.screens.bootstrap.BootstrapSetupScreen
 import com.aurastudio.ui.screens.dashboard.DashboardScreen
 import com.aurastudio.ui.screens.projects.CreateProjectScreen
 import com.aurastudio.ui.screens.projects.ProjectsScreen
+import com.aurastudio.ui.screens.splash.SplashScreen
 import com.aurastudio.ui.screens.terminal.TerminalScreen
 import com.aurastudio.ui.theme.*
+import com.termux.app.TermuxInstaller
 
 private const val PREFS_NAME = "aurastudio_settings"
 private const val KEY_THEME_MODE = "theme_mode"
@@ -34,6 +41,8 @@ private val ICON_ALIASES = mapOf(
     ICON_LIGHT to ComponentName(BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}.IconLight"),
 )
 
+private enum class StartupPhase { Splash, Bootstrap, Main }
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +50,7 @@ class MainActivity : ComponentActivity() {
 
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val savedThemeMode = prefs.getInt(KEY_THEME_MODE, THEME_SYSTEM)
-        val savedIconMode = prefs.getInt(KEY_ICON_MODE, ICON_SYSTEM)
+        val savedIconMode = prefs.getInt(KEY_ICON_MODE, ICON_DARK)
         val isDark = resolveIsDark(savedThemeMode)
         applyIcon(this, savedIconMode, isDark)
 
@@ -56,18 +65,23 @@ class MainActivity : ComponentActivity() {
             }
 
             AuraStudioTheme(themeMode = themeMode) {
-                AuraStudioApp(
-                    themeMode = themeMode,
+                AuraStudioStartup(
                     iconMode = iconMode,
-                    onThemeChange = { mode ->
-                        themeMode = mode
-                        prefs.edit().putInt(KEY_THEME_MODE, mode).apply()
-                    },
-                    onIconChange = { mode ->
-                        iconMode = mode
-                        prefs.edit().putInt(KEY_ICON_MODE, mode).apply()
-                    }
-                )
+                    currentIsDark = currentIsDark,
+                ) { phase ->
+                    AuraStudioApp(
+                        themeMode = themeMode,
+                        iconMode = iconMode,
+                        onThemeChange = { mode ->
+                            themeMode = mode
+                            prefs.edit().putInt(KEY_THEME_MODE, mode).apply()
+                        },
+                        onIconChange = { mode ->
+                            iconMode = mode
+                            prefs.edit().putInt(KEY_ICON_MODE, mode).apply()
+                        }
+                    )
+                }
             }
         }
     }
@@ -95,6 +109,53 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
+}
+
+/**
+ * First-run sequence: splash (brand logo matching the active icon mode + permission
+ * request) → bootstrap installer (first launch only) → main app.
+ */
+@Composable
+private fun AuraStudioStartup(
+    iconMode: Int,
+    currentIsDark: Boolean,
+    mainContent: @Composable (StartupPhase) -> Unit,
+) {
+    var phase by remember { mutableStateOf(StartupPhase.Splash) }
+    val context = LocalContext.current
+    val coordinator = remember { BootstrapCoordinator(context as Activity) }
+
+    when (phase) {
+        StartupPhase.Splash -> {
+            SplashScreen(
+                useDarkLogo = effectiveIconIsDark(iconMode, currentIsDark),
+                onFinished = {
+                    phase = if (TermuxInstaller.isBootstrapInstalled()) StartupPhase.Main else StartupPhase.Bootstrap
+                },
+            )
+        }
+
+        StartupPhase.Bootstrap -> {
+            val state by coordinator.state.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) {
+                coordinator.start(postSetup = { coordinator.finishSetup() })
+            }
+            BootstrapSetupScreen(
+                state = state,
+                onDone = { phase = StartupPhase.Main },
+                onRetry = { coordinator.retry(postSetup = { coordinator.finishSetup() }) },
+                onSkip = { phase = StartupPhase.Main },
+            )
+        }
+
+        StartupPhase.Main -> mainContent(phase)
+    }
+}
+
+private fun effectiveIconIsDark(iconMode: Int, isDark: Boolean): Boolean = when (iconMode) {
+    ICON_DARK -> true
+    ICON_LIGHT -> false
+    else -> isDark
 }
 
 @Composable

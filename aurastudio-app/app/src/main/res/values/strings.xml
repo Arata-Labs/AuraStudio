@@ -2,6 +2,24 @@
 <resources>
     <string name="app_name">Aura Studio</string>
 
+    <!-- Splash -->
+    <string name="splash_welcome">Welcome to Aura Studio</string>
+
+    <!-- Bootstrap Setup -->
+    <string name="bootstrap_title">Preparing AuraStudio</string>
+    <string name="bootstrap_desc">Setting up your Android development environment</string>
+    <string name="bootstrap_extracted_label">Files extracted:</string>
+    <string name="bootstrap_log_title">Bootstrap Install Log</string>
+    <string name="bootstrap_log_empty">Waiting for logs…</string>
+    <string name="bootstrap_status_done">Bootstrap installed</string>
+    <string name="bootstrap_status_failed">Bootstrap failed</string>
+    <string name="bootstrap_status_waiting">Starting…</string>
+    <string name="bootstrap_ready">Your Android development environment is ready</string>
+    <string name="bootstrap_done">Done</string>
+    <string name="bootstrap_retry">Try Again</string>
+    <string name="bootstrap_skip">Skip</string>
+    <string name="bootstrap_error_title">Bootstrap Failed</string>
+
     <!-- Dashboard -->
     <string name="dashboard_tagline">Build Android, Anywhere</string>
     <string name="dashboard_health_title">Environment Health</string>
