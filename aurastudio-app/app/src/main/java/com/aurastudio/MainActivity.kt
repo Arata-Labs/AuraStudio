@@ -51,23 +51,21 @@ class MainActivity : ComponentActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val savedThemeMode = prefs.getInt(KEY_THEME_MODE, THEME_SYSTEM)
         val savedIconMode = prefs.getInt(KEY_ICON_MODE, ICON_DARK)
-        val isDark = resolveIsDark(savedThemeMode)
-        applyIcon(this, savedIconMode, isDark)
+        applyIcon(this, savedIconMode, resources.configuration.uiMode and 0x20 != 0)
 
         setContent {
             var themeMode by remember { mutableIntStateOf(savedThemeMode) }
             var iconMode by remember { mutableIntStateOf(savedIconMode) }
             val isSystemDark = isSystemInDarkTheme()
-            val currentIsDark = resolveIsDark(themeMode, isSystemDark)
 
-            LaunchedEffect(currentIsDark, iconMode) {
-                applyIcon(this@MainActivity, iconMode, currentIsDark)
+            LaunchedEffect(isSystemDark, iconMode) {
+                applyIcon(this@MainActivity, iconMode, isSystemDark)
             }
 
             AuraStudioTheme(themeMode = themeMode) {
                 AuraStudioStartup(
                     iconMode = iconMode,
-                    currentIsDark = currentIsDark,
+                    isSystemDark = isSystemDark,
                 ) { phase ->
                     AuraStudioApp(
                         themeMode = themeMode,
@@ -83,14 +81,6 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
-        }
-    }
-
-    private fun resolveIsDark(themeMode: Int, systemDark: Boolean = resources.configuration.uiMode and 0x20 != 0): Boolean {
-        return when (themeMode) {
-            THEME_DARK -> true
-            THEME_LIGHT -> false
-            else -> systemDark
         }
     }
 
@@ -118,7 +108,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun AuraStudioStartup(
     iconMode: Int,
-    currentIsDark: Boolean,
+    isSystemDark: Boolean,
     mainContent: @Composable (StartupPhase) -> Unit,
 ) {
     var phase by remember { mutableStateOf(StartupPhase.Splash) }
@@ -128,7 +118,7 @@ private fun AuraStudioStartup(
     when (phase) {
         StartupPhase.Splash -> {
             SplashScreen(
-                useDarkLogo = effectiveIconIsDark(iconMode, currentIsDark),
+                useDarkLogo = effectiveIconIsDark(iconMode, isSystemDark),
                 onFinished = {
                     phase = if (TermuxInstaller.isBootstrapInstalled()) StartupPhase.Main else StartupPhase.Bootstrap
                 },

@@ -31,8 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -95,11 +93,7 @@ private fun SplashContent(useDarkLogo: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(bg, if (logoDark) Color(0xFF161622) else Color(0xFFF4F0FF))
-                )
-            ),
+            .background(bg),
         contentAlignment = Alignment.Center,
     ) {
         Column(
