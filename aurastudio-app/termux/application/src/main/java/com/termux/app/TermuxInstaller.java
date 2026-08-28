@@ -195,6 +195,7 @@ final class TermuxInstaller {
                                     }
                                     if (zipEntryName.startsWith("bin/") || zipEntryName.startsWith("libexec") ||
                                         zipEntryName.startsWith("lib/apt/apt-helper") || zipEntryName.startsWith("lib/apt/methods") ||
+                                        zipEntryName.startsWith("opt/aurastudio/") ||
                                         zipEntryName.equals("etc/termux/bootstrap/termux-bootstrap-second-stage.sh")) {
                                         //noinspection OctalInteger
                                         Os.chmod(targetFile.getAbsolutePath(), 0700);
