@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilterInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -362,7 +363,17 @@ final class TermuxInstaller {
         System.loadLibrary("termux-bootstrap");
         // The bootstrap zip (~160 MB) is embedded in the native library and streamed
         // out of an anonymous memfd instead of being copied into a byte[] first.
-        return new FileInputStream(ParcelFileDescriptor.fromFd(getZipFd()).getFileDescriptor());
+        // Keep the ParcelFileDescriptor referenced by the returned stream so GC cannot
+        // finalize (and close) the owning fd while the zip is still being extracted.
+        final ParcelFileDescriptor pfd = ParcelFileDescriptor.adoptFd(getZipFd());
+        final InputStream in = new FileInputStream(pfd.getFileDescriptor());
+        return new FilterInputStream(in) {
+            @Override
+            public void close() throws java.io.IOException {
+                super.close();
+                pfd.close();
+            }
+        };
     }
 
     public static native int getZipFd();
