@@ -1,0 +1,169 @@
+name: Build Custom Bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      architectures:
+        description: 'Target architectures (space-separated)'
+        required: false
+        default: 'aarch64'
+      termux_packages_repo:
+        description: 'termux-packages repo URL'
+        required: false
+        default: 'https://github.com/termux/termux-packages.git'
+      termux_packages_branch:
+        description: 'termux-packages branch'
+        required: false
+        default: 'master'
+      upload_release:
+        description: 'Upload to GitHub release (bootstrap-v1 tag)'
+        required: false
+        default: 'true'
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-bootstrap:
+    name: Build Bootstrap (${{ github.event.inputs.architectures || 'aarch64' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc || true
+          df -h
+
+      - name: Clone termux-packages
+        run: |
+          git clone --depth 1 \
+            -b ${{ github.event.inputs.termux_packages_branch || 'master' }} \
+            ${{ github.event.inputs.termux_packages_repo || 'https://github.com/termux/termux-packages.git' }} \
+            /tmp/termux-packages
+
+      - name: Set custom package name
+        working-directory: /tmp/termux-packages
+        run: |
+          # Override TERMUX_APP_PACKAGE in properties.sh
+          sed -i 's/^TERMUX_APP_PACKAGE=.*/TERMUX_APP_PACKAGE="com.aurastudio"/' scripts/properties.sh
+          echo "=== TERMUX_APP_PACKAGE ==="
+          grep TERMUX_APP_PACKAGE scripts/properties.sh
+
+      - name: Build bootstrap via Docker
+        working-directory: /tmp/termux-packages
+        run: |
+          ARCHITECTURES="${{ github.event.inputs.architectures || 'aarch64' }}"
+          echo "Building for: $ARCHITECTURES"
+          
+          docker run --rm \
+            -v "$(pwd):/home/builder/termux-packages" \
+            -e HOME=/home/builder \
+            termux/package-builder:latest \
+            bash -c "
+              cd /home/builder/termux-packages
+              # Clean any previous output
+              ./scripts/run-docker.sh ./scripts/build-bootstraps.sh --architectures $ARCHITECTURES || \
+              ./scripts/build-bootstraps.sh --architectures $ARCHITECTURES || \
+              echo 'Trying alternative build method...'
+              
+              # If build-bootstraps.sh is not available, try build-bootstrap.sh
+              if [ ! -f scripts/build-bootstraps.sh ] && [ ! -f output/bootstrap-*.zip ]; then
+                echo 'build-bootstraps.sh not found, trying build-bootstrap.sh...'
+                if [ -f scripts/build-bootstrap.sh ]; then
+                  ./scripts/build-bootstrap.sh --architectures $ARCHITECTURES
+                fi
+              fi
+            "
+
+      - name: Locate bootstrap output
+        id: locate
+        run: |
+          echo "=== Searching for bootstrap zip ==="
+          find /tmp -name "bootstrap-*.zip" -type f 2>/dev/null
+          find /tmp/termux-packages -name "bootstrap-*.zip" -type f 2>/dev/null
+          
+          # Try multiple locations
+          for dir in /tmp/output /tmp/termux-packages/output /tmp/termux-packages; do
+            if [ -d "$dir" ]; then
+              for f in "$dir"/bootstrap-*.zip; do
+                if [ -f "$f" ]; then
+                  echo "FOUND=$f"
+                  echo "bootstrap_path=$f" >> $GITHUB_OUTPUT
+                  ls -la "$f"
+                  sha256sum "$f"
+                  break 2
+                fi
+              done
+            fi
+          done
+          
+          echo "ERROR: No bootstrap zip found"
+          exit 1
+
+      - name: Compute checksums
+        id: checksums
+        run: |
+          BOOTSTRAP="${{ steps.locate.outputs.bootstrap_path }}"
+          
+          for arch in aarch64 arm i686 x86_64; do
+            FILE=$(find /tmp -name "bootstrap-${arch}.zip" -type f 2>/dev/null | head -1)
+            if [ -n "$FILE" ]; then
+              SHA=$(sha256sum "$FILE" | awk '{print $1}')
+              SIZE=$(stat -c%s "$FILE")
+              echo "${arch}_sha256=$SHA" >> $GITHUB_OUTPUT
+              echo "${arch}_size=$SIZE" >> $GITHUB_OUTPUT
+              echo "$arch: sha256=$SHA size=$SIZE"
+            fi
+          done
+
+      - name: Upload bootstrap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootstrap-com.aurastudio
+          path: /tmp/**/bootstrap-*.zip
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Upload to GitHub release
+        if: github.event.inputs.upload_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BOOTSTRAP_TAG="bootstrap-v1"
+          
+          # Delete existing tag/release if present
+          git tag -d "$BOOTSTRAP_TAG" 2>/dev/null || true
+          git push --delete origin "$BOOTSTRAP_TAG" 2>/dev/null || true
+          gh release delete "$BOOTSTRAP_TAG" --yes 2>/dev/null || true
+          
+          # Create release with bootstrap files
+          BOOTSTRAP_FILES=$(find /tmp -name "bootstrap-*.zip" -type f 2>/dev/null)
+          if [ -n "$BOOTSTRAP_FILES" ]; then
+            echo "$BOOTSTRAP_FILES" | xargs gh release create "$BOOTSTRAP_TAG" \
+              --title "Custom Bootstrap (com.aurastudio)" \
+              --notes "Custom bootstrap built with TERMUX_APP_PACKAGE=com.aurastudio" \
+              --prerelease
+          fi
+
+      - name: Print integration instructions
+        run: |
+          echo ""
+          echo "============================================"
+          echo "  BOOTSTRAP BUILD COMPLETE"
+          echo "============================================"
+          echo ""
+          echo "Update aurastudio-app/app/build.gradle.kts:"
+          echo ""
+          echo "  val BOOTSTRAP_VERSION = \"custom\""
+          echo "  val BOOTSTRAP_URL = \"https://github.com/${{ github.repository }}/releases/download/bootstrap-v1\""
+          echo ""
+          for arch in aarch64 arm i686 x86_64; do
+            SHA_VAR="${arch}_sha256"
+            if [ -n "${!SHA_VAR}" ]; then
+              echo "  downloadBootstrap(\"$arch\", \"${!SHA_VAR}\", BOOTSTRAP_VERSION, BOOTSTRAP_URL)"
+            fi
+          done
+          echo ""

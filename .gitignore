@@ -7,7 +7,13 @@ dist/
 tmp/
 *.tar.xz
 *.tar.gz
-!bootstrap-*.zip
+aurastudio-app/termux/application/src/main/cpp/bootstrap-*.zip
+
+# Gradle Build Artifacts (vendored termux-app modules)
+aurastudio-app/termux/*/build/
+aurastudio-app/termux/*/.gradle/
+aurastudio-app/termux/*/.cxx/
+aurastudio-app/termux/*/.kotlin/
 
 # Local Android SDK Test Data
 android-sdk/
