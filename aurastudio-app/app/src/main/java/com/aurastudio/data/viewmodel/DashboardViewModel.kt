@@ -114,6 +114,32 @@ class DashboardViewModel(private val context: Context) : ViewModel() {
         }
     }
 
+    fun switchJavaVersion(version: String) {
+        installJob?.cancel()
+        _installState.value = InstallState(
+            componentName = "Java ${version}.0",
+            version = version,
+            log = emptyList()
+        )
+        installJob = viewModelScope.launch {
+            val command = installer.switchJavaCommand(version)
+            installer.run(command).collect { event ->
+                val current = _installState.value ?: return@collect
+                _installState.value = if (event.isFinished) {
+                    current.copy(
+                        isInstalling = false,
+                        isFinished = true,
+                        isSuccess = event.isSuccess,
+                        error = event.error
+                    )
+                } else {
+                    current.copy(log = current.log + event.line)
+                }
+            }
+            refreshStatus()
+        }
+    }
+
     fun dismissInstallDialog() {
         installJob?.cancel()
         _installState.value = null

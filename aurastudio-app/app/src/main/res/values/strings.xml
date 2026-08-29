@@ -74,6 +74,9 @@
     <string name="env_versions_available">Available Versions</string>
     <string name="env_install">Install</string>
     <string name="env_uninstall">Uninstall</string>
+    <string name="env_java_active">Active Java version: %1$s</string>
+    <string name="env_java_active_label">Active</string>
+    <string name="env_java_switch_to">Switch to %1$s</string>
     <string name="env_no_versions">No versions available</string>
 
     <!-- Recent Projects -->

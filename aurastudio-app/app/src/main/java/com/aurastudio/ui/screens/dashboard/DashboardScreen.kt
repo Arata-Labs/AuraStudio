@@ -70,6 +70,9 @@ fun DashboardScreen(
                 },
                 onUninstall = { key, version, name ->
                     viewModel.startUninstall(key, version, name)
+                },
+                onJavaSwitch = { version ->
+                    viewModel.switchJavaVersion(version)
                 }
             )
         }
@@ -484,7 +487,8 @@ private data class EnvComponentItem(
 private fun EnvironmentCard(
     status: EnvironmentStatus,
     onInstall: (String, String, String) -> Unit,
-    onUninstall: (String, String, String) -> Unit
+    onUninstall: (String, String, String) -> Unit,
+    onJavaSwitch: (String) -> Unit
 ) {
     var showAllDialog by remember { mutableStateOf(false) }
     var selectedComponent by remember { mutableStateOf<EnvComponentItem?>(null) }
@@ -718,7 +722,10 @@ private fun EnvironmentCard(
             component = component,
             onDismiss = { selectedComponent = null },
             onInstall = { version -> onInstall(component.key, version, component.name) },
-            onUninstall = { version -> onUninstall(component.key, version, component.name) }
+            onUninstall = { version -> onUninstall(component.key, version, component.name) },
+            onJavaSwitch = { version -> 
+                if (component.key == "java") onJavaSwitch(version)
+            }
         )
     }
 }
@@ -981,7 +988,8 @@ private fun ComponentDetailDialog(
     component: EnvComponentItem,
     onDismiss: () -> Unit,
     onInstall: (String) -> Unit,
-    onUninstall: (String) -> Unit
+    onUninstall: (String) -> Unit,
+    onJavaSwitch: (String) -> Unit = {}
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1018,6 +1026,90 @@ private fun ComponentDetailDialog(
         },
         text = {
             Column {
+                // Java version switch (when multiple JDKs installed)
+                if (component.key == "java" && component.installedVersions.size > 1) {
+                    Text(
+                        text = stringResource(R.string.env_java_active, component.version ?: ""),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    component.installedVersions.forEach { version ->
+                        val isActive = version == component.version
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                            border = BorderStroke(
+                                1.dp,
+                                if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = if (isActive) Icons.Filled.CheckCircle else Icons.Filled.SwapHoriz,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = version,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (!isActive) {
+                                    Surface(
+                                        onClick = {
+                                            val ver = when {
+                                                version.contains("21") -> "21"
+                                                version.contains("17") -> "17"
+                                                else -> version
+                                            }
+                                            if (ver == "21" || ver == "17") onJavaSwitch(ver)
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.env_java_switch_to, version),
+                                                fontWeight = FontWeight.SemiBold,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Text(
+                                        text = stringResource(R.string.env_java_active_label),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
                 // Installed versions
                 if (component.installedVersions.isNotEmpty()) {
                     Text(
