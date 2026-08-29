@@ -154,7 +154,9 @@ fun AuraStudioApp(
     iconMode: Int,
     onThemeChange: (Int) -> Unit,
     onIconChange: (Int) -> Unit,
-    dashboardViewModel: DashboardViewModel = viewModel()
+    dashboardViewModel: DashboardViewModel = viewModel(
+        factory = DashboardViewModel.provideFactory(LocalContext.current.applicationContext)
+    )
 ) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
     var previousScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
