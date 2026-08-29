@@ -345,6 +345,11 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
     var showAllDialog by remember { mutableStateOf(false) }
     var selectedComponent by remember { mutableStateOf<EnvComponentItem?>(null) }
 
+    val javaAvailable = if (status.java.version?.isNotBlank() == true) listOf(status.java.version) else listOf("21.0.12", "17.0.14")
+    val gradleAvailable = if (status.gradle.version?.isNotBlank() == true) listOf(status.gradle.version) else listOf("9.7.0", "8.12.1")
+    val aapt2Available = if (status.aapt2.version?.isNotBlank() == true) listOf(status.aapt2.version) else listOf("16.0.0.4-1")
+    val sdkAvailable = if (status.cmdlineTools.version?.isNotBlank() == true) listOf(status.cmdlineTools.version) else listOf("12.0")
+
     val components = listOf(
         EnvComponentItem(
             name = stringResource(R.string.env_component_java),
@@ -352,7 +357,7 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.java.isInstalled,
             version = status.java.version,
             installedVersions = if (status.java.isInstalled) listOfNotNull(status.java.version) else emptyList(),
-            availableVersions = listOf("21.0.12", "21.0.8", "17.0.14")
+            availableVersions = javaAvailable
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_gradle),
@@ -360,7 +365,7 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.gradle.isInstalled,
             version = status.gradle.version,
             installedVersions = if (status.gradle.isInstalled) listOfNotNull(status.gradle.version) else emptyList(),
-            availableVersions = listOf("9.7.0", "8.12.1", "8.10.2")
+            availableVersions = gradleAvailable
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_aapt2),
@@ -368,7 +373,7 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.aapt2.isInstalled,
             version = status.aapt2.version,
             installedVersions = if (status.aapt2.isInstalled) listOfNotNull(status.aapt2.version) else emptyList(),
-            availableVersions = listOf("2.20", "2.19", "2.18")
+            availableVersions = aapt2Available
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_sdk),
@@ -376,7 +381,7 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.cmdlineTools.isInstalled,
             version = status.cmdlineTools.version,
             installedVersions = if (status.cmdlineTools.isInstalled) listOfNotNull(status.cmdlineTools.version) else emptyList(),
-            availableVersions = listOf("12.0", "11.0", "10.0")
+            availableVersions = sdkAvailable
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_platforms),

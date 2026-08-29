@@ -1,12 +1,12 @@
 package com.aurastudio.data.repository
 
 import android.content.Context
-import com.aurastudio.data.models.EnvironmentStatus
-import com.aurastudio.data.models.StatusJson
+import com.aurastudio.data.models.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.net.URL
 
 class DashboardRepository(private val context: Context) {
 
@@ -27,65 +27,75 @@ class DashboardRepository(private val context: Context) {
     private val sdkDir: String
         get() = "$home/android-sdk"
 
+    private val packagesJsonUrl = "https://arata-labs.github.io/aurastudio-termux/packages.json"
+
     suspend fun getEnvironmentStatus(): Result<EnvironmentStatus> = withContext(Dispatchers.IO) {
         try {
-            val bashPath = "$prefix/bin/bash"
-            if (!File(bashPath).exists()) {
-                return@withContext Result.failure(IllegalStateException("Bootstrap not installed: bash not found at $bashPath"))
-            }
+            // Probe local installations
+            val javaInstalled = File("$prefix/bin/java").exists()
+            val gradleInstalled = File("$prefix/bin/gradle").exists() || 
+                File("$prefix/share/gradle").isDirectory
+            val aapt2Installed = File("$prefix/bin/aapt2").exists()
+            val sdkToolsInstalled = File("$sdkDir/cmdline-tools/latest").isDirectory
+            val buildTools = listDir("$sdkDir/buildTools")
+            val platforms = listDir("$sdkDir/platforms")
+            val ndk = listDir("$sdkDir/ndk")
+            val cmake = listDir("$sdkDir/cmake")
 
-            val process = ProcessBuilder(
-                bashPath,
-                "-c",
-                "aurastudio status --json 2>/dev/null"
-            ).apply {
-                val env = environment()
-                env["PREFIX"] = prefix
-                env["TERMUX_PREFIX"] = prefix
-                env["HOME"] = home
-                env["PATH"] = "$prefix/bin:$prefix/bin/applets"
-                env["LD_LIBRARY_PATH"] = "$prefix/lib"
-                env["TMPDIR"] = "$prefix/tmp"
-            }.start()
+            // Fetch available versions from packages.json
+            val packages = fetchPackages()
+            val javaVersion = findPackageVersion(packages, "openjdk-21") ?: findPackageVersion(packages, "openjdk-17")
+            val aapt2Version = findPackageVersion(packages, "aapt2")
+            val gradleVersion = findPackageVersion(packages, "gradle")
 
-            val output = process.inputStream.bufferedReader().use { it.readText() }
-            val exitCode = process.waitFor()
+            val status = EnvironmentStatus(
+                java = InstalledComponent(
+                    name = "Java OpenJDK",
+                    version = if (javaInstalled) javaVersion else javaVersion,
+                    isInstalled = javaInstalled
+                ),
+                gradle = InstalledComponent(
+                    name = "Gradle",
+                    version = if (gradleInstalled) gradleVersion else gradleVersion,
+                    isInstalled = gradleInstalled
+                ),
+                aapt2 = InstalledComponent(
+                    name = "AAPT2",
+                    version = if (aapt2Installed) aapt2Version else aapt2Version,
+                    isInstalled = aapt2Installed
+                ),
+                cmdlineTools = InstalledComponent(
+                    name = "cmdline-tools",
+                    version = null,
+                    isInstalled = sdkToolsInstalled
+                ),
+                platforms = platforms,
+                buildTools = buildTools,
+                ndk = ndk,
+                cmake = cmake,
+                healthScore = 0
+            )
 
-            if (exitCode == 0 && output.isNotBlank()) {
-                // Find start of JSON object { in case of terminal escapes
-                val jsonStart = output.indexOf('{')
-                val jsonEnd = output.lastIndexOf('}')
-                if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
-                    val cleanJson = output.substring(jsonStart, jsonEnd + 1)
-                    val statusJson = jsonParser.decodeFromString<StatusJson>(cleanJson)
-                    val rawStatus = EnvironmentStatus.fromStatusJson(statusJson)
-                    val envStatus = rawStatus.copy(
-                        aapt2 = com.aurastudio.data.models.InstalledComponent(
-                            "AAPT2",
-                            null,
-                            File("$prefix/bin/aapt2").exists()
-                        ),
-                        cmdlineTools = com.aurastudio.data.models.InstalledComponent(
-                            "cmdline-tools",
-                            null,
-                            File("$sdkDir/cmdline-tools/latest").isDirectory
-                        ),
-                        buildTools = listDir("$sdkDir/build-tools"),
-                        platforms = listDir("$sdkDir/platforms")
-                    )
-                    val finalStatus = envStatus.copy(
-                        healthScore = EnvironmentStatus.calculateHealthScore(envStatus)
-                    )
-                    Result.success(finalStatus)
-                } else {
-                    Result.failure(IllegalStateException("No valid JSON found in output"))
-                }
-            } else {
-                Result.failure(IllegalStateException("Command failed with exit code $exitCode: $output"))
-            }
+            Result.success(status.copy(
+                healthScore = EnvironmentStatus.calculateHealthScore(status)
+            ))
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private fun fetchPackages(): List<PackageInfo> {
+        return try {
+            val url = URL(packagesJsonUrl)
+            val text = url.readText()
+            jsonParser.decodeFromString(text)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun findPackageVersion(packages: List<PackageInfo>, name: String): String? {
+        return packages.find { it.name == name }?.version
     }
 
     private fun listDir(path: String): List<String> {
@@ -97,3 +107,11 @@ class DashboardRepository(private val context: Context) {
             ?.sortedDescending() ?: emptyList()
     }
 }
+
+@kotlinx.serialization.Serializable
+data class PackageInfo(
+    val name: String = "",
+    val version: String = "",
+    val desc: String = "",
+    val arch: List<String> = emptyList()
+)
