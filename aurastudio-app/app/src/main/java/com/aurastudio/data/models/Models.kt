@@ -38,29 +38,30 @@ data class EnvironmentStatus(
         fun fromStatusJson(json: StatusJson): EnvironmentStatus {
             val javaOk = json.tools["java"] == true
             val gradleOk = json.tools["gradle"] == true
-            val aapt2Ok = json.tools["aria2"] == true
 
             return EnvironmentStatus(
                 java = InstalledComponent("Java OpenJDK", null, javaOk),
                 gradle = InstalledComponent("Gradle", null, gradleOk),
-                aapt2 = InstalledComponent("AAPT2", null, aapt2Ok),
-                cmdlineTools = InstalledComponent("cmdline-tools", null, json.paths.sdk_dir.isNotBlank()),
+                aapt2 = InstalledComponent("AAPT2", null, false),
+                cmdlineTools = InstalledComponent("cmdline-tools", null, false),
                 platforms = json.installed.sdk_platforms,
                 buildTools = emptyList(),
                 ndk = json.installed.ndk,
                 cmake = json.installed.cmake,
-                healthScore = calculateHealthScore(json)
+                healthScore = 0
             )
         }
 
-        private fun calculateHealthScore(json: StatusJson): Int {
+        fun calculateHealthScore(status: EnvironmentStatus): Int {
             var score = 0
-            if (json.tools["java"] == true) score += 25
-            if (json.tools["gradle"] == true) score += 20
-            if (json.installed.sdk_platforms.isNotEmpty()) score += 20
-            if (json.installed.ndk.isNotEmpty()) score += 15
-            if (json.installed.cmake.isNotEmpty()) score += 10
-            if (json.paths.sdk_dir.isNotBlank()) score += 10
+            if (status.java.isInstalled) score += 20
+            if (status.gradle.isInstalled) score += 20
+            if (status.aapt2.isInstalled) score += 15
+            if (status.cmdlineTools.isInstalled) score += 15
+            if (status.platforms.isNotEmpty()) score += 10
+            if (status.buildTools.isNotEmpty()) score += 10
+            if (status.ndk.isNotEmpty()) score += 5
+            if (status.cmake.isNotEmpty()) score += 5
             return score.coerceIn(0, 100)
         }
     }

@@ -24,6 +24,9 @@ class DashboardRepository(private val context: Context) {
     private val home: String
         get() = "$filesDir/home"
 
+    private val sdkDir: String
+        get() = "$home/android-sdk"
+
     suspend fun getEnvironmentStatus(): Result<EnvironmentStatus> = withContext(Dispatchers.IO) {
         try {
             val bashPath = "$prefix/bin/bash"
@@ -55,7 +58,25 @@ class DashboardRepository(private val context: Context) {
                 if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
                     val cleanJson = output.substring(jsonStart, jsonEnd + 1)
                     val statusJson = jsonParser.decodeFromString<StatusJson>(cleanJson)
-                    Result.success(EnvironmentStatus.fromStatusJson(statusJson))
+                    val rawStatus = EnvironmentStatus.fromStatusJson(statusJson)
+                    val envStatus = rawStatus.copy(
+                        aapt2 = com.aurastudio.data.models.InstalledComponent(
+                            "AAPT2",
+                            null,
+                            File("$prefix/bin/aapt2").exists()
+                        ),
+                        cmdlineTools = com.aurastudio.data.models.InstalledComponent(
+                            "cmdline-tools",
+                            null,
+                            File("$sdkDir/cmdline-tools/latest").isDirectory
+                        ),
+                        buildTools = listDir("$sdkDir/build-tools"),
+                        platforms = listDir("$sdkDir/platforms")
+                    )
+                    val finalStatus = envStatus.copy(
+                        healthScore = EnvironmentStatus.calculateHealthScore(envStatus)
+                    )
+                    Result.success(finalStatus)
                 } else {
                     Result.failure(IllegalStateException("No valid JSON found in output"))
                 }
@@ -65,5 +86,14 @@ class DashboardRepository(private val context: Context) {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private fun listDir(path: String): List<String> {
+        val dir = File(path)
+        if (!dir.isDirectory) return emptyList()
+        return dir.listFiles()
+            ?.filter { it.isDirectory }
+            ?.map { it.name }
+            ?.sortedDescending() ?: emptyList()
     }
 }
