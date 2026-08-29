@@ -75,8 +75,6 @@ cmd_install_sdk() {
     fi
 
     if [ -n "$param_api" ] || [ -n "$param_bt" ]; then
-
-    if [ -n "$param_api" ] || [ -n "$param_bt" ]; then
         if [ -n "$param_api" ]; then
             local pkg_p="platforms;android-${param_api}"
             info "Installing $pkg_p..."
