@@ -17,7 +17,7 @@ cmd_install_sdk() {
     export JAVA_HOME
     export PATH="$JAVA_HOME/bin:$CMDTOOLS_DIR/bin:$SDK_DIR/platform-tools:$PATH"
 
-    local param_api="" param_bt=""
+    local param_api="" param_bt="" param_java=""
     local args=("${@}")
     local idx=0
     while [ $idx -lt ${#args[@]} ]; do
@@ -26,9 +26,25 @@ cmd_install_sdk() {
                 idx=$((idx+1)); param_api="${args[$idx]}" ;;
             buildtools)
                 idx=$((idx+1)); param_bt="${args[$idx]}" ;;
+            java)
+                idx=$((idx+1)); param_java="${args[$idx]}" ;;
         esac
         idx=$((idx+1))
     done
+
+    if [ -n "$param_java" ]; then
+        if [[ "$param_java" =~ ^(21|17)$ ]]; then
+            info "Installing openjdk-${param_java}..."
+            run_animated "Installing openjdk-${param_java}" pkg install -y "openjdk-${param_java}"
+            success "openjdk-${param_java} installed"
+        else
+            error "Unsupported Java version: $param_java (supported: 21, 17)"
+            return 1
+        fi
+        return
+    fi
+
+    if [ -n "$param_api" ] || [ -n "$param_bt" ]; then
 
     if [ -n "$param_api" ] || [ -n "$param_bt" ]; then
         if [ -n "$param_api" ]; then

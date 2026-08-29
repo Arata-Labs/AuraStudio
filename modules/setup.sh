@@ -1,6 +1,12 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
 cmd_setup() {
+    if [ "${1:-}" = "--cmdtools-only" ] || [ "${2:-}" = "--cmdtools-only" ]; then
+        _setup_cmdtools
+        _patch_shebangs
+        return
+    fi
+
     clear
     draw_banner
     printf "\n  %b\n" "${BOLD}${WHITE}Environment Setup — AuraStudio${RESET}"
