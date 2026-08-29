@@ -34,7 +34,7 @@ cmd_use_java() {
         if [ -L "$target" ]; then
             rm -f "$target"
         elif [ -e "$target" ]; then
-            # A static file (e.g. previous pkg install) — back it up
+            # A static file (e.g. previous apt install) — back it up
             mv "$target" "$target.bak-$(date +%s)" 2>/dev/null
         fi
         ln -s "$from" "$target"

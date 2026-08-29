@@ -13,7 +13,7 @@ cmd_update() {
         info "  1. Download the latest .deb file from GitHub Releases:"
         info "     ${CYAN}https://github.com/Arata-Labs/AuraStudio/releases/latest${RESET}"
         info "  2. Install the downloaded package using:"
-        info "     ${CYAN}pkg install ./aurastudio_<version>_all.deb${RESET}"
+        info "     ${CYAN}apt install ./aurastudio_<version>_all.deb${RESET}"
         echo ""
         return 0
     fi

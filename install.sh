@@ -59,6 +59,14 @@ run_animated() {
     if [ $res -eq 0 ]; then success "$msg"; else error "$msg ${RED}(Failed)${RESET}"; return 1; fi
 }
 
+ensure_apt_updated() {
+    local lists_dir="${PREFIX:-}/var/lib/apt/lists"
+    if [ -d "$lists_dir" ] && compgen -G "$lists_dir/*_Packages" >/dev/null; then
+        return 0
+    fi
+    apt update -y > /dev/null 2>&1 || apt update
+}
+
 main() {
     clear
     draw_banner
@@ -75,8 +83,9 @@ main() {
 
     if [ "${#missing_pkgs[@]}" -gt 0 ]; then
         info "Installing missing dependencies: ${CYAN}${missing_pkgs[*]}${RESET}"
-        run_animated "Updating package database" pkg update -y
-        run_animated "Installing dependencies (${missing_pkgs[*]})" pkg install -y "${missing_pkgs[@]}"
+        ensure_apt_updated
+        run_animated "Updating package database" apt update -y
+        run_animated "Installing dependencies (${missing_pkgs[*]})" apt install -y "${missing_pkgs[@]}"
     else
         success "All core bootstrap tools are ready (${CYAN}git, curl, tar, unzip${RESET})"
     fi

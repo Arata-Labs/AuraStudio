@@ -2,7 +2,7 @@
 
 check_java() { 
     if ! command -v java &>/dev/null; then
-        error "Java not found — Run: pkg install openjdk-21"
+        error "Java not found — Run: apt install -y openjdk-21"
         return 1
     fi
     return 0
@@ -19,7 +19,8 @@ ensure_tools() {
         if command -v "$cmd_name" &>/dev/null; then
             success "Tool ${CYAN}$pkg_name${RESET} is ready"
         else
-            run_animated "Installing $pkg_name" pkg install -y "$pkg_name"
+            ensure_apt_updated
+            run_animated "Installing $pkg_name" apt install -y "$pkg_name"
             if ! command -v "$cmd_name" &>/dev/null; then
                 failed+=("$pkg_name")
             fi
@@ -27,7 +28,7 @@ ensure_tools() {
     done
     if [ "${#failed[@]}" -gt 0 ]; then
         error "Auto-install failed for: ${failed[*]}"
-        printf "  %b\n" "${MUTED}→ Try manually: pkg install ${failed[*]}${RESET}"
+        printf "  %b\n" "${MUTED}→ Try manually: apt install -y ${failed[*]}${RESET}"
         return 1
     fi
     return 0

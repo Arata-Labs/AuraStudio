@@ -75,14 +75,23 @@ class PackageInstaller(private val context: Context) {
     }.flowOn(Dispatchers.IO)
 
     /**
+     * Build an apt install command, refreshing package lists first if the
+     * local apt cache under `$PREFIX/var/lib/apt/lists` is empty or missing.
+     * Runs inside the app's own prefix (`$PREFIX` is injected into the env).
+     */
+    private fun apt(packageName: String): String =
+        "ls \$PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; " +
+            "apt install -y $packageName 2>&1 || exit 1"
+
+    /**
      * Map a component key + version to the shell command that installs it.
      * `aurastudio install sdk` is used only for sdkmanager-managed components
-     * (platforms, build-tools); everything else installs via pkg or the CLI.
+     * (platforms, build-tools); everything else installs via apt or the CLI.
      */
     fun installCommand(componentKey: String, version: String): String = when (componentKey) {
-        "java" -> if (version.contains("21")) "pkg install -y openjdk-21 2>&1 || exit 1" else "pkg install -y openjdk-17 2>&1 || exit 1"
-        "gradle" -> "pkg install -y gradle 2>&1 || exit 1"
-        "aapt2" -> "pkg install -y aapt2 2>&1 || exit 1"
+        "java" -> if (version.contains("21")) apt("openjdk-21") else apt("openjdk-17")
+        "gradle" -> apt("gradle")
+        "aapt2" -> apt("aapt2")
         "cmdline_tools" -> "aurastudio setup --cmdtools-only 2>&1 || exit 1"
         "platforms" -> "aurastudio install sdk platform $version 2>&1 || exit 1"
         "build_tools" -> "aurastudio install sdk buildtools $version 2>&1 || exit 1"
@@ -93,9 +102,9 @@ class PackageInstaller(private val context: Context) {
 
     /** Map a component key + version to the shell command that uninstalls it. */
     fun uninstallCommand(componentKey: String, version: String): String = when (componentKey) {
-        "java" -> "pkg remove -y openjdk-21 openjdk-17 2>&1"
-        "gradle" -> "pkg remove -y gradle 2>&1"
-        "aapt2" -> "pkg remove -y aapt2 2>&1"
+        "java" -> "ls \$PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; apt remove -y openjdk-21 openjdk-17 2>&1"
+        "gradle" -> "ls \$PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; apt remove -y gradle 2>&1"
+        "aapt2" -> "ls \$PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; apt remove -y aapt2 2>&1"
         "cmdline_tools" -> "rm -rf $home/android-sdk/cmdline-tools 2>&1"
         "platforms" -> "rm -rf $home/android-sdk/platforms/android-$version 2>&1"
         "build_tools" -> "rm -rf $home/android-sdk/build-tools/$version 2>&1"

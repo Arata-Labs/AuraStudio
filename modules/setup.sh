@@ -122,7 +122,8 @@ _setup_java() {
         ver=$(java -version 2>&1 | head -1 | sed 's/.*"\(.*\)".*/\1/')
         success "Java already installed: $ver"
     else
-        run_animated "Downloading & Installing openjdk-21 & openjdk-17" pkg install -y openjdk-21 openjdk-17
+        ensure_apt_updated
+        run_animated "Downloading & Installing openjdk-21 & openjdk-17" apt install -y openjdk-21 openjdk-17
     fi
     check_java
 }
@@ -134,13 +135,15 @@ _setup_gradle() {
         ver=$(gradle --version 2>/dev/null | grep "^Gradle " | awk '{print $2}')
         success "Gradle already installed: $ver"
     else
-        run_animated "Downloading & Installing gradle" pkg install -y gradle
+        ensure_apt_updated
+        run_animated "Downloading & Installing gradle" apt install -y gradle
     fi
 
     if command -v aapt2 &>/dev/null; then
         success "AAPT2 already installed"
     else
-        run_animated "Downloading & Installing aapt2 (standalone)" pkg install -y aapt2
+        ensure_apt_updated
+        run_animated "Downloading & Installing aapt2 (standalone)" apt install -y aapt2
     fi
 }
 

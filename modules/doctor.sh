@@ -32,9 +32,10 @@ cmd_doctor() {
         local cmd_base="${fix_cmd%% *}"
         local cmd_args="${fix_cmd#* }"
         case "$cmd_base" in
-            pkg)
+            apt)
                 info "Auto-fixing: $fix_cmd"
-                run_animated "Installing package" pkg install -y $cmd_args
+                ensure_apt_updated
+                run_animated "Installing package" apt install -y $cmd_args
                 ;;
             aurastudio)
                 local subcmd="${cmd_args%% *}"
@@ -49,9 +50,9 @@ cmd_doctor() {
         esac
     }
 
-    command -v java &>/dev/null && chk "Java OpenJDK 21" "true" "pkg install -y openjdk-21" || chk "Java OpenJDK 21" "false" "pkg install -y openjdk-21"
-    command -v gradle &>/dev/null && chk "Gradle Build Tool" "true" "pkg install -y gradle" || chk "Gradle Build Tool" "false" "pkg install -y gradle"
-    command -v aapt2 &>/dev/null && chk "AAPT2 (standalone)" "true" "pkg install -y aapt2" || chk "AAPT2 (standalone)" "false" "pkg install -y aapt2"
+    command -v java &>/dev/null && chk "Java OpenJDK 21" "true" "apt install -y openjdk-21" || chk "Java OpenJDK 21" "false" "apt install -y openjdk-21"
+    command -v gradle &>/dev/null && chk "Gradle Build Tool" "true" "apt install -y gradle" || chk "Gradle Build Tool" "false" "apt install -y gradle"
+    command -v aapt2 &>/dev/null && chk "AAPT2 (standalone)" "true" "apt install -y aapt2" || chk "AAPT2 (standalone)" "false" "apt install -y aapt2"
     [ -d "$SDK_DIR" ] && chk "ANDROID_HOME Directory" "true" "aurastudio setup" || chk "ANDROID_HOME Directory" "false" "aurastudio setup"
     [ -f "$SDKMANAGER" ] && chk "Android cmdline-tools" "true" "aurastudio setup" || chk "Android cmdline-tools" "false" "aurastudio setup"
 

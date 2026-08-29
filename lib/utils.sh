@@ -304,6 +304,20 @@ ENV
     fi
 }
 
+ensure_apt_updated() {
+    local lists_dir="${PREFIX:-/data/data/com.termux/files/usr}/var/lib/apt/lists"
+    if [ -d "$lists_dir" ] && compgen -G "$lists_dir/*_Packages" >/dev/null; then
+        return 0
+    fi
+    info "Updating apt package lists..."
+    if command -v apt &>/dev/null; then
+        apt update
+    else
+        error "apt not found. Unable to update package lists."
+        return 1
+    fi
+}
+
 check_all_deps() {
     local deps=("bash" "curl" "tar" "unzip" "git" "sed" "grep" "awk" "find")
     local missing=()
@@ -314,7 +328,7 @@ check_all_deps() {
     
     if [ "${#missing[@]}" -gt 0 ]; then
         error "Missing dependencies: ${missing[*]}"
-        printf "  %b\n" "${MUTED}Run: pkg install ${missing[*]}${RESET}"
+        printf "  %b\n" "${MUTED}Run: apt install -y ${missing[*]}${RESET}"
         return 1
     fi
     return 0

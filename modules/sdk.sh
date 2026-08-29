@@ -35,7 +35,8 @@ cmd_install_sdk() {
     if [ -n "$param_java" ]; then
         if [[ "$param_java" =~ ^(21|17)$ ]]; then
             info "Installing openjdk-${param_java}..."
-            run_animated "Installing openjdk-${param_java}" pkg install -y "openjdk-${param_java}"
+            ensure_apt_updated
+            run_animated "Installing openjdk-${param_java}" apt install -y "openjdk-${param_java}"
             success "openjdk-${param_java} installed"
         else
             error "Unsupported Java version: $param_java (supported: 21, 17)"

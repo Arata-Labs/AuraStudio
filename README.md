@@ -74,7 +74,7 @@ The installer will:
 1. Download the latest `.deb` package from [GitHub Releases](https://github.com/Arata-Labs/AuraStudio/releases/latest).
 2. Install it using Termux package manager:
    ```bash
-   pkg install ./aurastudio_1.2_all.deb
+   apt install ./aurastudio_1.2_all.deb
    ```
 
 ---
@@ -290,7 +290,7 @@ aurastudio status --json
 3. **Download Interruptions:**
    Install `aria2` to enable resilient 16-connection parallel downloads:
    ```bash
-   pkg install aria2
+   apt install aria2
    ```
 
 ---

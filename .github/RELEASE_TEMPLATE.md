@@ -20,7 +20,7 @@ curl -sSL https://raw.githubusercontent.com/Arata-Labs/AuraStudio/main/install.s
 
 ```bash
 # Download the .deb package from this release, then:
-pkg install ./aurastudio_{VERSION}_all.deb
+apt install ./aurastudio_{VERSION}_all.deb
 ```
 
 ## Verify Installation
