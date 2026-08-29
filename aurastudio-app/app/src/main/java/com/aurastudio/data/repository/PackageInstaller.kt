@@ -103,9 +103,9 @@ class PackageInstaller(private val context: Context) {
 
     /** Build an apt install command, refreshing package lists first if the
      *  local apt cache under $PREFIX/var/lib/apt/lists is empty. */
-    private fun apt(packageName: String): String =
+    private fun apt(packageName: String, forceOverwrite: Boolean = false): String =
         "ls {DOLLAR}PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; " +
-            "apt install -y $packageName 2>&1 || exit 1"
+            "apt install -y ${if (forceOverwrite) "-o Dpkg::Options::=--force-overwrite " else ""}$packageName 2>&1 || exit 1"
         .replace("{DOLLAR}", "$")
 
     /**
@@ -114,7 +114,7 @@ class PackageInstaller(private val context: Context) {
      * inside the app's embedded prefix.
      */
     fun installCommand(componentKey: String, version: String): String = when (componentKey) {
-        "java" -> if (version.contains("21")) apt("openjdk-21") else apt("openjdk-17") +
+        "java" -> apt(if (version.contains("21")) "openjdk-21" else "openjdk-17", forceOverwrite = true) +
             "\n" + ensureEnvironmentCommand()
         "gradle" -> apt("gradle")
         "aapt2" -> apt("aapt2")

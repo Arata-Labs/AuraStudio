@@ -501,7 +501,7 @@ private fun EnvironmentCard(
             icon = Icons.Filled.Coffee,
             isInstalled = status.java.isInstalled,
             version = status.java.version,
-            installedVersions = if (status.java.isInstalled) listOfNotNull(status.java.version) else emptyList(),
+            installedVersions = status.java.installedVersions,
             availableVersions = status.java.availableVersions.ifEmpty { listOf("21.0.12", "17.0.20") },
             key = "java"
         ),
