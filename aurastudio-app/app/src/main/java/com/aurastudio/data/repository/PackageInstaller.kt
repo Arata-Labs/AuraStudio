@@ -18,15 +18,25 @@ data class InstallEvent(
 
 /**
  * Runs install/uninstall commands inside the app's embedded Termux prefix.
- * [java]/[aapt2]/[gradle] install via apt from the hosted repo; SDK/NDK/CMake
- * components install via the aurastudio CLI which downloads from the same
- * sources the CLI uses.
+ * Everything is handled standalone (no aurastudio CLI dependency):
+ * - [java]/[aapt2]/[gradle]        → apt from the hosted repo
+ * - [cmdline_tools]                → direct Google commandlinetools download
+ * - [platforms]/[build_tools]      → sdkmanager from cmdline-tools
+ * - [ndk]/[cmake]                  → direct GitHub archive download/extract
+ * - java version switch            → re-points $PREFIX/bin cmd symlinks
  */
 class PackageInstaller(private val context: Context) {
 
     private val filesDir: String get() = context.filesDir.absolutePath
     private val prefix: String get() = "$filesDir/usr"
     private val home: String get() = "$filesDir/home"
+
+    // Downloads mirrored from the CLI's config/env.sh (must stay in sync).
+    private val cmdlineToolsUrl =
+        "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+    private val ndkBaseUrl = "https://github.com/HomuHomu833/android-ndk-custom/releases/download"
+    private val cmakeHomuBase = "https://github.com/HomuHomu833/cmake-custom/releases/download"
+    private val cmakeIksoBase = "https://github.com/MrIkso/AndroidIDE-NDK/releases/download/cmake"
 
     private fun buildCommand(command: String): Process {
         val bash = "$prefix/bin/bash"
@@ -75,36 +85,45 @@ class PackageInstaller(private val context: Context) {
     }.flowOn(Dispatchers.IO)
 
     /**
-     * Build an apt install command, refreshing package lists first if the
-     * local apt cache under `$PREFIX/var/lib/apt/lists` is empty or missing.
-     * Runs inside the app's own prefix (`$PREFIX` is injected into the env).
+     * Convert a raw shell script (where `{DOLLAR}` is a literal `$`) into a
+     * real command string. Kotlin raw strings treat `$` as template syntax, so
+     * every shell variable is written as `{DOLLAR}VAR` and normalized here.
      */
+    private fun sh(script: String): String = script.replace("{DOLLAR}", "$")
+
+    /** Build an apt install command, refreshing package lists first if the
+     *  local apt cache under $PREFIX/var/lib/apt/lists is empty. */
     private fun apt(packageName: String): String =
-        "ls \$PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; " +
+        "ls {DOLLAR}PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; " +
             "apt install -y $packageName 2>&1 || exit 1"
+        .replace("{DOLLAR}", "$")
 
     /**
-     * Map a component key + version to the shell command that installs it.
-     * `aurastudio install sdk` is used only for sdkmanager-managed components
-     * (platforms, build-tools); everything else installs via apt or the CLI.
+     * Map a component key + version to the standalone shell command that
+     * installs it. No aurastudio CLI calls — every command runs directly
+     * inside the app's embedded prefix.
      */
     fun installCommand(componentKey: String, version: String): String = when (componentKey) {
         "java" -> if (version.contains("21")) apt("openjdk-21") else apt("openjdk-17")
         "gradle" -> apt("gradle")
         "aapt2" -> apt("aapt2")
-        "cmdline_tools" -> "aurastudio setup --cmdtools-only 2>&1 || exit 1"
-        "platforms" -> "aurastudio install sdk platform $version 2>&1 || exit 1"
-        "build_tools" -> "aurastudio install sdk buildtools $version 2>&1 || exit 1"
-        "ndk" -> "aurastudio install ndk $version 2>&1 || exit 1"
-        "cmake" -> "aurastudio install cmake $version 2>&1 || exit 1"
+
+        "cmdline_tools" -> installCmdlineToolsCommand()
+
+        "platforms" -> sdkmanagerInstallCommand("platforms;android-$version")
+        "build_tools" -> sdkmanagerInstallCommand("build-tools;$version")
+
+        "ndk" -> installNdkCommand(version)
+        "cmake" -> installCmakeCommand(version)
+
         else -> "echo \"Unknown component: $componentKey\""
     }
 
     /** Map a component key + version to the shell command that uninstalls it. */
     fun uninstallCommand(componentKey: String, version: String): String = when (componentKey) {
-        "java" -> "ls \$PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; apt remove -y openjdk-21 openjdk-17 2>&1"
-        "gradle" -> "ls \$PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; apt remove -y gradle 2>&1"
-        "aapt2" -> "ls \$PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; apt remove -y aapt2 2>&1"
+        "java" -> "ls {DOLLAR}PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; apt remove -y openjdk-21 openjdk-17 2>&1".replace("{DOLLAR}", "$")
+        "gradle" -> "ls {DOLLAR}PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; apt remove -y gradle 2>&1".replace("{DOLLAR}", "$")
+        "aapt2" -> "ls {DOLLAR}PREFIX/var/lib/apt/lists/*_Packages >/dev/null 2>&1 || apt update 2>&1; apt remove -y aapt2 2>&1".replace("{DOLLAR}", "$")
         "cmdline_tools" -> "rm -rf $home/android-sdk/cmdline-tools 2>&1"
         "platforms" -> "rm -rf $home/android-sdk/platforms/android-$version 2>&1"
         "build_tools" -> "rm -rf $home/android-sdk/build-tools/$version 2>&1"
@@ -113,9 +132,155 @@ class PackageInstaller(private val context: Context) {
         else -> "echo \"Unknown component: $componentKey\""
     }
 
-    fun switchJavaCommand(version: String): String = when {
-        version == "21" -> "aurastudio use java 21 2>&1 || exit 1"
-        version == "17" -> "aurastudio use java 17 2>&1 || exit 1"
+    fun switchJavaCommand(version: String): String = when (version) {
+        "21", "17" -> switchJavaScript(version)
         else -> "echo \"Invalid Java version: $version\""
     }
+
+    // ── cmdline-tools ──────────────────────────────────────────────
+    private fun installCmdlineToolsCommand(): String = sh(
+        """
+        SDK_DIR="{DOLLAR}HOME/android-sdk"
+        TMP_ZIP="{DOLLAR}TMPDIR/aurastudio_cmdtools.zip"
+        TMP_DIR="{DOLLAR}TMPDIR/aurastudio_cmdtools_extract"
+        curl -L --retry 3 --fail "$cmdlineToolsUrl" -o "{DOLLAR}TMP_ZIP" 2>&1 || exit 1
+        rm -rf "{DOLLAR}TMP_DIR"
+        unzip -q "{DOLLAR}TMP_ZIP" -d "{DOLLAR}TMP_DIR" || exit 1
+        mkdir -p "{DOLLAR}SDK_DIR/cmdline-tools/latest"
+        if [ -d "{DOLLAR}TMP_DIR/cmdline-tools" ]; then
+            cp -r "{DOLLAR}TMP_DIR/cmdline-tools/." "{DOLLAR}SDK_DIR/cmdline-tools/latest/" || exit 1
+        else
+            cp -r "{DOLLAR}TMP_DIR/." "{DOLLAR}SDK_DIR/cmdline-tools/latest/" || exit 1
+        fi
+        rm -rf "{DOLLAR}TMP_ZIP" "{DOLLAR}TMP_DIR"
+        chmod -R 755 "{DOLLAR}SDK_DIR/cmdline-tools/latest/bin/" 2>/dev/null
+        # Patch /usr/bin/env shebangs to the embedded prefix env
+        TERMUX_ENV="{DOLLAR}(command -v env)"
+        for bin_file in "{DOLLAR}SDK_DIR/cmdline-tools/latest/bin/"*; do
+            [ -f "{DOLLAR}bin_file" ] || continue
+            SHEBANG="{DOLLAR}(head -1 "{DOLLAR}bin_file" 2>/dev/null)"
+            if [[ "{DOLLAR}SHEBANG" == "#!/usr/bin/env"* ]]; then
+                REST="{DOLLAR}{SHEBANG#'#!/usr/bin/env'}"
+                sed -i "1s|.*|#!{DOLLAR}TERMUX_ENV{DOLLAR}REST|" "{DOLLAR}bin_file"
+            fi
+        done
+        """.trimIndent()
+    )
+
+    // ── platforms / build-tools (sdkmanager) ───────────────────────
+    private fun sdkmanagerInstallCommand(pkg: String): String = sh(
+        """
+        export ANDROID_HOME="{DOLLAR}HOME/android-sdk"
+        export ANDROID_SDK_ROOT="{DOLLAR}HOME/android-sdk"
+        JAVA_HOME="{DOLLAR}(dirname "{DOLLAR}(dirname "{DOLLAR}(readlink -f "{DOLLAR}PREFIX/bin/java")")")"
+        [ -n "{DOLLAR}JAVA_HOME" ] && [ -x "{DOLLAR}JAVA_HOME/bin/java" ] || { echo "Java not installed"; exit 1; }
+        export JAVA_HOME
+        export PATH="{DOLLAR}JAVA_HOME/bin:{DOLLAR}HOME/android-sdk/cmdline-tools/latest/bin:{DOLLAR}HOME/android-sdk/platform-tools:{DOLLAR}PATH"
+        SDKMANAGER="{DOLLAR}HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager"
+        [ -x "{DOLLAR}SDKMANAGER" ] || { echo "cmdline-tools not installed"; exit 1; }
+        yes 2>/dev/null | "{DOLLAR}SDKMANAGER" --sdk_root="{DOLLAR}HOME/android-sdk" "$pkg" 2>&1 || exit 1
+        """.trimIndent()
+    )
+
+    // ── NDK (HomuHomu833 archives) ─────────────────────────────────
+    private fun installNdkCommand(version: String): String {
+        val url = ndkUrl(version)
+        return if (url == null) {
+            "echo \"Unknown NDK version: $version\""
+        } else sh(
+            """
+            SDK_DIR="{DOLLAR}HOME/android-sdk"
+            NDK_DIR="{DOLLAR}SDK_DIR/ndk"
+            NDK_VER="$version"
+            FILE="{DOLLAR}(basename "$url")"
+            TARGET="{DOLLAR}TMPDIR/{DOLLAR}FILE"
+            curl -L --retry 3 --fail "$url" -o "{DOLLAR}TARGET" 2>&1 || exit 1
+            (cd "{DOLLAR}HOME" && tar --no-same-owner -xf "{DOLLAR}TARGET" --warning=no-unknown-keyword 2>/dev/null) || { rm -f "{DOLLAR}TARGET"; exit 1; }
+            rm -f "{DOLLAR}TARGET"
+            mkdir -p "{DOLLAR}NDK_DIR"
+            EXTRACTED="{DOLLAR}(find "{DOLLAR}HOME" -maxdepth 1 -type d \( -name "android-ndk-*" -o -name "{DOLLAR}NDK_VER" \) 2>/dev/null | head -1)"
+            [ -n "{DOLLAR}EXTRACTED" ] || { echo "Extracted NDK dir not found"; exit 1; }
+            mv "{DOLLAR}EXTRACTED" "{DOLLAR}NDK_DIR/{DOLLAR}NDK_VER" || exit 1
+            # musl symlinks (linux-aarch64 -> linux-arm64) for clang toolchain
+            for p in toolchains/llvm/prebuilt prebuilt shader-tools; do
+                if [ -d "{DOLLAR}NDK_DIR/{DOLLAR}NDK_VER/{DOLLAR}p" ]; then
+                    ( cd "{DOLLAR}NDK_DIR/{DOLLAR}NDK_VER/{DOLLAR}p" && [ ! -e linux-aarch64 ] && ln -s linux-arm64 linux-aarch64 ) 2>/dev/null
+                fi
+            done
+            # Gradle expects NDK dir named by real Pkg.Revision — symlink it
+            SP="{DOLLAR}NDK_DIR/{DOLLAR}NDK_VER/source.properties"
+            if [ -f "{DOLLAR}SP" ]; then
+                RV="{DOLLAR}(grep "^Pkg.Revision" "{DOLLAR}SP" | cut -d'=' -f2 | tr -d ' ')"
+                if [ -n "{DOLLAR}RV" ] && [ "{DOLLAR}RV" != "{DOLLAR}NDK_VER" ] && [ ! -e "{DOLLAR}NDK_DIR/{DOLLAR}RV" ]; then
+                    ln -s "{DOLLAR}NDK_DIR/{DOLLAR}NDK_VER" "{DOLLAR}NDK_DIR/{DOLLAR}RV" 2>/dev/null
+                fi
+            fi
+            """.trimIndent()
+        )
+    }
+
+    private fun ndkUrl(version: String): String? = when (version) {
+        "r30-beta2" -> "$ndkBaseUrl/r30/android-ndk-r30-beta2-aarch64-linux-musl.tar.xz"
+        "r29" -> "$ndkBaseUrl/r29/android-ndk-r29-aarch64-linux-musl.tar.xz"
+        "r28c" -> "$ndkBaseUrl/r28/android-ndk-r28c-aarch64-linux-musl.tar.xz"
+        "r27d" -> "$ndkBaseUrl/r27/android-ndk-r27d-aarch64-linux-musl.tar.xz"
+        "r26d" -> "$ndkBaseUrl/r26/android-ndk-r26d-aarch64-linux-musl.tar.xz"
+        else -> null
+    }
+
+    // ── CMake (HomuHomu833 tar.xz / MrIkso zips) ───────────────────
+    private fun installCmakeCommand(version: String): String {
+        val url = cmakeUrl(version)
+        return if (url == null) {
+            "echo \"Unknown CMake version: $version\""
+        } else sh(
+            """
+            CMAKE_DIR="{DOLLAR}HOME/android-sdk/cmake"
+            CMAKE_VER="$version"
+            FILE="{DOLLAR}(basename "$url")"
+            TARGET="{DOLLAR}TMPDIR/{DOLLAR}FILE"
+            mkdir -p "{DOLLAR}CMAKE_DIR" "{DOLLAR}CMAKE_DIR/{DOLLAR}CMAKE_VER"
+            curl -L --retry 3 --fail "$url" -o "{DOLLAR}TARGET" 2>&1 || exit 1
+            [ -s "{DOLLAR}TARGET" ] || { rm -f "{DOLLAR}TARGET"; echo "Download failed"; exit 1; }
+            if [[ "{DOLLAR}FILE" == *.tar.xz ]]; then
+                tar -xf "{DOLLAR}TARGET" -C "{DOLLAR}CMAKE_DIR/{DOLLAR}CMAKE_VER" --strip-components=1 2>/dev/null || tar -xf "{DOLLAR}TARGET" -C "{DOLLAR}CMAKE_DIR/{DOLLAR}CMAKE_VER"
+            elif [[ "{DOLLAR}FILE" == *.zip ]]; then
+                unzip -qq "{DOLLAR}TARGET" -d "{DOLLAR}CMAKE_DIR"
+            fi
+            rm -f "{DOLLAR}TARGET"
+            chmod -R +x "{DOLLAR}CMAKE_DIR/{DOLLAR}CMAKE_VER/bin" 2>/dev/null
+            """.trimIndent()
+        )
+    }
+
+    private fun cmakeUrl(version: String): String? = when (version) {
+        "4.1.2", "4.1.1", "4.1.0", "4.0.3", "4.0.2" ->
+            "$cmakeHomuBase/$version/cmake-aarch64-linux-musl.tar.xz"
+        "3.25.1", "3.22.1", "3.18.1", "3.10.2" ->
+            "$cmakeIksoBase/cmake-$version-android-aarch64.zip"
+        else -> null
+    }
+
+    // ── Java version switch (re-points $PREFIX/bin/*java* symlinks) ─
+    private fun switchJavaScript(version: String): String = sh(
+        """
+        TARGET_JVM="{DOLLAR}PREFIX/lib/jvm/java-$version-openjdk"
+        [ -x "{DOLLAR}TARGET_JVM/bin/java" ] || { echo "openjdk-$version is not installed"; exit 1; }
+        for cmd in java javac javadoc jar keytool jshell javap jdb jdeps jlink; do
+            [ -f "{DOLLAR}TARGET_JVM/bin/{DOLLAR}cmd" ] || continue
+            TARGET="{DOLLAR}PREFIX/bin/{DOLLAR}cmd"
+            if [ -L "{DOLLAR}TARGET" ]; then
+                rm -f "{DOLLAR}TARGET"
+            elif [ -e "{DOLLAR}TARGET" ]; then
+                mv "{DOLLAR}TARGET" "{DOLLAR}TARGET.bak-{DOLLAR}(date +%s)" 2>/dev/null
+            fi
+            ln -s "{DOLLAR}TARGET_JVM/bin/{DOLLAR}cmd" "{DOLLAR}TARGET"
+            chmod +x "{DOLLAR}TARGET"
+        done
+        # Persist JAVA_HOME in the embedded env file for new shells
+        if [ -f "{DOLLAR}HOME/.config/aurastudio/env.sh" ]; then
+            sed -i "s|^export JAVA_HOME=.*|export JAVA_HOME=\"$version-openjdk\"|" "{DOLLAR}HOME/.config/aurastudio/env.sh" 2>/dev/null
+        fi
+        """.trimIndent()
+    )
 }
