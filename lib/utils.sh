@@ -219,6 +219,13 @@ retry_command() {
 }
 
 detect_java_home() {
+    local want_ver="${1:-}"
+    if [ -n "$want_ver" ]; then
+        local jvm_dir="${PREFIX:-/data/data/com.termux/files/usr}/lib/jvm/java-${want_ver}-openjdk"
+        [ -x "$jvm_dir/bin/java" ] && echo "$jvm_dir" && return 0
+        return 1
+    fi
+
     local java_bin
     java_bin="$(command -v java 2>/dev/null)" || return 1
     local real_path
@@ -227,6 +234,15 @@ detect_java_home() {
     dir="$(dirname "$(dirname "$real_path")")"
     [ -d "$dir" ] && echo "$dir" && return 0
     return 1
+}
+
+list_java_homes() {
+    local jvm_root="${PREFIX:-/data/data/com.termux/files/usr}/lib/jvm"
+    [ -d "$jvm_root" ] || return 0
+    local jvm
+    for jvm in "$jvm_root"/*openjdk; do
+        [ -x "$jvm/bin/java" ] && echo "$jvm"
+    done
 }
 
 detect_shell_rc() {

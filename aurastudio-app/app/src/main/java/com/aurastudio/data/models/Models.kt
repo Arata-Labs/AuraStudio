@@ -21,7 +21,8 @@ data class InstalledComponent(
     val name: String,
     val version: String?,
     val isInstalled: Boolean,
-    val availableVersions: List<String> = emptyList()
+    val availableVersions: List<String> = emptyList(),
+    val installedVersions: List<String> = emptyList()
 )
 
 data class EnvironmentStatus(

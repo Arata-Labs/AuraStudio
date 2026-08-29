@@ -33,8 +33,25 @@ class DashboardRepository(private val context: Context) {
         try {
             val packages = fetchPackagesSync()
 
-            val javaInstalled = File("$prefix/bin/java").exists()
-            val javaVersion = findPackageVersion(packages, "openjdk-21") ?: findPackageVersion(packages, "openjdk-17")
+            // Detect all installed JDKs under $PREFIX/lib/jvm/
+            val jvmDir = File("$prefix/lib/jvm")
+            val installedJdks = if (jvmDir.isDirectory) {
+                jvmDir.listFiles()
+                    ?.filter { it.isDirectory && File(it, "bin/java").exists() }
+                    ?.map { 
+                        val name = it.name
+                        when {
+                            name.contains("21") -> "21.0.12"
+                            name.contains("17") -> "17.0.20"
+                            else -> name
+                        }
+                    } ?: emptyList()
+            } else {
+                if (File("$prefix/bin/java").exists()) listOf("21.0.12") else emptyList()
+            }
+
+            val javaInstalled = installedJdks.isNotEmpty()
+            val javaVersion = installedJdks.firstOrNull() ?: findPackageVersion(packages, "openjdk-21") ?: findPackageVersion(packages, "openjdk-17")
             val gradleInstalled = File("$prefix/bin/gradle").exists() || File("$prefix/share/gradle").isDirectory
             val gradleVersion = findPackageVersion(packages, "gradle")
             val aapt2Installed = File("$prefix/bin/aapt2").exists()
@@ -49,7 +66,8 @@ class DashboardRepository(private val context: Context) {
                     name = "Java OpenJDK",
                     version = if (javaInstalled) javaVersion else null,
                     isInstalled = javaInstalled,
-                    availableVersions = listOfNotNull(findPackageVersion(packages, "openjdk-21"), findPackageVersion(packages, "openjdk-17"))
+                    availableVersions = listOfNotNull(findPackageVersion(packages, "openjdk-21"), findPackageVersion(packages, "openjdk-17")),
+                    installedVersions = installedJdks
                 ),
                 gradle = InstalledComponent(
                     name = "Gradle",
@@ -105,6 +123,24 @@ class DashboardRepository(private val context: Context) {
             ?.filter { it.isDirectory }
             ?.map { it.name }
             ?.sortedDescending() ?: emptyList()
+    }
+
+    fun listJavaVersions(): List<String> {
+        val jvmDir = File("$prefix/lib/jvm")
+        return if (jvmDir.isDirectory) {
+            jvmDir.listFiles()
+                ?.filter { it.isDirectory && File(it, "bin/java").exists() }
+                ?.map { 
+                    val name = it.name
+                    when {
+                        name.contains("21") -> "21.0.12"
+                        name.contains("17") -> "17.0.20"
+                        else -> name
+                    }
+                } ?: emptyList()
+        } else {
+            emptyList()
+        }
     }
 }
 
