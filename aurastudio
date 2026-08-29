@@ -23,6 +23,7 @@ source "$AURA_ROOT/lib/tools.sh"
 # Load Command Modules
 source "$AURA_ROOT/modules/setup.sh"
 source "$AURA_ROOT/modules/sdk.sh"
+source "$AURA_ROOT/modules/use.sh"
 source "$AURA_ROOT/modules/ndk.sh"
 source "$AURA_ROOT/modules/cmake.sh"
 source "$AURA_ROOT/modules/remove.sh"
@@ -67,6 +68,14 @@ case "${1:-}" in
             *)
                 error "Unknown command: aurastudio install ${2:-}"
                 printf "  %b\n" "${MUTED}Available: aurastudio install sdk | ndk | cmake${RESET}"
+                CLI_EXIT_CODE=1 ;;
+        esac ;;
+    use)
+        case "${2:-}" in
+            java)  cmd_use_java "${3:-}" || CLI_EXIT_CODE=$? ;;
+            *)
+                error "Unknown command: aurastudio use ${2:-}"
+                printf "  %b\n" "${MUTED}Available: aurastudio use java 17 | 21${RESET}"
                 CLI_EXIT_CODE=1 ;;
         esac ;;
     remove)       cmd_remove "${2:-}" "${3:-}" "${4:-}" || CLI_EXIT_CODE=$? ;;

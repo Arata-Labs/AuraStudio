@@ -101,8 +101,8 @@ class PackageInstaller(private val context: Context) {
     }
 
     fun switchJavaCommand(version: String): String = when {
-        version == "21" -> "aurastudio install sdk java-use 21 2>&1 || exit 1"
-        version == "17" -> "aurastudio install sdk java-use 17 2>&1 || exit 1"
+        version == "21" -> "aurastudio use java 21 2>&1 || exit 1"
+        version == "17" -> "aurastudio use java 17 2>&1 || exit 1"
         else -> "echo \"Invalid Java version: $version\""
     }
 }

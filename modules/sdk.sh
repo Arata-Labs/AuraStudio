@@ -1,13 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 
-_update_java_home() {
-    local new_jdk_home="$1"
-    local env_file="$AURA_CONFIG_DIR/env.sh"
-    if [ -f "$env_file" ]; then
-        sed -i "s|JAVA_HOME=.*|JAVA_HOME=\"$new_jdk_home\"|" "$env_file"
-    fi
-}
-
 cmd_install_sdk() {
     clear
     draw_banner
@@ -25,7 +17,7 @@ cmd_install_sdk() {
     export JAVA_HOME
     export PATH="$JAVA_HOME/bin:$CMDTOOLS_DIR/bin:$SDK_DIR/platform-tools:$PATH"
 
-    local param_api="" param_bt="" param_java="" param_java_use=""
+    local param_api="" param_bt="" param_java=""
     local args=("${@}")
     local idx=0
     while [ $idx -lt ${#args[@]} ]; do
@@ -36,8 +28,6 @@ cmd_install_sdk() {
                 idx=$((idx+1)); param_bt="${args[$idx]}" ;;
             java)
                 idx=$((idx+1)); param_java="${args[$idx]}" ;;
-            java-use)
-                idx=$((idx+1)); param_java_use="${args[$idx]}" ;;
         esac
         idx=$((idx+1))
     done
@@ -49,26 +39,6 @@ cmd_install_sdk() {
             success "openjdk-${param_java} installed"
         else
             error "Unsupported Java version: $param_java (supported: 21, 17)"
-            return 1
-        fi
-        return
-    fi
-
-    if [ -n "$param_java_use" ]; then
-        if [[ "$param_java_use" =~ ^(21|17)$ ]]; then
-            local new_home
-            new_home="$(detect_java_home "$param_java_use")"
-            if [ -n "$new_home" ]; then
-                _update_java_home "$new_home"
-                export JAVA_HOME="$new_home"
-                export PATH="$JAVA_HOME/bin:$PATH"
-                success "JAVA_HOME switched to $new_home"
-            else
-                error "openjdk-${param_java_use} not installed or not found"
-                return 1
-            fi
-        else
-            error "Unsupported Java version: $param_java_use (supported: 21, 17)"
             return 1
         fi
         return
