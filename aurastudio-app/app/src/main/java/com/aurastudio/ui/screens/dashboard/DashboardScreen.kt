@@ -57,14 +57,7 @@ fun DashboardScreen(
             HealthBanner(score = status.healthScore, status = status)
         }
 
-        item {
-            QuickActionsGrid(
-                onSetup = { onNavigateToTerminal("aurastudio setup") },
-                onInstallSdk = { onNavigateToTerminal("aurastudio install sdk") },
-                onDoctor = { onNavigateToTerminal("aurastudio doctor") },
-                onStatus = { onNavigateToTerminal("aurastudio status") }
-            )
-        }
+
 
         item {
             EnvironmentCard(status)
