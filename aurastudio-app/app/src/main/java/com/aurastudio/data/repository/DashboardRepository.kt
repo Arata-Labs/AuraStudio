@@ -29,6 +29,8 @@ class DashboardRepository(private val context: Context) {
 
     private val packagesJsonUrl = "https://arata-labs.github.io/aurastudio-termux/packages.json"
 
+    private val CMDLINE_TOOLS_VERSION = "12.0"
+
     suspend fun getEnvironmentStatus(): Result<EnvironmentStatus> = withContext(Dispatchers.IO) {
         try {
             val packages = fetchPackagesSync()
@@ -70,7 +72,7 @@ class DashboardRepository(private val context: Context) {
 
             val cmdlineToolsDir = File("$sdkDir/cmdline-tools")
             val sdkToolsInstalled = cmdlineToolsDir.isDirectory && cmdlineToolsDir.listFiles()?.any { it.isDirectory } == true
-            val cmdlineToolsVersion = if (sdkToolsInstalled) cmdlineToolsDir.listFiles()?.maxByOrNull { it.name }?.name else null
+            val cmdlineToolsVersion = if (sdkToolsInstalled) CMDLINE_TOOLS_VERSION else null
 
             val status = EnvironmentStatus(
                 java = InstalledComponent(
