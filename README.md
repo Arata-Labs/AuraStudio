@@ -3,13 +3,13 @@
 ```text
   ╭──────────────────────────────────────────────────────────────╮
   │                                                              │
-  │    ⚡  AuraStudio CLI  v1.2                                  │
+  │    ⚡  AuraStudio CLI  v1.5                                  │
   │        Build Android, Anywhere                               │
   │                                                              │
   ╰──────────────────────────────────────────────────────────────╯
 ```
 
-# ⚡ AuraStudio CLI v1.2
+# ⚡ AuraStudio CLI v1.5
 
 **Turn your Android device into a full-fledged native Android development environment.**
 
@@ -99,9 +99,11 @@ source ~/.config/aurastudio/env.sh
 | Command | Arguments | Description |
 | :--- | :--- | :--- |
 | `aurastudio setup` | - | Smart environment setup with status dashboard, skip existing, optional NDK/CMake. |
-| `aurastudio install sdk` | `[platform <API>] [buildtools <ver>]` | Interactive or direct CLI installation for Android Platforms & Build-Tools. |
+| `aurastudio install sdk` | `[platform <API>] [buildtools <ver>] [java <17\|21>]` | Interactive or direct CLI installation for Android Platforms, Build-Tools, and multi-version Java. |
 | `aurastudio install ndk` | - | Interactive selector to install custom Native NDK versions (r26d - r30). |
 | `aurastudio install cmake` | - | Interactive selector to install native CMake binaries (3.10.2 - 4.1.2). |
+| `aurastudio use java` | `<17\|21>` | Instantly switch the active JDK by re-pointing `$PREFIX/bin/*java*` symlinks. No download, no `$PATH` duplication. |
+| `aurastudio completion` | - | Shows how to enable bash/zsh autocompletion. |
 | `aurastudio init` | - | Scaffolds C++ CMake, NDK Shared Lib, or Gradle Android App (Java/Kotlin) starters. |
 | `aurastudio remove` | `[ndk\|cmake\|sdk] [name/type] [ver]` | Uninstalls specific SDK/NDK components via direct flags or interactive menu. |
 | `aurastudio clean` | - | Cleans up temporary downloaded zips and extraction caches in `$TMPDIR`. |
@@ -115,6 +117,29 @@ source ~/.config/aurastudio/env.sh
 | `aurastudio help` | - | Shows the help message with all available commands. |
 
 > **Tip:** Append `--verbose` or `-v` to any command to enable debug logging without background spinner animations.
+
+---
+
+## 🖥️ Shell Autocompletion
+
+AuraStudio ships with tab-completion for all commands. It is configured automatically by `aurastudio setup`, or you can enable it manually:
+
+```bash
+# Bash — add to $PREFIX/etc/bash.bashrc
+source ~/.aurastudio/lib/aurastudio-completion.bash
+
+# Zsh — add to ~/.zshrc
+autoload -U +X bashcompinit && bashcompinit
+source ~/.aurastudio/lib/aurastudio-completion.bash
+```
+
+You can also run `aurastudio completion` at any time to print these instructions. Completion covers top-level commands plus subcommands:
+- `aurastudio install sdk|ndk|cmake`
+- `aurastudio use java 17|21`
+- `aurastudio status --json`
+- `aurastudio doctor --fix --snapshot`
+
+> **Note:** If you installed via the `.deb` package, the completion script lives at `$PREFIX/share/aurastudio/aurastudio-completion.bash`. Adjust the `source` path accordingly.
 
 ---
 
@@ -154,6 +179,7 @@ aurastudio/
 │   ├── init.sh                   # Boilerplate project scaffold generator
 │   ├── update.sh                 # GitHub auto-updater
 │   ├── uninstall.sh              # System uninstaller
+│   ├── use.sh                    # Java version switcher
 │   ├── status.sh                 # Environment status dashboard + health score
 │   └── doctor.sh                 # Diagnostic, health checks & snapshots
 └── tests/
@@ -185,32 +211,6 @@ When you push a version tag (`v*`), GitHub Actions automatically:
 
 ---
 
-## ⌨️ Bash Autocompletion
-
-AuraStudio CLI includes tab completion for all commands. It is automatically configured during installation.
-
-### Manual Setup:
-```bash
-# Copy completion script
-mkdir -p ~/.config/aurastudio
-cp ~/.aurastudio/lib/aurastudio-completion.bash ~/.config/aurastudio/
-
-# Add to your shell RC (auto-detects zsh/bash)
-RC=""
-[ -f ~/.zshrc ] && RC=~/.zshrc
-[ -z "$RC" ] && RC="${PREFIX:-}/etc/bash.bashrc"
-echo '[ -f ~/.config/aurastudio/aurastudio-completion.bash ] && source ~/.config/aurastudio/aurastudio-completion.bash' >> "$RC"
-source "$RC"
-```
-
-### Available Completions:
-- `aurastudio <TAB>` → All commands
-- `aurastudio install <TAB>` → `sdk`, `ndk`, `cmake`
-- `aurastudio status <TAB>` → `--json`, `-j`
-- `aurastudio doctor <TAB>` → `--fix`, `--snapshot`
-
----
-
 ## ⚙️ Environment Configuration
 
 During setup, AuraStudio generates an isolated configuration file at `~/.config/aurastudio/env.sh` and injects a single load line into your shell profile (`~/.zshrc` or `$PREFIX/etc/bash.bashrc`):
@@ -221,7 +221,7 @@ During setup, AuraStudio generates an isolated configuration file at `~/.config/
 
 ### Managed Environment Variables:
 - `ANDROID_HOME` & `ANDROID_SDK_ROOT` → Points to `$HOME/android-sdk`
-- `JAVA_HOME` → Dynamically detects and points to OpenJDK 21
+- `JAVA_HOME` → Detects the active JDK under `$PREFIX/lib/jvm/` (Java 21 or 17). Switch with `aurastudio use java 17|21`.
 - `PATH` → Automatically includes `cmdline-tools`, `platform-tools`, `JAVA_HOME/bin`, and active `build-tools`
 
 ### XDG Base Directory Paths:

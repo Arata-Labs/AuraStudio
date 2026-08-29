@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 # shellcheck disable=SC1091
 # ╭──────────────────────────────────────────────────────────────╮
-# │    ⚡  AuraStudio CLI  v1.1                                  │
+# │    ⚡  AuraStudio CLI  v1.5                                  │
 # │        Build Android, Anywhere                               │
 # ╰──────────────────────────────────────────────────────────────╯
 
@@ -92,6 +92,7 @@ case "${1:-}" in
         fi
         ;;
     doctor)       cmd_doctor "${2:-}" || CLI_EXIT_CODE=$? ;;
+    completion)   show_completion_setup ;;
     man)          show_man_page ;;
     version|-v|--version) printf "\n  %b v%s\n\n" "${INDIGO}AuraStudio CLI${RESET}" "${CLI_VERSION}" ;;
     help|-help|--help|"")

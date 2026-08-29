@@ -592,6 +592,12 @@ COMMANDS
        install ndk     Install custom NDK versions (aarch64-linux-musl)
        install cmake   Install native CMake versions
        
+       use java        Switch the active JDK instantly (17 or 21)
+                       Re-points $PREFIX/bin/*java* symlinks to the
+                       target JVM. No download, no $PATH duplication.
+       
+       completion      Show how to enable bash/zsh autocompletion
+       
        init            Create new project from templates
                          1. C++ Native CMake Starter
                          2. Android NDK Shared Library
@@ -617,6 +623,15 @@ OPTIONS
 EXAMPLES
        aurastudio setup
            Run full environment setup wizard
+       
+       aurastudio use java 17
+           Switch the active JDK to Java 17 instantly
+       
+       aurastudio use java 21
+           Switch the active JDK back to Java 21
+       
+       aurastudio completion
+           Show how to enable shell autocompletion
        
        aurastudio install ndk
            Install custom NDK toolchain
@@ -654,7 +669,7 @@ AUTHOR
 LICENSE
        MIT License
 
-AURA STUDIO CLI v1.1            August 2026                    AURASTUDIO(1)
+AURA STUDIO CLI v1.5            August 2026                    AURASTUDIO(1)
 MANPAGE
 }
 
@@ -688,6 +703,36 @@ show_help() {
     printf "  %b\n\n" "${MUTED}    Run diagnostic checks and view recommended fixes${RESET}"
     printf "  %b\n" "${CYAN}aurastudio man${RESET}"
     printf "  %b\n\n" "${MUTED}    Show full manual page${RESET}"
+    printf "  %b\n" "${CYAN}aurastudio completion${RESET}"
+    printf "  %b\n" "${MUTED}    Show how to set up bash/zsh autocompletion${RESET}"
+    printf "  %b\n" "${CYAN}aurastudio use java <17|21>${RESET}"
+    printf "  %b\n\n" "${MUTED}    Switch the active JDK instantly (re-points java symlinks)${RESET}"
+    draw_divider
+    echo ""
+}
+
+show_completion_setup() {
+    printf "\n  %b\n" "${BOLD}${WHITE}AuraStudio Shell Completion${RESET}"
+    draw_divider
+
+    local completion_script="${AURA_ROOT:-$HOME/.aurastudio}/lib/aurastudio-completion.bash"
+
+    printf "\n  %b\n\n" "${CYAN}Bash:${RESET}"
+    printf "  %b\n" "${MUTED}Add this line to $PREFIX/etc/bash.bashrc:${RESET}"
+    printf "  %b\n\n" "    source $completion_script"
+
+    printf "  %b\n\n" "${CYAN}Zsh:${RESET}"
+    printf "  %b\n" "${MUTED}Add this line to ~/.zshrc:${RESET}"
+    printf "  %b\n\n" "    autoload -U +X bashcompinit && bashcompinit"
+    printf "  %b\n\n" "    source $completion_script"
+
+    printf "  %b\n\n" "${CYAN}One-time manual install:${RESET}"
+    printf "  %b\n" "    mkdir -p $HOME/.config/aurastudio"
+    printf "  %b\n\n" "    cp $completion_script $HOME/.config/aurastudio/"
+
+    printf "  %b\n" "${CYAN}Auto-install (via setup):${RESET}"
+    printf "  %b\n\n" "    aurastudio setup  →  configures completion automatically"
+
     draw_divider
     echo ""
 }

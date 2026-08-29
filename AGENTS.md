@@ -1,7 +1,7 @@
 # AuraStudio CLI
 
 ## Project Overview
-AuraStudio CLI v1.2 is a Bash-based command-line tool suite for Android development in Termux on Android. It automates installation and configuration of development toolchains (OpenJDK 21, Gradle, Android SDK, AAPT2, custom NDK aarch64-linux-musl, CMake).
+AuraStudio CLI v1.5 is a Bash-based command-line tool suite for Android development in Termux on Android. It automates installation and configuration of development toolchains (OpenJDK 21, Gradle, Android SDK, AAPT2, custom NDK aarch64-linux-musl, CMake).
 
 ## Language & Stack
 - **Primary Language:** Bash (shell scripts)
@@ -12,18 +12,41 @@ AuraStudio CLI v1.2 is a Bash-based command-line tool suite for Android developm
 
 ```
 aurastudio/
-├── aurastudio              # Main CLI entry point & command router
-├── aurastudio-app/         # Android GUI app (Kotlin + Jetpack Compose)
-│   ├── app/src/main/java/com/aurastudio/app/
-│   │   ├── MainActivity.kt
-│   │   ├── data/models/Models.kt
-│   │   ├── data/viewmodel/MainViewModel.kt
-│   │   ├── ui/components/Components.kt
-│   │   ├── ui/screens/terminal/TerminalScreen.kt
-│   │   ├── ui/screens/editor/EditorScreen.kt
-│   │   ├── ui/screens/editor/FileExplorerScreen.kt
-│   │   └── ui/theme/{Color,Theme,Type}.kt
-│   └── build.gradle.kts
+├── aurastudio                    # Main CLI entry point & command router
+├── aurastudio-app/               # Android GUI app (Kotlin + Jetpack Compose)
+│   ├── app/src/main/java/com/aurastudio/
+│   │   ├── MainActivity.kt              # Main activity with startup flow
+│   │   ├── data/
+│   │   │   ├── bootstrap/
+│   │   │   │   ├── BootstrapCoordinator.kt
+│   │   │   │   └── BootstrapState.kt
+│   │   │   ├── models/Models.kt
+│   │   │   ├── repository/
+│   │   │   │   ├── DashboardRepository.kt
+│   │   │   │   └── PackageInstaller.kt
+│   │   │   └── viewmodel/DashboardViewModel.kt
+│   │   └── ui/
+│   │       ├── components/
+│   │       │   ├── BottomNavBar.kt
+│   │       │   └── TopBar.kt
+│   │       ├── navigation/Navigation.kt
+│   │       ├── screens/
+│   │       │   ├── bootstrap/BootstrapSetupScreen.kt
+│   │       │   ├── dashboard/DashboardScreen.kt
+│   │       │   ├── projects/
+│   │       │   │   ├── CreateProjectScreen.kt
+│   │       │   │   └── ProjectsScreen.kt
+│   │       │   ├── settings/SettingsScreen.kt
+│   │       │   ├── splash/SplashScreen.kt
+│   │       │   └── terminal/TerminalScreen.kt
+│   │       └── theme/
+│   │           ├── Color.kt
+│   │           ├── Theme.kt
+│   │           └── Type.kt
+│   ├── build.gradle.kts
+│   ├── settings.gradle.kts
+│   ├── gradle.properties
+│   └── termux/                     # Embedded Termux terminal emulator (Java)
 ├── install.sh              # Web installer script
 ├── build_deb.sh            # Debian package builder
 ├── config/
@@ -43,13 +66,22 @@ aurastudio/
 │   ├── clean.sh            # Cache/temp cleanup
 │   ├── update.sh           # GitHub auto-updater
 │   ├── uninstall.sh        # Full uninstaller
-│   ├── status.sh           # Environment status dashboard
-│   └── doctor.sh           # Diagnostic & health checks
+│   ├── use.sh              # Java version switcher (17/21)
+│   ├── status.sh           # Environment status dashboard + health score
+│   └── doctor.sh           # Diagnostic, health checks & snapshots
 ├── tests/
 │   ├── run_tests.sh        # Main test runner
 │   └── test_download.sh    # Download function tests
-└── .github/workflows/
-    └── release.yml         # CI/CD for .deb releases
+└── .github/
+    ├── workflows/
+    │   ├── lint.yml        # ShellCheck CI + unit tests
+    │   ├── release.yml     # Automated DEB build + changelog + GitHub Release
+    │   └── build-bootstrap.yml
+    ├── ISSUE_TEMPLATE/
+    │   ├── bug_report.md
+    │   └── feature_request.md
+    ├── pull_request_template.md
+    └── RELEASE_TEMPLATE.md
 ```
 
 ## Coding Conventions
@@ -96,6 +128,8 @@ aurastudio/
 | `aurastudio install sdk` | `cmd_install_sdk` | Install Android SDK platforms/build-tools |
 | `aurastudio install ndk` | `cmd_install_ndk` | Install custom NDK versions |
 | `aurastudio install cmake` | `cmd_install_cmake` | Install CMake versions |
+| `aurastudio use java` | `cmd_use_java` | Switch active JDK instantly (17\|21) via symlink re-point |
+| `aurastudio completion` | `show_completion_setup` | Show how to set up shell autocompletion |
 | `aurastudio init` | `cmd_init` | Scaffold new project (C++/NDK/Gradle) |
 | `aurastudio remove` | `cmd_remove` | Uninstall specific components |
 | `aurastudio clean` | `cmd_clean` | Clean temp/cache files |

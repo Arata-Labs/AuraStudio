@@ -6,7 +6,7 @@ _aurastudio_completions() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    opts="setup install remove clean init update check-update status doctor uninstall man version -v --verbose --help"
+    opts="setup install use remove clean init update check-update status doctor uninstall man completion version -v --verbose --help"
 
     case "$prev" in
         aurastudio)
@@ -17,12 +17,20 @@ _aurastudio_completions() {
             COMPREPLY=( $(compgen -W "sdk ndk cmake" -- "$cur") )
             return 0
             ;;
+        use)
+            COMPREPLY=( $(compgen -W "java" -- "$cur") )
+            return 0
+            ;;
+        java)
+            COMPREPLY=( $(compgen -W "17 21" -- "$cur") )
+            return 0
+            ;;
         remove)
             COMPREPLY=( $(compgen -W "sdk ndk cmake" -- "$cur") )
             return 0
             ;;
         sdk)
-            COMPREPLY=( $(compgen -W "platform buildtools" -- "$cur") )
+            COMPREPLY=( $(compgen -W "platform buildtools java" -- "$cur") )
             return 0
             ;;
         status)

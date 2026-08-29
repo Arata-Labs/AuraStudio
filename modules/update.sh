@@ -33,7 +33,7 @@ cmd_update() {
 
     local local_hash remote_hash
     local_hash=$(git rev-parse HEAD 2>/dev/null)
-    remote_hash=$(git rev-parse origin/main 2>/dev/null || git rev-parse origin/master 2>/dev/null)
+    remote_hash=$(git rev-parse origin/dev-app 2>/dev/null || git rev-parse origin/main 2>/dev/null)
 
     if [ "$local_hash" = "$remote_hash" ]; then
         success "AuraStudio CLI is already up to date! (v$CLI_VERSION)"
