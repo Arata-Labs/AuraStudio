@@ -74,11 +74,15 @@ class PackageInstaller(private val context: Context) {
         }
     }.flowOn(Dispatchers.IO)
 
-    /** Map a component key + version to the shell command that installs it. */
+    /**
+     * Map a component key + version to the shell command that installs it.
+     * `aurastudio install sdk` is used only for sdkmanager-managed components
+     * (platforms, build-tools); everything else installs via pkg or the CLI.
+     */
     fun installCommand(componentKey: String, version: String): String = when (componentKey) {
-        "java" -> if (version.contains("21")) "aurastudio install sdk java 21 2>&1 || exit 1" else "aurastudio install sdk java 17 2>&1 || exit 1"
-        "gradle" -> "aurastudio install sdk gradle $version 2>&1 || exit 1"
-        "aapt2" -> "aurastudio install sdk aapt2 $version 2>&1 || exit 1"
+        "java" -> if (version.contains("21")) "pkg install -y openjdk-21 2>&1 || exit 1" else "pkg install -y openjdk-17 2>&1 || exit 1"
+        "gradle" -> "pkg install -y gradle 2>&1 || exit 1"
+        "aapt2" -> "pkg install -y aapt2 2>&1 || exit 1"
         "cmdline_tools" -> "aurastudio setup --cmdtools-only 2>&1 || exit 1"
         "platforms" -> "aurastudio install sdk platform $version 2>&1 || exit 1"
         "build_tools" -> "aurastudio install sdk buildtools $version 2>&1 || exit 1"

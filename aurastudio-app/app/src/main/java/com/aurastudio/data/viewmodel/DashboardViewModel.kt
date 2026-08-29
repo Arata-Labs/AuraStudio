@@ -72,6 +72,24 @@ class DashboardViewModel(private val context: Context) : ViewModel() {
 
     fun startInstall(componentKey: String, version: String, componentName: String) {
         installJob?.cancel()
+        // Components managed by sdkmanager require cmdline-tools first.
+        val needsCmdlineTools = componentKey == "platforms" || componentKey == "build_tools"
+        if (needsCmdlineTools && !_status.value.cmdlineTools.isInstalled) {
+            _installState.value = InstallState(
+                componentName = componentName,
+                version = version,
+                log = listOf(
+                    "This component is installed via sdkmanager,",
+                    "which requires cmdline-tools to be present.",
+                    "Install 'cmdline-tools' first, then retry."
+                ),
+                isInstalling = false,
+                isFinished = true,
+                isSuccess = false,
+                error = "cmdline-tools is required to install $componentName"
+            )
+            return
+        }
         _installState.value = InstallState(componentName = componentName, version = version, log = emptyList())
         installJob = viewModelScope.launch {
             val command = installer.installCommand(componentKey, version)
