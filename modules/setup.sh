@@ -116,7 +116,7 @@ _setup_java() {
         ver=$(java -version 2>&1 | head -1 | sed 's/.*"\(.*\)".*/\1/')
         success "Java already installed: $ver"
     else
-        run_animated "Downloading & Installing openjdk-21" pkg install -y openjdk-21
+        run_animated "Downloading & Installing openjdk-21 & openjdk-17" pkg install -y openjdk-21 openjdk-17
     fi
     check_java
 }

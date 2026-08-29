@@ -76,10 +76,10 @@ class PackageInstaller(private val context: Context) {
 
     /** Map a component key + version to the shell command that installs it. */
     fun installCommand(componentKey: String, version: String): String = when (componentKey) {
-        "java" -> "apt install -y openjdk-21 2>&1"
-        "gradle" -> "apt install -y gradle 2>&1"
-        "aapt2" -> "apt install -y aapt2 2>&1"
-        "cmdline_tools" -> "apt install -y cmdline-tools 2>&1"
+        "java" -> if (version.contains("21")) "aurastudio install sdk java 21 2>&1 || exit 1" else "aurastudio install sdk java 17 2>&1 || exit 1"
+        "gradle" -> "aurastudio install sdk gradle $version 2>&1 || exit 1"
+        "aapt2" -> "aurastudio install sdk aapt2 $version 2>&1 || exit 1"
+        "cmdline_tools" -> "aurastudio setup --cmdtools-only 2>&1 || exit 1"
         "platforms" -> "aurastudio install sdk platform $version 2>&1 || exit 1"
         "build_tools" -> "aurastudio install sdk buildtools $version 2>&1 || exit 1"
         "ndk" -> "aurastudio install ndk $version 2>&1 || exit 1"
@@ -89,10 +89,10 @@ class PackageInstaller(private val context: Context) {
 
     /** Map a component key + version to the shell command that uninstalls it. */
     fun uninstallCommand(componentKey: String, version: String): String = when (componentKey) {
-        "java" -> "apt remove -y openjdk-21 2>&1"
-        "gradle" -> "apt remove -y gradle 2>&1"
-        "aapt2" -> "apt remove -y aapt2 2>&1"
-        "cmdline_tools" -> "apt remove -y cmdline-tools 2>&1"
+        "java" -> "pkg remove -y openjdk-21 openjdk-17 2>&1"
+        "gradle" -> "pkg remove -y gradle 2>&1"
+        "aapt2" -> "pkg remove -y aapt2 2>&1"
+        "cmdline_tools" -> "rm -rf $home/android-sdk/cmdline-tools 2>&1"
         "platforms" -> "rm -rf $home/android-sdk/platforms/android-$version 2>&1"
         "build_tools" -> "rm -rf $home/android-sdk/build-tools/$version 2>&1"
         "ndk" -> "rm -rf $home/android-sdk/ndk/$version 2>&1"
