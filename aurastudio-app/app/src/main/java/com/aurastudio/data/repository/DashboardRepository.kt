@@ -31,48 +31,48 @@ class DashboardRepository(private val context: Context) {
 
     suspend fun getEnvironmentStatus(): Result<EnvironmentStatus> = withContext(Dispatchers.IO) {
         try {
-            // Probe local installations
-            val javaInstalled = File("$prefix/bin/java").exists()
-            val gradleInstalled = File("$prefix/bin/gradle").exists() || 
-                File("$prefix/share/gradle").isDirectory
-            val aapt2Installed = File("$prefix/bin/aapt2").exists()
-            val sdkToolsInstalled = File("$sdkDir/cmdline-tools/latest").isDirectory
-            val buildTools = listDir("$sdkDir/buildTools")
-            val platforms = listDir("$sdkDir/platforms")
-            val ndk = listDir("$sdkDir/ndk")
-            val cmake = listDir("$sdkDir/cmake")
+            val packages = fetchPackagesSync()
 
-            // Fetch available versions from packages.json
-            val packages = fetchPackages()
+            val javaInstalled = File("$prefix/bin/java").exists()
             val javaVersion = findPackageVersion(packages, "openjdk-21") ?: findPackageVersion(packages, "openjdk-17")
-            val aapt2Version = findPackageVersion(packages, "aapt2")
+            val gradleInstalled = File("$prefix/bin/gradle").exists() || File("$prefix/share/gradle").isDirectory
             val gradleVersion = findPackageVersion(packages, "gradle")
+            val aapt2Installed = File("$prefix/bin/aapt2").exists()
+            val aapt2Version = findPackageVersion(packages, "aapt2")
+
+            val cmdlineToolsDir = File("$sdkDir/cmdline-tools")
+            val sdkToolsInstalled = cmdlineToolsDir.isDirectory && cmdlineToolsDir.listFiles()?.any { it.isDirectory } == true
+            val cmdlineToolsVersion = if (sdkToolsInstalled) cmdlineToolsDir.listFiles()?.maxByOrNull { it.name }?.name else null
 
             val status = EnvironmentStatus(
                 java = InstalledComponent(
                     name = "Java OpenJDK",
-                    version = if (javaInstalled) javaVersion else javaVersion,
-                    isInstalled = javaInstalled
+                    version = if (javaInstalled) javaVersion else null,
+                    isInstalled = javaInstalled,
+                    availableVersions = listOfNotNull(findPackageVersion(packages, "openjdk-21"), findPackageVersion(packages, "openjdk-17"))
                 ),
                 gradle = InstalledComponent(
                     name = "Gradle",
-                    version = if (gradleInstalled) gradleVersion else gradleVersion,
-                    isInstalled = gradleInstalled
+                    version = if (gradleInstalled) gradleVersion else null,
+                    isInstalled = gradleInstalled,
+                    availableVersions = listOfNotNull(gradleVersion)
                 ),
                 aapt2 = InstalledComponent(
                     name = "AAPT2",
-                    version = if (aapt2Installed) aapt2Version else aapt2Version,
-                    isInstalled = aapt2Installed
+                    version = if (aapt2Installed) aapt2Version else null,
+                    isInstalled = aapt2Installed,
+                    availableVersions = listOfNotNull(aapt2Version)
                 ),
                 cmdlineTools = InstalledComponent(
                     name = "cmdline-tools",
-                    version = null,
-                    isInstalled = sdkToolsInstalled
+                    version = cmdlineToolsVersion,
+                    isInstalled = sdkToolsInstalled,
+                    availableVersions = listOf("12.0")
                 ),
-                platforms = platforms,
-                buildTools = buildTools,
-                ndk = ndk,
-                cmake = cmake,
+                platforms = listDir("$sdkDir/platforms"),
+                buildTools = listDir("$sdkDir/build-tools"),
+                ndk = listDir("$sdkDir/ndk"),
+                cmake = listDir("$sdkDir/cmake"),
                 healthScore = 0
             )
 
@@ -84,7 +84,7 @@ class DashboardRepository(private val context: Context) {
         }
     }
 
-    private fun fetchPackages(): List<PackageInfo> {
+    private fun fetchPackagesSync(): List<PackageInfo> {
         return try {
             val url = URL(packagesJsonUrl)
             val text = url.readText()

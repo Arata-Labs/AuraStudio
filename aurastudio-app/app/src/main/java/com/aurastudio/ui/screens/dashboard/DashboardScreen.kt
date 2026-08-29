@@ -6,6 +6,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -60,7 +63,15 @@ fun DashboardScreen(
 
 
         item {
-            EnvironmentCard(status)
+            EnvironmentCard(
+                status = status,
+                onInstall = { key, version, name ->
+                    viewModel.startInstall(key, version, name)
+                },
+                onUninstall = { key, version, name ->
+                    viewModel.startUninstall(key, version, name)
+                }
+            )
         }
 
         item {
@@ -72,6 +83,134 @@ fun DashboardScreen(
 
         item { Spacer(modifier = Modifier.height(8.dp)) }
     }
+
+    val installState by viewModel.installState.collectAsState()
+    installState?.let { state ->
+        InstallProgressDialog(
+            state = state,
+            onDismiss = { viewModel.dismissInstallDialog() }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InstallProgressDialog(
+    state: com.aurastudio.data.viewmodel.InstallState,
+    onDismiss: () -> Unit
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(state.log.size) {
+        if (state.log.isNotEmpty()) listState.animateScrollToItem(state.log.lastIndex)
+    }
+
+    AlertDialog(
+        onDismissRequest = { if (!state.isInstalling) onDismiss() },
+        containerColor = cardBg(),
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (state.isFinished && !state.isSuccess) Icons.Filled.Error else Icons.Filled.Download,
+                        contentDescription = null,
+                        tint = when {
+                            state.isFinished && state.isSuccess -> termGreen()
+                            state.isFinished -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.primary
+                        },
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = if (state.isFinished) {
+                            if (state.isSuccess) "${state.componentName} ${state.version}" else "Install failed"
+                        } else {
+                            "Installing ${state.componentName} ${state.version}…"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        },
+        text = {
+            Column {
+                if (state.isInstalling) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
+                Text(
+                    text = if (state.isFinished && !state.isSuccess) state.error else "Tapping elsewhere won't dismiss this while the operation runs.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (state.isFinished && !state.isSuccess) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = termBg(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        if (state.log.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "Waiting for output…",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = termFg().copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                        itemsIndexed(state.log) { index, line ->
+                            val isLast = index == state.log.lastIndex
+                            val isErrorLine = line.contains("error", ignoreCase = true) || line.contains("error:", ignoreCase = true)
+                            Text(
+                                text = line,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = FontFamily.Monospace,
+                                color = when {
+                                    isErrorLine && !isLast -> MaterialTheme.colorScheme.error
+                                    isLast -> termFg()
+                                    else -> termFg().copy(alpha = 0.85f)
+                                }
+                            )
+                        }
+                    }
+                }
+                if (state.isSuccess && state.isFinished) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = "Installed successfully.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = termGreen(),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !state.isInstalling
+            ) {
+                Text(if (state.isFinished) "Done" else "Cancel")
+            }
+        }
+    )
 }
 
 @Composable
@@ -337,18 +476,18 @@ private data class EnvComponentItem(
     val isInstalled: Boolean,
     val version: String?,
     val installedVersions: List<String>,
-    val availableVersions: List<String>
+    val availableVersions: List<String>,
+    val key: String // maps to PackageInstaller command
 )
 
 @Composable
-private fun EnvironmentCard(status: EnvironmentStatus) {
+private fun EnvironmentCard(
+    status: EnvironmentStatus,
+    onInstall: (String, String, String) -> Unit,
+    onUninstall: (String, String, String) -> Unit
+) {
     var showAllDialog by remember { mutableStateOf(false) }
     var selectedComponent by remember { mutableStateOf<EnvComponentItem?>(null) }
-
-    val javaAvailable = if (status.java.version?.isNotBlank() == true) listOf(status.java.version) else listOf("21.0.12", "17.0.14")
-    val gradleAvailable = if (status.gradle.version?.isNotBlank() == true) listOf(status.gradle.version) else listOf("9.7.0", "8.12.1")
-    val aapt2Available = if (status.aapt2.version?.isNotBlank() == true) listOf(status.aapt2.version) else listOf("16.0.0.4-1")
-    val sdkAvailable = if (status.cmdlineTools.version?.isNotBlank() == true) listOf(status.cmdlineTools.version) else listOf("12.0")
 
     val components = listOf(
         EnvComponentItem(
@@ -357,7 +496,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.java.isInstalled,
             version = status.java.version,
             installedVersions = if (status.java.isInstalled) listOfNotNull(status.java.version) else emptyList(),
-            availableVersions = javaAvailable
+            availableVersions = status.java.availableVersions.ifEmpty { listOf("21.0.12", "17.0.20") },
+            key = "java"
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_gradle),
@@ -365,7 +505,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.gradle.isInstalled,
             version = status.gradle.version,
             installedVersions = if (status.gradle.isInstalled) listOfNotNull(status.gradle.version) else emptyList(),
-            availableVersions = gradleAvailable
+            availableVersions = status.gradle.availableVersions.ifEmpty { listOf("9.7.1") },
+            key = "gradle"
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_aapt2),
@@ -373,7 +514,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.aapt2.isInstalled,
             version = status.aapt2.version,
             installedVersions = if (status.aapt2.isInstalled) listOfNotNull(status.aapt2.version) else emptyList(),
-            availableVersions = aapt2Available
+            availableVersions = status.aapt2.availableVersions.ifEmpty { listOf("16.0.0.4-1") },
+            key = "aapt2"
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_sdk),
@@ -381,7 +523,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.cmdlineTools.isInstalled,
             version = status.cmdlineTools.version,
             installedVersions = if (status.cmdlineTools.isInstalled) listOfNotNull(status.cmdlineTools.version) else emptyList(),
-            availableVersions = sdkAvailable
+            availableVersions = listOf("12.0"),
+            key = "cmdline_tools"
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_platforms),
@@ -389,7 +532,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.platforms.isNotEmpty(),
             version = status.platforms.firstOrNull(),
             installedVersions = status.platforms,
-            availableVersions = listOf("API 36", "API 35", "API 34")
+            availableVersions = listOf("37", "36", "35", "34", "33", "32", "31", "30"),
+            key = "platforms"
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_build_tools),
@@ -397,7 +541,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.buildTools.isNotEmpty(),
             version = status.buildTools.firstOrNull(),
             installedVersions = status.buildTools,
-            availableVersions = listOf("37.0.0", "36.0.0", "35.0.0")
+            availableVersions = listOf("37.0.0", "36.0.0", "35.0.0", "34.0.0", "33.0.2", "32.0.0", "31.0.0", "30.0.3"),
+            key = "build_tools"
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_ndk),
@@ -405,7 +550,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.ndk.isNotEmpty(),
             version = status.ndk.firstOrNull(),
             installedVersions = status.ndk,
-            availableVersions = listOf("28.0.13004108", "27.2.12479018", "26.1.10909125")
+            availableVersions = listOf("r30-beta2", "r29", "r28c", "r27d", "r26d"),
+            key = "ndk"
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_cmake),
@@ -413,7 +559,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
             isInstalled = status.cmake.isNotEmpty(),
             version = status.cmake.firstOrNull(),
             installedVersions = status.cmake,
-            availableVersions = listOf("3.31.6", "3.30.5", "3.28.1")
+            availableVersions = listOf("4.1.2", "4.1.1", "4.1.0", "4.0.3", "4.0.2", "3.25.1", "3.22.1", "3.18.1", "3.10.2"),
+            key = "cmake"
         )
     )
 
@@ -570,8 +717,8 @@ private fun EnvironmentCard(status: EnvironmentStatus) {
         ComponentDetailDialog(
             component = component,
             onDismiss = { selectedComponent = null },
-            onInstall = { /* TODO: hook to real install */ },
-            onUninstall = { /* TODO: hook to real uninstall */ }
+            onInstall = { version -> onInstall(component.key, version, component.name) },
+            onUninstall = { version -> onUninstall(component.key, version, component.name) }
         )
     }
 }

@@ -20,7 +20,8 @@ enum class ProjectType {
 data class InstalledComponent(
     val name: String,
     val version: String?,
-    val isInstalled: Boolean
+    val isInstalled: Boolean,
+    val availableVersions: List<String> = emptyList()
 )
 
 data class EnvironmentStatus(
