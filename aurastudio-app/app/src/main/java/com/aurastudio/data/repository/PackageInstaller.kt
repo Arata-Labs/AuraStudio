@@ -51,6 +51,16 @@ class PackageInstaller(private val context: Context) {
         env["TMPDIR"] = "$prefix/tmp"
         env["TERMUX_APP_PACKAGE"] = "com.aurastudio"
         env["TERMUX_PREFIX"] = prefix
+        val androidSdk = "$home/android-sdk"
+        env["ANDROID_HOME"] = androidSdk
+        env["ANDROID_SDK_ROOT"] = androidSdk
+        val javaLink = File("$prefix/bin/java")
+        if (javaLink.exists()) {
+            val jvmHome = File(javaLink.canonicalPath).parentFile?.parentFile?.absolutePath
+            if (jvmHome != null && File("$jvmHome/bin/java").exists()) {
+                env["JAVA_HOME"] = jvmHome
+            }
+        }
         return pb.start()
     }
 
@@ -104,7 +114,8 @@ class PackageInstaller(private val context: Context) {
      * inside the app's embedded prefix.
      */
     fun installCommand(componentKey: String, version: String): String = when (componentKey) {
-        "java" -> if (version.contains("21")) apt("openjdk-21") else apt("openjdk-17")
+        "java" -> if (version.contains("21")) apt("openjdk-21") else apt("openjdk-17") +
+            "\n" + ensureEnvironmentCommand()
         "gradle" -> apt("gradle")
         "aapt2" -> apt("aapt2")
 
@@ -138,34 +149,35 @@ class PackageInstaller(private val context: Context) {
     }
 
     // ── cmdline-tools ──────────────────────────────────────────────
-    private fun installCmdlineToolsCommand(): String = sh(
-        """
-        SDK_DIR="{DOLLAR}HOME/android-sdk"
-        TMP_ZIP="{DOLLAR}TMPDIR/aurastudio_cmdtools.zip"
-        TMP_DIR="{DOLLAR}TMPDIR/aurastudio_cmdtools_extract"
-        curl -L --retry 3 --fail "$cmdlineToolsUrl" -o "{DOLLAR}TMP_ZIP" 2>&1 || exit 1
-        rm -rf "{DOLLAR}TMP_DIR"
-        unzip -q "{DOLLAR}TMP_ZIP" -d "{DOLLAR}TMP_DIR" || exit 1
-        mkdir -p "{DOLLAR}SDK_DIR/cmdline-tools/latest"
-        if [ -d "{DOLLAR}TMP_DIR/cmdline-tools" ]; then
-            cp -r "{DOLLAR}TMP_DIR/cmdline-tools/." "{DOLLAR}SDK_DIR/cmdline-tools/latest/" || exit 1
-        else
-            cp -r "{DOLLAR}TMP_DIR/." "{DOLLAR}SDK_DIR/cmdline-tools/latest/" || exit 1
-        fi
-        rm -rf "{DOLLAR}TMP_ZIP" "{DOLLAR}TMP_DIR"
-        chmod -R 755 "{DOLLAR}SDK_DIR/cmdline-tools/latest/bin/" 2>/dev/null
-        # Patch /usr/bin/env shebangs to the embedded prefix env
-        TERMUX_ENV="{DOLLAR}(command -v env)"
-        for bin_file in "{DOLLAR}SDK_DIR/cmdline-tools/latest/bin/"*; do
-            [ -f "{DOLLAR}bin_file" ] || continue
-            SHEBANG="{DOLLAR}(head -1 "{DOLLAR}bin_file" 2>/dev/null)"
-            if [[ "{DOLLAR}SHEBANG" == "#!/usr/bin/env"* ]]; then
-                REST="{DOLLAR}{SHEBANG#'#!/usr/bin/env'}"
-                sed -i "1s|.*|#!{DOLLAR}TERMUX_ENV{DOLLAR}REST|" "{DOLLAR}bin_file"
+    private fun installCmdlineToolsCommand(): String =
+        sh(
+            """
+            SDK_DIR="{DOLLAR}HOME/android-sdk"
+            TMP_ZIP="{DOLLAR}TMPDIR/aurastudio_cmdtools.zip"
+            TMP_DIR="{DOLLAR}TMPDIR/aurastudio_cmdtools_extract"
+            curl -L --retry 3 --fail "$cmdlineToolsUrl" -o "{DOLLAR}TMP_ZIP" 2>&1 || exit 1
+            rm -rf "{DOLLAR}TMP_DIR"
+            unzip -q "{DOLLAR}TMP_ZIP" -d "{DOLLAR}TMP_DIR" || exit 1
+            mkdir -p "{DOLLAR}SDK_DIR/cmdline-tools/latest"
+            if [ -d "{DOLLAR}TMP_DIR/cmdline-tools" ]; then
+                cp -r "{DOLLAR}TMP_DIR/cmdline-tools/." "{DOLLAR}SDK_DIR/cmdline-tools/latest/" || exit 1
+            else
+                cp -r "{DOLLAR}TMP_DIR/." "{DOLLAR}SDK_DIR/cmdline-tools/latest/" || exit 1
             fi
-        done
-        """.trimIndent()
-    )
+            rm -rf "{DOLLAR}TMP_ZIP" "{DOLLAR}TMP_DIR"
+            chmod -R 755 "{DOLLAR}SDK_DIR/cmdline-tools/latest/bin/" 2>/dev/null
+            # Patch /usr/bin/env shebangs to the embedded prefix env
+            TERMUX_ENV="{DOLLAR}(command -v env)"
+            for bin_file in "{DOLLAR}SDK_DIR/cmdline-tools/latest/bin/"*; do
+                [ -f "{DOLLAR}bin_file" ] || continue
+                SHEBANG="{DOLLAR}(head -1 "{DOLLAR}bin_file" 2>/dev/null)"
+                if [[ "{DOLLAR}SHEBANG" == "#!/usr/bin/env"* ]]; then
+                    REST="{DOLLAR}{SHEBANG#'#!/usr/bin/env'}"
+                    sed -i "1s|.*|#!{DOLLAR}TERMUX_ENV{DOLLAR}REST|" "{DOLLAR}bin_file"
+                fi
+            done
+            """.trimIndent()
+        ) + "\n" + ensureEnvironmentCommand()
 
     // ── platforms / build-tools (sdkmanager) ───────────────────────
     private fun sdkmanagerInstallCommand(pkg: String): String = sh(
@@ -262,24 +274,57 @@ class PackageInstaller(private val context: Context) {
     }
 
     // ── Java version switch (re-points $PREFIX/bin/*java* symlinks) ─
-    private fun switchJavaScript(version: String): String = sh(
+    private fun switchJavaScript(version: String): String =
+        sh(
+            """
+            TARGET_JVM="{DOLLAR}PREFIX/lib/jvm/java-$version-openjdk"
+            [ -x "{DOLLAR}TARGET_JVM/bin/java" ] || { echo "openjdk-$version is not installed"; exit 1; }
+            for cmd in java javac javadoc jar keytool jshell javap jdb jdeps jlink; do
+                [ -f "{DOLLAR}TARGET_JVM/bin/{DOLLAR}cmd" ] || continue
+                TARGET="{DOLLAR}PREFIX/bin/{DOLLAR}cmd"
+                if [ -L "{DOLLAR}TARGET" ]; then
+                    rm -f "{DOLLAR}TARGET"
+                elif [ -e "{DOLLAR}TARGET" ]; then
+                    mv "{DOLLAR}TARGET" "{DOLLAR}TARGET.bak-{DOLLAR}(date +%s)" 2>/dev/null
+                fi
+                ln -s "{DOLLAR}TARGET_JVM/bin/{DOLLAR}cmd" "{DOLLAR}TARGET"
+                chmod +x "{DOLLAR}TARGET"
+            done
+            """.trimIndent()
+        ) + "\n" + ensureEnvironmentCommand()
+
+    /**
+     * Generate the app's own `~/.config/aurastudio/env.sh` (ANDROID_HOME,
+     * JAVA_HOME, PATH) and make it load from `$PREFIX/etc/bash.bashrc`, so the
+     * environment no longer depends on files left behind by the aurastudio CLI.
+     * Uses a quoted heredoc so `$VAR` refs stay literal inside the file and
+     * expand when a shell sources it later.
+     */
+    fun ensureEnvironmentCommand(): String = sh(
         """
-        TARGET_JVM="{DOLLAR}PREFIX/lib/jvm/java-$version-openjdk"
-        [ -x "{DOLLAR}TARGET_JVM/bin/java" ] || { echo "openjdk-$version is not installed"; exit 1; }
-        for cmd in java javac javadoc jar keytool jshell javap jdb jdeps jlink; do
-            [ -f "{DOLLAR}TARGET_JVM/bin/{DOLLAR}cmd" ] || continue
-            TARGET="{DOLLAR}PREFIX/bin/{DOLLAR}cmd"
-            if [ -L "{DOLLAR}TARGET" ]; then
-                rm -f "{DOLLAR}TARGET"
-            elif [ -e "{DOLLAR}TARGET" ]; then
-                mv "{DOLLAR}TARGET" "{DOLLAR}TARGET.bak-{DOLLAR}(date +%s)" 2>/dev/null
-            fi
-            ln -s "{DOLLAR}TARGET_JVM/bin/{DOLLAR}cmd" "{DOLLAR}TARGET"
-            chmod +x "{DOLLAR}TARGET"
+        ENV_DIR="{DOLLAR}HOME/.config/aurastudio"
+        ENV_FILE="{DOLLAR}ENV_DIR/env.sh"
+        mkdir -p "{DOLLAR}ENV_DIR"
+        cat > "{DOLLAR}ENV_FILE" << 'AS_ENV'
+        export ANDROID_HOME="{DOLLAR}HOME/android-sdk"
+        export ANDROID_SDK_ROOT="{DOLLAR}ANDROID_HOME"
+        export PATH="{DOLLAR}ANDROID_HOME/cmdline-tools/latest/bin:{DOLLAR}ANDROID_HOME/platform-tools:{DOLLAR}PATH"
+
+        if command -v java &>/dev/null; then
+            _java_real="{DOLLAR}(readlink -f "{DOLLAR}(command -v java)" 2>/dev/null || command -v java)"
+            export JAVA_HOME="{DOLLAR}(dirname "{DOLLAR}(dirname "{DOLLAR}_java_real")")"
+            unset _java_real
+            export PATH="{DOLLAR}JAVA_HOME/bin:{DOLLAR}PATH"
+        fi
+
+        for _bt_dir in "{DOLLAR}ANDROID_HOME/build-tools"/*/; do
+            [ -d "{DOLLAR}_bt_dir" ] && export PATH="{DOLLAR}{_bt_dir}bin:{DOLLAR}PATH"
         done
-        # Persist JAVA_HOME in the embedded env file for new shells
-        if [ -f "{DOLLAR}HOME/.config/aurastudio/env.sh" ]; then
-            sed -i "s|^export JAVA_HOME=.*|export JAVA_HOME=\"$version-openjdk\"|" "{DOLLAR}HOME/.config/aurastudio/env.sh" 2>/dev/null
+        unset _bt_dir
+        AS_ENV
+        RC_FILE="{DOLLAR}PREFIX/etc/bash.bashrc"
+        if [ -f "{DOLLAR}RC_FILE" ]; then
+            grep -qF "aurastudio/env.sh" "{DOLLAR}RC_FILE" 2>/dev/null || echo "source {DOLLAR}ENV_FILE" >> "{DOLLAR}RC_FILE"
         fi
         """.trimIndent()
     )
