@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -25,7 +24,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -230,8 +228,6 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
 
         setTerminalToolbarView(savedInstanceState);
 
-        setSettingsButtonView();
-
         setNewSessionButtonView();
 
         setToggleKeyboardView();
@@ -417,7 +413,6 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
         if (mProperties.isUsingBlackUI()) {
             findViewById(R.id.left_drawer).setBackgroundColor(ContextCompat.getColor(this,
                 android.R.color.background_dark));
-            ((ImageButton) findViewById(R.id.settings_button)).setColorFilter(Color.WHITE);
         }
     }
 
@@ -519,13 +514,6 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
     }
 
 
-
-    private void setSettingsButtonView() {
-        ImageButton settingsButton = findViewById(R.id.settings_button);
-        settingsButton.setOnClickListener(v -> {
-            startActivity(new Intent(this, SettingsActivity.class));
-        });
-    }
 
     private void setNewSessionButtonView() {
         View newSessionButton = findViewById(R.id.new_session_button);
