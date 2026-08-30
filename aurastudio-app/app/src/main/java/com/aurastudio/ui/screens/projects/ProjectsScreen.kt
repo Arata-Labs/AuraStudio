@@ -133,8 +133,13 @@ private fun ProjectCard(project: Project, onClick: () -> Unit) {
             ) {
                 Icon(
                     when (project.type) {
-                        ProjectType.GRADLE_JAVA -> Icons.Filled.Code
-                        ProjectType.GRADLE_KOTLIN -> Icons.Filled.Code
+                        ProjectType.GRADLE_JAVA,
+                        ProjectType.GRADLE_KOTLIN,
+                        ProjectType.ANDROID_LIBRARY,
+                        ProjectType.JAVA_LIBRARY,
+                        ProjectType.KOTLIN_LIBRARY -> Icons.Filled.Code
+                        ProjectType.MATERIAL_YOU -> Icons.Filled.Build
+                        ProjectType.COMPOSE -> Icons.Filled.Star
                         ProjectType.NATIVE_CPP -> Icons.Filled.Memory
                         ProjectType.NDK_SHARED_LIB -> Icons.Filled.Layers
                     },

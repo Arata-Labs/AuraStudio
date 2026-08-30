@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aurastudio.data.bootstrap.BootstrapCoordinator
 import com.aurastudio.data.viewmodel.DashboardViewModel
+import com.aurastudio.data.viewmodel.ProjectsViewModel
 import com.aurastudio.ui.components.AuraStudioTopBar
 import com.aurastudio.ui.components.ModernBottomNavBar
 import com.aurastudio.ui.navigation.Screen
@@ -156,6 +157,9 @@ fun AuraStudioApp(
     onIconChange: (Int) -> Unit,
     dashboardViewModel: DashboardViewModel = viewModel(
         factory = DashboardViewModel.provideFactory(LocalContext.current.applicationContext)
+    ),
+    projectsViewModel: ProjectsViewModel = viewModel(
+        factory = ProjectsViewModel.provideFactory(LocalContext.current.applicationContext)
     )
 ) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
@@ -224,7 +228,12 @@ fun AuraStudioApp(
                     )
                 }
                 is Screen.Projects -> {
+                    val projects by projectsViewModel.projects.collectAsStateWithLifecycle()
+                    LaunchedEffect(Unit) {
+                        projectsViewModel.refreshProjects()
+                    }
                     ProjectsScreen(
+                        projects = projects,
                         scaffoldPadding = innerPadding,
                         onOpenProject = { /* TODO */ }
                     )
@@ -232,7 +241,8 @@ fun AuraStudioApp(
                 is Screen.CreateProject -> {
                     CreateProjectScreen(
                         scaffoldPadding = innerPadding,
-                        onCreateProject = { name, type, path ->
+                        projectsViewModel = projectsViewModel,
+                        onCreated = {
                             navigateToTab(Screen.Projects.route)
                         }
                     )

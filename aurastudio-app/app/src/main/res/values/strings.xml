@@ -178,12 +178,37 @@
     <string name="create_project_title">Create Project</string>
     <string name="create_project_name_label">Project Name</string>
     <string name="create_project_name_hint">my_awesome_app</string>
-    <string name="create_project_type_label">Project Type</string>
+    <string name="create_project_package_label">Package Name</string>
+    <string name="create_project_package_hint">com.example.myapp</string>
+    <string name="create_project_package_invalid">Invalid package name</string>
+    <string name="create_project_type_label">Template</string>
     <string name="create_project_btn">Create Project</string>
-    <string name="create_project_type_gradle_java">Gradle + Java</string>
-    <string name="create_project_type_gradle_kotlin">Gradle + Kotlin</string>
-    <string name="create_project_type_native_cpp">Native C++</string>
-    <string name="create_project_type_ndk">NDK Shared Lib</string>
+    <string name="create_project_creating">Creating project…</string>
+    <string name="create_project_error">Failed to create project</string>
+    <string name="create_project_exists">A project named "%1$s" already exists</string>
+    <string name="create_project_storage_title">Storage access required</string>
+    <string name="create_project_storage_denied">Allow "All files access" so projects can be stored on Internal Storage.</string>
+    <string name="create_project_storage_allow">Allow access</string>
+
+    <!-- Project Templates -->
+    <string name="template_app_kotlin">Android App (Kotlin)</string>
+    <string name="template_app_kotlin_desc">Empty activity with XML layout</string>
+    <string name="template_app_java">Android App (Java)</string>
+    <string name="template_app_java_desc">Empty activity with XML layout</string>
+    <string name="template_app_material_you">Android App (Material You)</string>
+    <string name="template_app_material_you_desc">Material 3 with dynamic colors</string>
+    <string name="template_app_compose">Jetpack Compose App</string>
+    <string name="template_app_compose_desc">Modern Compose + Material 3 UI</string>
+    <string name="template_android_library">Android Library</string>
+    <string name="template_android_library_desc">Reusable AAR module</string>
+    <string name="template_java_library">Java Library</string>
+    <string name="template_java_library_desc">Plain Java library module</string>
+    <string name="template_kotlin_library">Kotlin Library</string>
+    <string name="template_kotlin_library_desc">Kotlin JVM library module</string>
+    <string name="template_native_cpp">Native C++</string>
+    <string name="template_native_cpp_desc">Standalone C++ executable (CMake + make)</string>
+    <string name="template_ndk">NDK Shared Lib</string>
+    <string name="template_ndk_desc">Native .so shared library</string>
 
     <!-- Text Selection -->
     <string name="copy_text">Copy</string>

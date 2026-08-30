@@ -14,7 +14,12 @@ enum class ProjectType {
     NATIVE_CPP,
     NDK_SHARED_LIB,
     GRADLE_JAVA,
-    GRADLE_KOTLIN
+    GRADLE_KOTLIN,
+    MATERIAL_YOU,
+    COMPOSE,
+    ANDROID_LIBRARY,
+    JAVA_LIBRARY,
+    KOTLIN_LIBRARY
 }
 
 data class InstalledComponent(
