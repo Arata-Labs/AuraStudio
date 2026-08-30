@@ -1,6 +1,7 @@
 package com.aurastudio.data.bootstrap
 
 import android.app.Activity
+import com.aurastudio.R
 import com.termux.app.TermuxInstaller
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,12 +22,12 @@ class BootstrapCoordinator(private val activity: Activity) {
     fun start(postSetup: () -> Unit = {}) {
         if (started) return
         started = true
-        _state.value = BootstrapState(running = true, phase = "Checking environment")
+        _state.value = BootstrapState(running = true, phase = activity.getString(R.string.bootstrap_status_checking))
 
         TermuxInstaller.installBootstrap(
             activity,
             {
-                _state.update { it.copy(running = false, done = true, phase = "Complete") }
+                _state.update { it.copy(running = false, done = true, phase = activity.getString(R.string.bootstrap_status_complete)) }
                 postSetup()
             },
             object : TermuxInstaller.TermuxBootstrapInstallerListener {

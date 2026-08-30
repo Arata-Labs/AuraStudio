@@ -30,6 +30,7 @@ data class EnvironmentStatus(
     val gradle: InstalledComponent,
     val aapt2: InstalledComponent,
     val cmdlineTools: InstalledComponent,
+    val platformTools: InstalledComponent,
     val platforms: List<String>,
     val buildTools: List<String>,
     val ndk: List<String>,
@@ -46,6 +47,7 @@ data class EnvironmentStatus(
                 gradle = InstalledComponent("Gradle", null, gradleOk),
                 aapt2 = InstalledComponent("AAPT2", null, false),
                 cmdlineTools = InstalledComponent("cmdline-tools", null, false),
+                platformTools = InstalledComponent("platform-tools", null, false),
                 platforms = json.installed.sdk_platforms,
                 buildTools = emptyList(),
                 ndk = json.installed.ndk,
@@ -60,6 +62,7 @@ data class EnvironmentStatus(
             if (status.gradle.isInstalled) score += 20
             if (status.aapt2.isInstalled) score += 15
             if (status.cmdlineTools.isInstalled) score += 15
+            if (status.platformTools.isInstalled) score += 10
             if (status.platforms.isNotEmpty()) score += 10
             if (status.buildTools.isNotEmpty()) score += 10
             if (status.ndk.isNotEmpty()) score += 5

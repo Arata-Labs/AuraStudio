@@ -110,7 +110,7 @@ fun AuraStudioTopBar(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Outlined.Notifications,
-                            contentDescription = "Notifications",
+                            contentDescription = stringResource(R.string.topbar_notifications),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )

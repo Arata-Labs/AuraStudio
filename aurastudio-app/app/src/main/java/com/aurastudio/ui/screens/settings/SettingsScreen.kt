@@ -515,7 +515,7 @@ private fun EnvironmentSection() {
                     if (isSelected) {
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = "Selected",
+                            contentDescription = stringResource(R.string.settings_theme_selected),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
@@ -542,7 +542,7 @@ private fun TerminalSection() {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "${fontSize.toInt()} sp",
+            text = stringResource(R.string.settings_font_size_value, fontSize.toInt()),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -644,18 +644,18 @@ private fun AboutSection() {
         val aboutItems = listOf(
             AboutItem(
                 titleRes = R.string.settings_version,
-                subtitle = "1.2",
+                subtitleRes = R.string.settings_version_value,
                 icon = Icons.Filled.Tag,
                 onClick = {
-                    copyToClipboard(context, "1.2", "Version")
+                    copyToClipboard(context, context.getString(R.string.settings_version_value), context.getString(R.string.settings_version))
                 }
             ),
             AboutItem(
                 titleRes = R.string.settings_build,
-                subtitle = "dev-app",
+                subtitleRes = R.string.settings_build_value,
                 icon = Icons.Filled.Build,
                 onClick = {
-                    copyToClipboard(context, "dev-app", "Build")
+                    copyToClipboard(context, context.getString(R.string.settings_build_value), context.getString(R.string.settings_build))
                 }
             ),
             AboutItem(
@@ -894,29 +894,7 @@ private fun DeveloperDialog(onDismiss: () -> Unit) {
 
 @Composable
 private fun LicenseDialog(onDismiss: () -> Unit) {
-    val licenseText = """
-MIT License
-
-Copyright (c) 2026 HinohArata (AuraStudio CLI)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-    """.trimIndent()
+    val licenseText = stringResource(R.string.settings_license_body)
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -951,7 +929,7 @@ SOFTWARE.
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "LICENSE",
+                        text = stringResource(R.string.settings_license_header),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = termGreen(),
@@ -973,7 +951,7 @@ SOFTWARE.
                                 .padding(14.dp)
                         ) {
                             Text(
-                                text = "MIT License",
+                                text = stringResource(R.string.settings_license_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = termGreen(),
@@ -982,7 +960,7 @@ SOFTWARE.
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Copyright (c) 2026 HinohArata",
+                                text = stringResource(R.string.settings_license_copyright),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontFamily = FontFamily.Monospace,
@@ -990,7 +968,7 @@ SOFTWARE.
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = licenseText.removePrefix("MIT License\n\nCopyright (c) 2026 HinohArata (AuraStudio CLI)\n\n"),
+                                text = licenseText,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily.Monospace,

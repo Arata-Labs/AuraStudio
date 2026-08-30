@@ -12,9 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.dp
+import com.aurastudio.R
 
 @Composable
 fun TerminalScreen(
@@ -31,11 +33,11 @@ fun TerminalScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "AuraStudio Terminal",
+            text = stringResource(R.string.terminal_screen_title),
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = "The Termux terminal engine runs in its own session-aware activity.",
+            text = stringResource(R.string.terminal_screen_desc),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(16.dp)
         )
@@ -51,7 +53,7 @@ fun TerminalScreen(
                 context.startActivity(intent)
             }
         ) {
-            Text("Open Terminal")
+            Text(stringResource(R.string.terminal_open))
         }
     }
 }

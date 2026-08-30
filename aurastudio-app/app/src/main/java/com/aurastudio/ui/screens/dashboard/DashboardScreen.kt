@@ -118,7 +118,11 @@ private fun InstallProgressDialog(
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = if (state.isFinished && !state.isSuccess) Icons.Filled.Error else Icons.Filled.Download,
+                        imageVector = when {
+                            state.isFinished && !state.isSuccess -> Icons.Filled.Error
+                            state.isUninstall -> Icons.Filled.Delete
+                            else -> Icons.Filled.Download
+                        },
                         contentDescription = null,
                         tint = when {
                             state.isFinished && state.isSuccess -> termGreen()
@@ -129,10 +133,18 @@ private fun InstallProgressDialog(
                     )
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        text = if (state.isFinished) {
-                            if (state.isSuccess) "${state.componentName} ${state.version}" else "Install failed"
-                        } else {
-                            "Installing ${state.componentName} ${state.version}…"
+                        text = when {
+                            state.isFinished && state.isSuccess ->
+                                stringResource(R.string.env_dialog_title, state.componentName, state.version)
+                            state.isFinished -> if (state.isUninstall) {
+                                stringResource(R.string.env_dialog_uninstall_failed)
+                            } else {
+                                stringResource(R.string.env_dialog_install_failed)
+                            }
+                            state.isUninstall ->
+                                stringResource(R.string.env_dialog_uninstalling, state.componentName, state.version)
+                            else ->
+                                stringResource(R.string.env_dialog_installing, state.componentName, state.version)
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -152,7 +164,8 @@ private fun InstallProgressDialog(
                     Spacer(Modifier.height(12.dp))
                 }
                 Text(
-                    text = if (state.isFinished && !state.isSuccess) state.error else "Tapping elsewhere won't dismiss this while the operation runs.",
+                    text = if (state.isFinished && !state.isSuccess) state.error
+                    else stringResource(R.string.env_dialog_cancel_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (state.isFinished && !state.isSuccess) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -173,7 +186,7 @@ private fun InstallProgressDialog(
                         if (state.log.isEmpty()) {
                             item {
                                 Text(
-                                    text = "Waiting for output…",
+                                    text = stringResource(R.string.env_dialog_waiting_output),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontFamily = FontFamily.Monospace,
                                     color = termFg().copy(alpha = 0.6f)
@@ -199,7 +212,8 @@ private fun InstallProgressDialog(
                 if (state.isSuccess && state.isFinished) {
                     Spacer(Modifier.height(10.dp))
                     Text(
-                        text = "Installed successfully.",
+                        text = if (state.isUninstall) stringResource(R.string.env_dialog_uninstalled_success)
+else stringResource(R.string.env_dialog_installed_success),
                         style = MaterialTheme.typography.bodySmall,
                         color = termGreen(),
                         fontWeight = FontWeight.SemiBold
@@ -209,10 +223,10 @@ private fun InstallProgressDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = onDismiss,
-                enabled = !state.isInstalling
+                onClick = onDismiss
             ) {
-                Text(if (state.isFinished) "Done" else "Cancel")
+                Text(if (state.isFinished) stringResource(R.string.env_dialog_done)
+else stringResource(R.string.env_dialog_cancel))
             }
         }
     )
@@ -493,7 +507,7 @@ private fun EnvironmentCard(
     onJavaSwitch: (String) -> Unit
 ) {
     var showAllDialog by remember { mutableStateOf(false) }
-    var selectedComponent by remember { mutableStateOf<EnvComponentItem?>(null) }
+    var selectedComponentKey by remember { mutableStateOf<String?>(null) }
 
     val components = listOf(
         EnvComponentItem(
@@ -549,6 +563,15 @@ private fun EnvironmentCard(
             installedVersions = status.buildTools,
             availableVersions = listOf("37.0.0", "36.0.0", "35.0.0", "34.0.0", "33.0.2", "32.0.0", "31.0.0", "30.0.3"),
             key = "build_tools"
+        ),
+        EnvComponentItem(
+            name = stringResource(R.string.env_component_platform_tools),
+            icon = Icons.Filled.Usb,
+            isInstalled = status.platformTools.isInstalled,
+            version = status.platformTools.version,
+            installedVersions = if (status.platformTools.isInstalled) listOfNotNull(status.platformTools.version) else emptyList(),
+            availableVersions = listOf("latest"),
+            key = "platform_tools"
         ),
         EnvComponentItem(
             name = stringResource(R.string.env_component_ndk),
@@ -641,8 +664,20 @@ private fun EnvironmentCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Component grid - 2 columns x 4 rows
-            val rows = components.chunked(2)
+            // Most important component — full-width header card
+            val featured = components.first()
+            EnvComponentCard(
+                modifier = Modifier.fillMaxWidth(),
+                component = featured,
+                highlight = true,
+                onClick = { selectedComponentKey = featured.key }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Component grid - 2 columns
+            val gridComponents = components.drop(1)
+            val rows = gridComponents.chunked(2)
             rows.forEach { row ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -652,7 +687,7 @@ private fun EnvironmentCard(
                         EnvComponentCard(
                             modifier = Modifier.weight(1f),
                             component = component,
-                            onClick = { selectedComponent = component }
+                            onClick = { selectedComponentKey = component.key }
                         )
                     }
                     // Fill empty slots
@@ -713,16 +748,18 @@ private fun EnvironmentCard(
             onDismiss = { showAllDialog = false },
             onComponentClick = { component ->
                 showAllDialog = false
-                selectedComponent = component
+                selectedComponentKey = component.key
             }
         )
     }
 
-    // Single component dialog
+    // Single component dialog — derived from the LIVE status (via components)
+    // so installed versions refresh immediately after an install finishes.
+    val selectedComponent = selectedComponentKey?.let { key -> components.firstOrNull { it.key == key } }
     selectedComponent?.let { component ->
         ComponentDetailDialog(
             component = component,
-            onDismiss = { selectedComponent = null },
+            onDismiss = { selectedComponentKey = null },
             onInstall = { version -> onInstall(component.key, version, component.name) },
             onUninstall = { version -> onUninstall(component.key, version, component.name) },
             onJavaSwitch = { version -> 
@@ -736,73 +773,148 @@ private fun EnvironmentCard(
 private fun EnvComponentCard(
     modifier: Modifier = Modifier,
     component: EnvComponentItem,
+    highlight: Boolean = false,
     onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = cardContentBg(),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
+        color = if (highlight) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else cardContentBg(),
+        border = BorderStroke(
+            1.dp,
+            if (highlight) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f)
+        )
     ) {
-        Column(
+        if (highlight) {
+            EnvComponentHeaderBody(component)
+        } else {
+            EnvComponentGridBody(component)
+        }
+    }
+}
+
+@Composable
+private fun EnvComponentHeaderBody(component: EnvComponentItem) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .size(38.dp)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                component.icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = component.name,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(
+                text = if (component.isInstalled) {
+                    val extraCount = component.installedVersions.size - 1
+                    val base = component.version ?: stringResource(R.string.env_installed)
+                    if (extraCount > 0 && component.version != null) {
+                        stringResource(R.string.env_badge_more, base, extraCount)
+                    } else base
+                } else {
+                    stringResource(R.string.env_not_installed)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (component.isInstalled) Green40 else Red40.copy(alpha = 0.8f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(if (component.isInstalled) Green40 else Red40, CircleShape)
+        )
+    }
+}
+
+@Composable
+private fun EnvComponentGridBody(component: EnvComponentItem) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(
+                    if (component.isInstalled) Green40.copy(alpha = 0.15f) else Red40.copy(alpha = 0.15f),
+                    RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                component.icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = if (component.isInstalled) Green40 else Red40
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = component.name,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(6.dp)
                     .background(
-                        if (component.isInstalled) Green40.copy(alpha = 0.15f) else Red40.copy(alpha = 0.15f),
-                        RoundedCornerShape(8.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    component.icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = if (component.isInstalled) Green40 else Red40
-                )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = component.name,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center
+                        if (component.isInstalled) Green40 else Red40,
+                        CircleShape
+                    )
             )
-            Spacer(modifier = Modifier.height(2.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .background(
-                            if (component.isInstalled) Green40 else Red40,
-                            CircleShape
-                        )
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = if (component.isInstalled) {
-                        component.version ?: stringResource(R.string.env_installed)
-                    } else {
-                        stringResource(R.string.env_not_installed)
-                    },
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                    color = if (component.isInstalled) Green40 else Red40.copy(alpha = 0.8f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = if (component.isInstalled) {
+                    val extraCount = component.installedVersions.size - 1
+                    val base = component.version ?: stringResource(R.string.env_installed)
+                    if (extraCount > 0 && component.version != null) {
+                        stringResource(R.string.env_badge_more, base, extraCount)
+                    } else base
+                } else {
+                    stringResource(R.string.env_not_installed)
+                },
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                color = if (component.isInstalled) Green40 else Red40.copy(alpha = 0.8f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

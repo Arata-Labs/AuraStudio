@@ -71,8 +71,15 @@ class DashboardRepository(private val context: Context) {
             val aapt2Version = findPackageVersion(packages, "aapt2")
 
             val cmdlineToolsDir = File("$sdkDir/cmdline-tools")
-            val sdkToolsInstalled = cmdlineToolsDir.isDirectory && cmdlineToolsDir.listFiles()?.any { it.isDirectory } == true
+            val sdkToolsInstalled = cmdlineToolsDir.isDirectory &&
+                cmdlineToolsDir.listFiles()?.any { sub ->
+                    sub.isDirectory && File(sub, "bin/sdkmanager").isFile
+                } == true
             val cmdlineToolsVersion = if (sdkToolsInstalled) CMDLINE_TOOLS_VERSION else null
+
+            val platformToolsDir = File("$sdkDir/platform-tools")
+            val platformToolsInstalled = File(platformToolsDir, "adb").isFile
+            val platformToolsVersion = if (platformToolsInstalled) readSdkVersion(platformToolsDir) else null
 
             val status = EnvironmentStatus(
                 java = InstalledComponent(
@@ -100,10 +107,26 @@ class DashboardRepository(private val context: Context) {
                     isInstalled = sdkToolsInstalled,
                     availableVersions = listOf("12.0")
                 ),
-                platforms = listDir("$sdkDir/platforms"),
-                buildTools = listDir("$sdkDir/build-tools"),
-                ndk = listDir("$sdkDir/ndk"),
-                cmake = listDir("$sdkDir/cmake"),
+                platformTools = InstalledComponent(
+                    name = "platform-tools",
+                    version = platformToolsVersion,
+                    isInstalled = platformToolsInstalled,
+                    availableVersions = listOf("latest")
+                ),
+                platforms = listSdkDir("$sdkDir/platforms") { dir ->
+                    File(dir, "source.properties").exists() || File(dir, "android.jar").isFile
+                }.map { it.removePrefix("android-") },
+                buildTools = listSdkDir("$sdkDir/build-tools") { dir ->
+                    File(dir, "source.properties").exists() ||
+                        File(dir, "aapt2").isFile || File(dir, "aapt").isFile ||
+                        dir.listFiles()?.any { it.isFile && it.length() > 0 } == true
+                },
+                ndk = listSdkDir("$sdkDir/ndk") { dir ->
+                    File(dir, "source.properties").exists() || File(dir, "toolchains").isDirectory
+                },
+                cmake = listSdkDir("$sdkDir/cmake") { dir ->
+                    File(dir, "bin/cmake").isFile
+                },
                 healthScore = 0
             )
 
@@ -129,13 +152,28 @@ class DashboardRepository(private val context: Context) {
         return packages.find { it.name == name }?.version
     }
 
-    private fun listDir(path: String): List<String> {
+    /**
+     * List installed SDK version dirs under [path], keeping only dirs that
+     * actually contain real content (an empty/half-created folder is NOT
+     * considered installed — [isReal] decides based on real marker files).
+     */
+    private fun listSdkDir(path: String, isReal: (File) -> Boolean): List<String> {
         val dir = File(path)
         if (!dir.isDirectory) return emptyList()
         return dir.listFiles()
-            ?.filter { it.isDirectory }
+            ?.filter { it.isDirectory && isReal(it) }
             ?.map { it.name }
             ?.sortedDescending() ?: emptyList()
+    }
+
+    /** Read Pkg.Revision from an SDK component's source.properties (e.g. platform-tools). */
+    private fun readSdkVersion(dir: File): String? {
+        val sp = File(dir, "source.properties")
+        if (!sp.isFile) return null
+        return sp.readLines()
+            .firstOrNull { it.startsWith("Pkg.Revision=") }
+            ?.substringAfter('=')
+            ?.trim()
     }
 
     fun listJavaVersions(): List<String> {
