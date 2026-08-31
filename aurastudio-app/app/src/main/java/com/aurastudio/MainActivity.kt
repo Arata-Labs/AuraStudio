@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -165,8 +166,10 @@ fun AuraStudioApp(
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
     var previousScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
     var terminalCommand by remember { mutableStateOf<String?>(null) }
+    var openedProjectPath by remember { mutableStateOf<String?>(null) }
 
     fun navigateToTab(route: String) {
+        openedProjectPath = null
         if (route == Screen.Terminal.route) {
             terminalCommand = null
         }
@@ -198,17 +201,23 @@ fun AuraStudioApp(
         )
     }
 
+    val projectOpen = openedProjectPath != null
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            AuraStudioTopBar()
+            if (!projectOpen) {
+                AuraStudioTopBar()
+            }
         },
         bottomBar = {
-            ModernBottomNavBar(
-                items = bottomNavItemsLocalized,
-                currentRoute = currentScreen.route,
-                onItemClick = { navigateToTab(it) }
-            )
+            if (!projectOpen) {
+                ModernBottomNavBar(
+                    items = bottomNavItemsLocalized,
+                    currentRoute = currentScreen.route,
+                    onItemClick = { navigateToTab(it) }
+                )
+            }
         }
     ) { innerPadding ->
         Box(
@@ -224,19 +233,31 @@ fun AuraStudioApp(
                             navigateToTab(Screen.Terminal.route)
                         },
                         onNavigateToEditor = {},
-                        onOpenProject = { /* TODO */ }
+                        onOpenProject = { path -> openedProjectPath = path }
                     )
                 }
                 is Screen.Projects -> {
-                    val projects by projectsViewModel.projects.collectAsStateWithLifecycle()
-                    LaunchedEffect(Unit) {
-                        projectsViewModel.refreshProjects()
+                    val openedPath = openedProjectPath
+                    BackHandler(enabled = openedPath != null) {
+                        openedProjectPath = null
                     }
-                    ProjectsScreen(
-                        projects = projects,
-                        scaffoldPadding = innerPadding,
-                        onOpenProject = { /* TODO */ }
-                    )
+                    if (openedPath != null) {
+                        com.aurastudio.ui.screens.project.ProjectScreen(
+                            scaffoldPadding = innerPadding,
+                            projectDir = openedPath,
+                            onBack = { openedProjectPath = null }
+                        )
+                    } else {
+                        val projects by projectsViewModel.projects.collectAsStateWithLifecycle()
+                        LaunchedEffect(Unit) {
+                            projectsViewModel.refreshProjects()
+                        }
+                        ProjectsScreen(
+                            projects = projects,
+                            scaffoldPadding = innerPadding,
+                            onOpenProject = { path -> openedProjectPath = path }
+                        )
+                    }
                 }
                 is Screen.CreateProject -> {
                     CreateProjectScreen(

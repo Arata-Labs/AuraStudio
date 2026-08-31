@@ -55,6 +55,10 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.1")
 
     implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+
+    implementation("io.github.Rosemoe.sora-editor:editor:0.23.6")
+    implementation("io.github.Rosemoe.sora-editor:language-java:0.23.6")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
 
